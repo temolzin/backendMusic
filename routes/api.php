@@ -14,11 +14,6 @@ Route::get('/greeting', function () {
     return 'Hello World';
 });
 
-
-Route::group([
-    'middleware' => 'api',
-], function ($router) {
-
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [AuthController::class, 'create']);
     Route::get('/logout', [AuthController::class, 'logout']);
@@ -26,4 +21,4 @@ Route::group([
     Route::get('/refresh', [AuthController::class, 'refresh']);
 
     Route::resource('/product', ProductController::class);
-});
+

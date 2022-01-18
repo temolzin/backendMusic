@@ -23,7 +23,7 @@ class AuthController extends Controller
             return $this->respondWithToken($token);
         }
 
-        return response()->json(['error' => 'Failed Access'], 401);
+        return response()->json(['error' => 'The credentials do not correspond to any user.'], 401);
     }
 
     public function create(Request $request)
@@ -40,7 +40,7 @@ class AuthController extends Controller
                 $user->email = $email;
                 $valiEmail = User::where('email', $email)->first();
                 if (!empty($valiEmail['email'])) {
-                    return response()->json(['msg' => 'Email exist']);
+                    return response()->json(['message' => 'Email exist']);
                 }
                 $user->password = bcrypt($password);
                 $user->save();
@@ -48,7 +48,7 @@ class AuthController extends Controller
             }
             return response()->json([
                 'success' => true,
-                'msg' => 'User added',
+                'message' => 'User added',
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -65,7 +65,7 @@ class AuthController extends Controller
             auth()->logout();
             return response()->json([
                 'success' => true,
-                'msg' => 'Successfully logged out',
+                'message' => 'Successfully logged out',
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -100,6 +100,7 @@ class AuthController extends Controller
     protected function respondWithToken($token)
     {
         return response()->json([
+            'success' => true,
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60
