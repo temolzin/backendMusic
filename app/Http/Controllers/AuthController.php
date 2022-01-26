@@ -40,7 +40,7 @@ class AuthController extends Controller
                 $user->email = $email;
                 $valiEmail = User::where('email', $email)->first();
                 if (!empty($valiEmail['email'])) {
-                    return response()->json(['message' => 'Email exist']);
+                    return response()->json(['error' => 'The email has already been registered '], 401);
                 }
                 $user->password = bcrypt($password);
                 $user->save();
@@ -72,7 +72,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ]);
+            ], 401);
         }
     }
 
@@ -88,7 +88,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ]);
+            ], 401);
         }
     }
 
