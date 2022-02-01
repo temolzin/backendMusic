@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Auth\UserRegisterRequest;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ class AuthController extends Controller
         return response()->json(['error' => 'The credentials do not correspond to any user.'], 401);
     }
 
-    public function create(Request $request)
+    public function create(UserRegisterRequest $request)
     {
         try {
             $name = $request->input("name");
@@ -38,10 +39,10 @@ class AuthController extends Controller
                 $user = new User();
                 $user->name = $name;
                 $user->email = $email;
-                $valiEmail = User::where('email', $email)->first();
-                if (!empty($valiEmail['email'])) {
-                    return response()->json(['message' => 'Email exist']);
-                }
+                // $valiEmail = User::where('email', $email)->first();
+                // if (!empty($valiEmail['email'])) {
+                //     return response()->json(['error' => 'The email has already been registered '], 401);
+                // }
                 $user->password = bcrypt($password);
                 $user->save();
                 DB::commit();
@@ -55,7 +56,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ]);
+            ], 401);
         }
     }
 
@@ -72,7 +73,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ]);
+            ], 401);
         }
     }
 
@@ -88,7 +89,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ]);
+            ], 401);
         }
     }
 

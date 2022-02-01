@@ -18,10 +18,10 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index()
     {
         try {
-            $products = Product::all();
+            $products = Product::orderBy('id', 'Asc')->get();
 
             return response()->json([
                 'success' => true,
@@ -31,7 +31,7 @@ class ProductController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ]);
+            ], 401);
         }
     }
 
@@ -64,15 +64,15 @@ class ProductController extends Controller
             DB::commit();
 
             return response()->json([
-				'success' => true,
-				'product' => $product,
-			], 200);
+                'success' => true,
+                'product' => $product,
+            ], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
-				'success' => false,
-				'message' => $e->getMessage()
-			]);
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
         }
     }
 
@@ -84,7 +84,19 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        //
+        try {
+            $product = Product::find($id);
+
+            return response()->json([
+                'success' => true,
+                'product' => $product,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
+        }
     }
 
     /**
@@ -105,17 +117,16 @@ class ProductController extends Controller
             DB::commit();
 
             return response()->json([
-				'success' => true,
-				'product' => $product,
-			], 200);
+                'success' => true,
+                'product' => $product,
+            ], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
-				'success' => false,
-				'message' => $e->getMessage()
-			]);
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
         }
-
     }
 
     /**
@@ -133,14 +144,14 @@ class ProductController extends Controller
 
             DB::commit();
             return response()->json([
-				'success' => true,
-			], 200);
+                'success' => true,
+            ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-				'success' => false,
-				'message' => $e->getMessage()
-			]);
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
         }
     }
 }
