@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\SocialAccount;
 
 use Illuminate\Support\Facades\Auth;
@@ -35,6 +36,10 @@ class SocialAuthController extends Controller
         $appUser = User::whereEmail($user->email)->first();
 
         if (!$appUser) {
+
+            //Busca en la BD el slug developer y lo guarda en la variable
+            $developerRole = Role::where('slug', 'cantante-grupo')->first();
+            //$developerRole = Role::admin()->first();
             //Crear el usuario y añadir el provedor
             $appUser = User::create([
                 'name' => $user->name,
@@ -42,11 +47,14 @@ class SocialAuthController extends Controller
                 'password' => Hash::make($user->email),
             ]);
 
+            $appUser->roles()->attach($developerRole->id);
+
             $socialAccount = SocialAccount::create([
                 'provider' => 'google',
                 'provider_user_id' => $user->id,
                 'user_id' => $appUser->id
             ]);
+
 
             $credentials = ([
                 'email' => $appUser->email,
@@ -56,7 +64,7 @@ class SocialAuthController extends Controller
             if ($token = Auth::attempt($credentials)) {
                 return  response()->json([
                     'success' => true,
-                    'acction' => 'User created successfully',
+                    'acction' => 'Usuario creado con éxito',
                     'access_token' => $token,
                     'token_type' => 'bearer',
                     'expires_in' => auth()->factory()->getTTL() * 60
@@ -81,7 +89,7 @@ class SocialAuthController extends Controller
         if ($token = Auth::attempt($credentials)) {
             return  response()->json([
                 'success' => true,
-                'acction' => 'User found in registers',
+                'acction' => 'Usuario encontrado en los registros',
                 'access_token' => $token,
                 'token_type' => 'bearer',
                 'expires_in' => auth()->factory()->getTTL() * 60
