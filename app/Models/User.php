@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasPermissions;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,7 +14,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 {
 
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasPermissions;
 
     /**
      * The attributes that are mass assignable.
@@ -45,7 +46,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'email_verified_at' => 'datetime',
     ];
 
-
+    // JWT
     public function getJWTIdentifier()
     {
         return $this->getKey();
@@ -54,10 +55,27 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     {
         return [];
     }
+    // End JWT
 
-
+    // Relationships 
     public function socialAccounts()
     {
         return $this->hasMany(SocialAccount::class);
+    }
+
+    public function hasRole(...$roles)
+    {
+        // $user->hasRole('admin', 'developer');
+        return $this->roles()->whereIn('slug', $roles)->count();
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'users_roles');
+    }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class, 'users_permissions');
     }
 }

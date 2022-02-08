@@ -2,20 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Auth\UserRegisterRequest;
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'create']]);
+        $this->middleware('auth:api', ['except' => ['login']]);
     }
 
+    /**
+     * Display the specified resource.
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
@@ -24,49 +27,22 @@ class AuthController extends Controller
             return $this->respondWithToken($token);
         }
 
-        return response()->json(['error' => 'The credentials do not correspond to any user.'], 401);
+        return response()->json(['error' => 'Las credenciales no corresponden a ningún usuario'], 401);
     }
 
-    public function create(UserRegisterRequest $request)
-    {
-        try {
-            $name = $request->input("name");
-            $email = $request->input("email");
-            $password = $request->input("password");
-
-            if (!empty($name) && !empty($email) && !empty($password)) {
-                DB::beginTransaction();
-                $user = new User();
-                $user->name = $name;
-                $user->email = $email;
-                // $valiEmail = User::where('email', $email)->first();
-                // if (!empty($valiEmail['email'])) {
-                //     return response()->json(['error' => 'The email has already been registered '], 401);
-                // }
-                $user->password = bcrypt($password);
-                $user->save();
-                DB::commit();
-            }
-            return response()->json([
-                'success' => true,
-                'message' => 'User added',
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 401);
-        }
-    }
-
+    /**
+     * Display the specified resource.
+     *
+     * @param  null  
+     * @return \Illuminate\Http\Response
+     */
     public function logout()
     {
         try {
             auth()->logout();
             return response()->json([
                 'success' => true,
-                'message' => 'Successfully logged out',
+                'message' => 'Se cerró la sesión con éxito',
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -77,27 +53,23 @@ class AuthController extends Controller
         }
     }
 
-    public function me()
-    {
-        try {
-            return response()->json([
-                'success' => true,
-                'user' => auth()->user(),
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollback();
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 401);
-        }
-    }
-
+    /**
+     * Display the specified resource.
+     *
+     * @param  null  
+     * @return \Illuminate\Http\Response
+     */
     public function refresh()
     {
         return $this->respondWithToken(auth()->refresh());
     }
 
+    /**
+     * Display the specified resource.
+     *
+     * @param  $token  
+     * @return \Illuminate\Http\Response
+     */
     protected function respondWithToken($token)
     {
         return response()->json([
