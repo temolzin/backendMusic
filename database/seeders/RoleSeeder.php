@@ -15,16 +15,16 @@ class RoleSeeder extends Seeder
      */
     public function run()
     {
-        Role::create(["name" => "Administrador", "slug" => "administrador"]);
-        Role::create(["name" => "Cantante-Grupo", "slug" => "cantante-grupo"]);
-        Role::create(["name" => "Sonidero", "slug" => "sonidero"]);
-        Role::create(["name" => "Cliente", "slug" => "cliente"]);
+        Role::create(["name" => "Administrador", "slug" => "administrador","description" => "Tiene permisos totales"]);
+        Role::create(["name" => "Artist", "slug" => "artist","description" => "Solo tiene permiso de artista"]);
+        Role::create(["name" => "Cliente", "slug" => "cliente","description" => "Tiene permisos totales"]);
+        //Role::create(["name" => "Sonidero", "slug" => "sonidero","description" => "Solo tiene permiso de sonidero"]);
 
         //Permisos
         //Ruta del dashboard
         //Crea el permiso y se lo asigna al rol 1,2,3,4
-        Permission::create(['name' => 'View Dashboard', 'slug' => 'view-dashboard', 'description' => 'Ver el Dashboard'])->roles()->sync([1, 2, 3, 4]);
-        Permission::create(['name' => 'Edit Profile', 'slug' => 'edit-profile', 'description' => 'Editar su perfil'])->roles()->sync([1, 2, 3, 4]);
+        Permission::create(['name' => 'View Dashboard', 'slug' => 'view-dashboard', 'description' => 'Ver el Dashboard'])->roles()->sync([1, 2, 3]);
+        Permission::create(['name' => 'Edit Profile', 'slug' => 'edit-profile', 'description' => 'Editar su perfil'])->roles()->sync([1, 2, 3]);
 
         //Ruta del user
         //Crea el permiso y se lo asigna al rol 1

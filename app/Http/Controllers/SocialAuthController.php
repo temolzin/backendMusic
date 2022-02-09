@@ -38,7 +38,7 @@ class SocialAuthController extends Controller
         if (!$appUser) {
 
             //Busca en la BD el slug developer y lo guarda en la variable
-            $developerRole = Role::where('slug', 'cantante-grupo')->first();
+            $developerRole = Role::where('slug', 'artist')->first();
             //$developerRole = Role::admin()->first();
             //Crear el usuario y añadir el provedor
             $appUser = User::create([
