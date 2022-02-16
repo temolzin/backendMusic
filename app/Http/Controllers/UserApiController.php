@@ -6,6 +6,7 @@ use App\Http\Requests\User\UserApiCreateRequest;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class UserApiController extends Controller
@@ -18,12 +19,24 @@ class UserApiController extends Controller
     public function index()
     {
         try {
-            $users = User::orderBy('id', 'Asc')->get();
+            //$users = User::orderBy('id', 'Asc')->with('roles:id,name')->get();
+            $users = DB::table('users')
+                ->join('users_roles', 'users_roles.user_id', '=', 'users.id')
+                ->join('roles', 'roles.id', '=', 'users_roles.role_id')
+                ->select(
+                    'users.name',
+                    'users.id',
+                    'users.email',
+                    'users.created_at',
+                    'users_roles.role_id',
+                    'roles.name as role_name'
+                )->where('users.id', '!=', Auth::user()->id)
+                ->get();
 
             return response()->json([
                 'success' => true,
                 'users' => $users,
-            ],200);
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -57,15 +70,17 @@ class UserApiController extends Controller
             $password = $request->input("password");
             $role_id = $request->input("role_id");
 
-            
+            $role = Role::where('id', $role_id)->first();
+
+
             DB::beginTransaction();
-                $user = new User();
-                $user->name = $name;
-                $user->email = $email;
-                $user->password = bcrypt($password);
-                $user->save();  
-                $user->roles()->attach($role_id);
-                DB::commit();
+            $user = new User();
+            $user->name = $name;
+            $user->email = $email;
+            $user->password = bcrypt($password);
+            $user->save();
+            $user->roles()->attach($role->id);
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -121,25 +136,41 @@ class UserApiController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         try {
 
+            $role_id = $request->input("role_id");
+
+            $role = Role::where('id', $role_id)->first();
+
+            $id = $request->input("id");
             $name = $request->input("name");
             $email = $request->input("email");
             $password = $request->input("password");
-            $role_id = $request->input("role_id");
+            
+            if ($password == null) {
+                DB::beginTransaction();
+                $user = User::find($id);
+                $user->name = $name;
+                $user->email = $email;
+                $user->save();
+                $user->roles()->sync($role->id);
 
-            DB::beginTransaction();
-            $user = User::find($id);
-            $user->name = $name;
-            $user->email = $email;
-            $user->password = bcrypt($password);
-            $user->save();  
-            $user->roles()->attach($role_id);
-            $user->save();
+                DB::commit();
+            } else {
+                DB::beginTransaction();
+                $user = User::find($id);
+                $user->name = $name;
+                $user->email = $email;
 
-            DB::commit();
+                $user->password = bcrypt($password);
+
+                $user->save();
+                $user->roles()->sync($role->id);
+
+                DB::commit();
+            }
 
             return response()->json([
                 'success' => true,

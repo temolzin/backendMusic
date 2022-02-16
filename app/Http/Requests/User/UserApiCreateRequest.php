@@ -13,7 +13,7 @@ class UserApiCreateRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,12 +23,21 @@ class UserApiCreateRequest extends FormRequest
      */
     public function rules()
     {
-       
-            return [
-                'name' => 'required',
-                'email' => 'required|email|unique:users',
-                'password' => 'required'
-            ];
-       
+
+        return [
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required',
+            'role_id' => 'required'
+        ];
+    }
+    public function attributes()
+    {
+        return [
+            'name' => 'nombre del usuario',
+            'email' => 'email del usuario',
+            'password' => 'contraseña del usuario',
+            'role_id' => 'rol del usuario'
+        ];
     }
 }

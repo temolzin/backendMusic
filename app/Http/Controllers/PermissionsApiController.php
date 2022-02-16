@@ -17,12 +17,12 @@ class PermissionsApiController extends Controller
     public function index()
     {
         try {
-            $permissions = Permission::orderBy('id', 'Asc')->get();
+            $permissions = Permission::orderBy('id', 'Asc')->get(['id as permission_id','name']);
 
             return response()->json([
                 'success' => true,
                 'permissions' => $permissions,
-            ],200);
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -98,7 +98,7 @@ class PermissionsApiController extends Controller
         }
     }
 
-     /**
+    /**
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
@@ -143,7 +143,6 @@ class PermissionsApiController extends Controller
                 'message' => $e->getMessage()
             ], 401);
         }
-    
     }
 
     /**
@@ -171,6 +170,4 @@ class PermissionsApiController extends Controller
             ], 401);
         }
     }
-    
 }
-

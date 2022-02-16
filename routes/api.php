@@ -20,10 +20,12 @@ Route::get('/authorize/google/callback', [SocialAuthController::class, 'handlesP
 Route::group(["middleware" => "auth:api"], function () {
     Route::get('/me', [UsersController::class, 'me']);
     Route::get('/logout', [AuthController::class, 'logout']);
+    Route::put('/user/change-details', [UsersController::class, 'updateDetails']);
+    Route::put('/user/change-password', [UsersController::class, 'updatePassword']);
     //Route for user
-    Route::resource('/user', UserApiController::class);
-    Route::resource('/role', RolesApiController::class);
-    Route::resource('/permission', PermissionsApiController::class);
+    Route::resource('/admin/users', UserApiController::class);
+    Route::resource('/admin/roles', RolesApiController::class);
+    Route::resource('/admin/permissions', PermissionsApiController::class);
 });
 // Test route
 Route::resource('/product', ProductController::class);

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\User;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UserApiUpdateRequest extends FormRequest
 {
@@ -13,7 +14,7 @@ class UserApiUpdateRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,10 +25,9 @@ class UserApiUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-                'name' => 'required',
-                'email' => 'required|email|unique:users',
-                //'email' =>  ['required', 'email', Rule::unique('users')->ignore($user->id)],
-                'password' => 'required'
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            //'email' =>  ['required', 'email', Rule::unique('users')->ignore($user->id)],
         ];
     }
 }

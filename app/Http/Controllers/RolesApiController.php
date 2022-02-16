@@ -17,12 +17,13 @@ class RolesApiController extends Controller
     public function index()
     {
         try {
-            $roles = Role::orderBy('id', 'Asc')->get();
+            $roles = Role::orderBy('id', 'Asc')
+                ->with('permissions')->get();
 
             return response()->json([
                 'success' => true,
                 'roles' => $roles,
-            ],200);
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -53,12 +54,15 @@ class RolesApiController extends Controller
             DB::beginTransaction();
 
             $slug = Str::slug($request->input('name'));
-            
+
             $role = new Role();
             $role->name = $request->input('name');
             $role->slug = $slug;
             $role->description = $request->input('description');
             $role->save();
+            $role->permissions()->sync($request->selection);
+
+
 
             DB::commit();
 
@@ -97,7 +101,7 @@ class RolesApiController extends Controller
             ], 401);
         }
     }
-     /**
+    /**
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
@@ -116,18 +120,20 @@ class RolesApiController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         try {
+
             DB::beginTransaction();
-            $role = Role::find($id);
+            $role = Role::find($request->input('id'));
             $slug = Str::slug($request->input('name'));
-            
-            $role = new Role();
+
             $role->name = $request->input('name');
             $role->slug = $slug;
             $role->description = $request->input('description');
             $role->save();
+
+            $role->permissions()->sync($request->selection);
 
             DB::commit();
 
@@ -142,7 +148,6 @@ class RolesApiController extends Controller
                 'message' => $e->getMessage()
             ], 401);
         }
-    
     }
 
     /**
@@ -170,5 +175,4 @@ class RolesApiController extends Controller
             ], 401);
         }
     }
-    
 }
