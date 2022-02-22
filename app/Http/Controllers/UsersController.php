@@ -30,11 +30,12 @@ class UsersController extends Controller
             $name = $request->input("name");
             $email = $request->input("email");
             $password = $request->input("password");
+            $hash =  md5(strtolower(trim($email)));
 
             if (!empty($name) && !empty($email) && !empty($password)) {
 
                 //Busca en la BD el slug developer y lo guarda en la variable
-                $developerRole = Role::where('slug', 'administrador')->first();
+                $developerRole = Role::where('slug', 'cliente')->first();
                 //$developerRole = Role::developer()->first();
 
                 DB::beginTransaction();
@@ -42,6 +43,7 @@ class UsersController extends Controller
                 $user->name = $name;
                 $user->email = $email;
                 $user->password = bcrypt($password);
+                $user->image_profile = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
                 $user->save();
                 //En la instancia de user busca la relación e inserta el id de usuario y del rol
                 $user->roles()->attach($developerRole->id);

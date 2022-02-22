@@ -19,7 +19,7 @@ class ClientController extends Controller
     {
         try {
             $client = Client::orderBy('id', 'Asc')->where('user_id', Auth::user()->id)->get();
-        
+
             return response()->json([
                 'success' => true,
                 'client' => $client,
@@ -53,10 +53,11 @@ class ClientController extends Controller
         try {
             DB::beginTransaction();
             $client = new Client();
-            $client-> Auth::user()->id;
-            $client ->number_card = $request->input('number_card');
-            $client ->expiration_date = $request->input('expiration_date');
-            $client ->save();
+            $client->user_id = Auth::user()->id;
+            $client->number_card = $request->input('number_card');
+            $client->name = $request->input('name');
+            $client->expiration_date = $request->input('expiration_date');
+            $client->save();
 
             DB::commit();
 

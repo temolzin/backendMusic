@@ -25,6 +25,7 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'name',
         'email',
         'password',
+        'image_profile'
     ];
 
     /**
@@ -92,11 +93,6 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     public function historyShoppings()
     {
        return $this->belongsToMany(HistoryShopping::class);
-    }
-
-    public function images()
-    {
-        return $this->hasOne(Image::class);
     }
 
     public function ShoppingsCards()

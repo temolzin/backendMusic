@@ -15,8 +15,8 @@ class CreateArtistsTable extends Migration
     {
         Schema::create('artists', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('user_id')->unsigned();
-            $table->string('name');
+            $table->bigInteger('user_id')->unsigned()->unique();
+            $table->string('name')->unique();
             $table->integer('members');
             $table->string('history');
             $table->string('zone');

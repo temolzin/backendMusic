@@ -12,6 +12,7 @@ class Client extends Model
     protected $fillable = [
         'user_id',
         'number_card',
+        'name',
         'expiration_date',
     ];
 

@@ -16,8 +16,10 @@ class CreateClientsTable extends Migration
         Schema::create('clients', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('user_id')->unsigned();
-            $table->bigInteger('number_card');
-            $table->date('expiration_date');
+            $table->string('number_card');
+            $table->string('name');
+            $table->string('expiration_date');
+            $table->timestamps();
         });
 
         Schema::table('clients', function (Blueprint $table) {
