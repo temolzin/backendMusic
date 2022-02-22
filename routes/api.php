@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Artist\ArtistController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\PermissionsApiController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
@@ -26,6 +28,10 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::resource('/admin/users', UserApiController::class);
     Route::resource('/admin/roles', RolesApiController::class);
     Route::resource('/admin/permissions', PermissionsApiController::class);
+    //Route for artist
+    Route::resource('/artist-new', ArtistController::class);
+    //Route for client
+    Route::resource('/client-card', ClientController::class);
 });
 // Test route
 Route::resource('/product', ProductController::class);

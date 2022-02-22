@@ -26,6 +26,7 @@ class UserResource extends JsonResource
             'created_at'  => $this->created_at->format('d-m-Y'),
             'role'        => $roles,
             "permissions" => $userPermissions,
+            "image"       => $this->image_profile,
         ];
     }
 }
