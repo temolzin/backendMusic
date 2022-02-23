@@ -24,6 +24,8 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/logout', [AuthController::class, 'logout']);
     Route::put('/user/change-details', [UsersController::class, 'updateDetails']);
     Route::put('/user/change-password', [UsersController::class, 'updatePassword']);
+    Route::post('/user/change-image-profile', [UsersController::class, 'updateImageProfile']);
+
     //Route for user
     Route::resource('/admin/users', UserApiController::class);
     Route::resource('/admin/roles', RolesApiController::class);

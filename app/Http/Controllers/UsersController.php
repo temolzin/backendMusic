@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UsersController extends Controller
 {
@@ -175,6 +176,58 @@ class UsersController extends Controller
                     'success' => false,
                     'message' => 'Error por campos vacíos',
                 ], 401);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
+        }
+    }
+
+    public function updateImageProfile(Request $request)
+    {
+        try {
+            $request->validate([
+                'image_profile' => 'required|image|max:1024'
+            ]);
+
+            if (request()->file('image_profile')) {
+
+                $urlStore = Storage::put('public/user_profile', request()->file('image_profile'));
+                $link = Storage::url($urlStore);
+
+                $user = User::find(Auth::user()->id);
+                if ($user->image_profile) {
+
+                    $img = $user->image_profile;
+                    $img = str_replace('storage', 'public', $img);
+                    $less = env('APP_URL') . '/public/';
+                    $img = str_replace($less, '', $img);
+
+                    Storage::delete($img);
+                    //actualiza la nueva img del post
+                    $user->update([
+                        'image_profile' => $link
+                    ]);
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Imagen actualizada',
+                    ], 200);
+                } else {
+                    //si no existe ninguna foto
+                    //crea un nuevo registro
+                    DB::beginTransaction();
+                    $user = User::find(Auth::user()->id);
+                    $user->image_profile = $link;
+                    $user->save();
+                    DB::commit();
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Imagen actualizada',
+                    ], 200);
+                }
+            }
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
