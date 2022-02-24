@@ -20,6 +20,12 @@ class DatabaseSeeder extends Seeder
         Storage::deleteDirectory('public/user_profile');
         Storage::makeDirectory('public/user_profile');
 
+        Storage::deleteDirectory('public/artist');
+        Storage::makeDirectory('public/artist');
+
+        Storage::deleteDirectory('public/manager');
+        Storage::makeDirectory('public/manager');
+
         $this->call(RoleSeeder::class);
         $this->call(UserSeeder::class);
     }

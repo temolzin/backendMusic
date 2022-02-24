@@ -31,6 +31,7 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::resource('/admin/roles', RolesApiController::class);
     Route::resource('/admin/permissions', PermissionsApiController::class);
     //Route for artist
+    Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
     Route::resource('/artist-new', ArtistController::class);
     //Route for client
     Route::resource('/client-card', ClientController::class);
