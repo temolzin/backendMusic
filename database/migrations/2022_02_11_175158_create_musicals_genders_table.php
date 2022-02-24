@@ -17,7 +17,7 @@ class CreateMusicalsGendersTable extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug');
-            $table->string('created_at');
+            $table->timestamps();
         });
     }
 
