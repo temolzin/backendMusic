@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Artist;
 
 use App\Http\Controllers\Controller;
 use App\Models\Artist;
+use App\Models\GaleryArtist;
 use App\Models\Manager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,31 +21,11 @@ class ArtistController extends Controller
     public function index()
     {
         try {
-            $artists = DB::table('artists')
-                ->join('managers', 'artists.id', '=', 'managers.artist_id')
-                ->select(
-                    'artists.id',
-                    'artists.user_id',
-                    'artists.name',
-                    'artists.members',
-                    'artists.history',
-                    'artists.zone',
-                    'artists.price_hour',
-                    'artists.image as image_artist',
-                    'artists.extra_kilometre',
-                    'artists.points',
-                    'artists.created_at',
-                    'managers.id',
-                    'managers.name as name_manager',
-                    'managers.phone',
-                    'managers.email',
-                    'managers.image as image_manager',
-                )->where('artists.user_id', '=', Auth::user()->id)
-                ->get();
+            $artistMusicalGenders = Artist::with('musicalGenders')->with('manager')->where('user_id', Auth::user()->id)->first();
 
             return response()->json([
                 'success' => true,
-                'artists' => $artists,
+                'artists' => $artistMusicalGenders,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -74,6 +55,7 @@ class ArtistController extends Controller
     {
 
         try {
+
             $request->validate([
                 'name'    => 'required',
                 'members' => 'required',
@@ -90,8 +72,7 @@ class ArtistController extends Controller
 
             $urlStoreArtist = Storage::put('public/artist', request()->file('image_artist'));
             $linkArtist = Storage::url($urlStoreArtist);
-
-            //DB::beginTransaction();
+            DB::beginTransaction();
             $artist =  Artist::create([
                 'user_id' => Auth::user()->id,
                 'name' => $request->input('name'),
@@ -101,21 +82,21 @@ class ArtistController extends Controller
                 'price_hour' => $request->input('price_hour'),
                 'image' => $linkArtist,
                 'extra_kilometre' => $request->input('extra_kilometre'),
-                //$artist->points = $request->input('points');
             ]);
+
+            $artist->musicalGenders()->sync(json_decode($request->selection));
 
             $urlStoreManager = Storage::put('public/manager', request()->file('image_manager'));
             $linkManager = Storage::url($urlStoreManager);
 
-            //DB::commit();
-            $manager = Manager::create([
+            Manager::create([
                 'artist_id' => $artist->id,
                 'name' => $request->input('name_manager'),
                 'phone' => $request->input('phone_manager'),
                 'email' => $request->input('email_manager'),
                 'image' => $linkManager,
             ]);
-            //DB::beginTransaction();
+            DB::commit();
 
 
             return response()->json([
@@ -188,7 +169,6 @@ class ArtistController extends Controller
             $artist->manager->email = $request->input('email_manager');
             $artist->push();
             DB::commit();
-
             return response()->json([
                 'success' => true,
                 'artist' => $artist,
@@ -288,11 +268,50 @@ class ArtistController extends Controller
 
             $artist->push();
             DB::commit();
-
+            $artist->musicalGenders()->sync(json_decode($request->selection));
             return response()->json([
                 'success' => true,
                 'artist' => $artist,
             ], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
+        }
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function storeGaleryArtist(Request $request)
+    {
+        try {
+            $this->validate($request, [
+                'galeryArtists.*' => 'image|mimes:jpeg,png,jpg|max:1024'
+            ]);
+            if (count($request->file('galeryArtists')) > 1 && count($request->file('galeryArtists')) <= 5) {
+                foreach ($request->file('galeryArtists') as $image) {
+
+                    $urlStore = Storage::put('public/galery-artist', $image);
+                    $linkImgArtist = Storage::url($urlStore);
+                    DB::beginTransaction();
+                    GaleryArtist::create([
+                        'artist_id' => 1,
+                        'image' => $linkImgArtist,
+                    ]);
+                    DB::commit();
+                }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Revisa la cantidad de imagenes que se mandarón'
+                ], 401);
+            }
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([

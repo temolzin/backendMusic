@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMusicalsGendersTable extends Migration
+class CreateMusicalGendersTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,10 +13,12 @@ class CreateMusicalsGendersTable extends Migration
      */
     public function up()
     {
-        Schema::create('musicals_genders', function (Blueprint $table) {
+        Schema::create('musical_genders', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('slug');
+            $table->string('description');
+            $table->string('color');
             $table->timestamps();
         });
     }
@@ -28,6 +30,6 @@ class CreateMusicalsGendersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('musicals_genders');
+        Schema::dropIfExists('musical_genders');
     }
 }

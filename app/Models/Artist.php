@@ -30,7 +30,7 @@ class Artist extends Model
         return $this->hasOne(Manager::class);
     }
 
-    public function musicalGender()
+    public function musicalGenders()
     {
         return $this->belongsToMany(MusicalGender::class);
     }
@@ -38,5 +38,10 @@ class Artist extends Model
     public function shoppingCardDetail()
     {
         return $this->hasMany(ShoppingCardDetail::class);
+    }
+
+    public function galeryArtists()
+    {
+        return $this->belongsTo(GaleryArtist::class);
     }
 }
