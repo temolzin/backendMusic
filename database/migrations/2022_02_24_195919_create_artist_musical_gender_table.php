@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMusicalsGendersArtistsTable extends Migration
+class CreateArtistMusicalGenderTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,16 +13,13 @@ class CreateMusicalsGendersArtistsTable extends Migration
      */
     public function up()
     {
-        Schema::create('musicals_genders_artists', function (Blueprint $table) {
+        Schema::create('artist_musical_gender', function (Blueprint $table) {
             $table->bigInteger('artist_id')->unsigned();
             $table->bigInteger('musical_gender_id')->unsigned();
-
         });
-
-        Schema::table('musicals_genders_artists', function (Blueprint $table) {
+        Schema::table('artist_musical_gender', function (Blueprint $table) {
             $table->foreign('artist_id')->references('id')->on('artists');
-            $table->foreign('musical_gender_id')->references('id')->on('musicals_genders');
-
+            $table->foreign('musical_gender_id')->references('id')->on('musical_genders');
         });
     }
 
@@ -33,6 +30,6 @@ class CreateMusicalsGendersArtistsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('musicals_genders_artists');
+        Schema::dropIfExists('artist_musical_gender');
     }
 }

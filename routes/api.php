@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\MusicalsGenders;
+use App\Http\Controllers\Admin\MusicalsGendersController;
 use App\Http\Controllers\Artist\ArtistController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Client\ClientController;
@@ -26,12 +28,15 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::put('/user/change-password', [UsersController::class, 'updatePassword']);
     Route::post('/user/change-image-profile', [UsersController::class, 'updateImageProfile']);
 
-    //Route for user
+    //Route for admin
     Route::resource('/admin/users', UserApiController::class);
     Route::resource('/admin/roles', RolesApiController::class);
     Route::resource('/admin/permissions', PermissionsApiController::class);
+    Route::resource('/admin/musical-genders', MusicalsGendersController::class);
+
     //Route for artist
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
+    Route::post('/artist-new/galery-artist', [ArtistController::class, 'storeGaleryArtist']);
     Route::resource('/artist-new', ArtistController::class);
     //Route for client
     Route::resource('/client-card', ClientController::class);
