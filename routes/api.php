@@ -36,7 +36,10 @@ Route::group(["middleware" => "auth:api"], function () {
 
     //Route for artist
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
-    Route::post('/artist-new/galery-artist', [ArtistController::class, 'storeGaleryArtist']);
+    Route::get('/artist-new/gallery', [ArtistController::class, 'artistGalleryIndex']);
+    Route::post('/artist-new/gallery-artist', [ArtistController::class, 'storeGaleryArtist']);
+    Route::post('/artist-new/gallery-artist-update', [ArtistController::class, 'updateGaleryArtist']);
+    Route::delete('/artist-new/gallery-artist-delete', [ArtistController::class, 'deleteGaleryArtist']);
     Route::resource('/artist-new', ArtistController::class);
     //Route for client
     Route::resource('/client-card', ClientController::class);
