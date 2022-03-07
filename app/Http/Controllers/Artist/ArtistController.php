@@ -207,7 +207,13 @@ class ArtistController extends Controller
         //     ], 401);
         // }
     }
-
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
     public function updateDetails(Request $request)
     {
         try {
@@ -282,6 +288,29 @@ class ArtistController extends Controller
         }
     }
 
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function artistGalleryIndex()
+    {
+        try {
+            $artist_id = Artist::where('user_id', Auth::user()->id)->firstOrFail();
+            $artistGallery = GaleryArtist::where('artist_id', $artist_id->id)->get();
+            return response()->json([
+                'success' => true,
+                'artistGallery' => $artistGallery,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
+        }
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -290,30 +319,102 @@ class ArtistController extends Controller
      */
     public function storeGaleryArtist(Request $request)
     {
+        $request->validate([
+            'sub_files_paths' => 'image|max:1024',
+        ]);
         try {
-            $this->validate($request, [
-                'galeryArtists.*' => 'image|mimes:jpeg,png,jpg|max:1024'
-            ]);
-            if (count($request->file('galeryArtists')) > 1 && count($request->file('galeryArtists')) <= 5) {
-                foreach ($request->file('galeryArtists') as $image) {
-
-                    $urlStore = Storage::put('public/galery-artist', $image);
-                    $linkImgArtist = Storage::url($urlStore);
+            $artist_id = Artist::where('user_id', Auth::user()->id)->firstOrFail();
+            $artistGallery = GaleryArtist::where('artist_id', $artist_id->id)->count();
+            if ($artistGallery < 5) {
+                if ($request->hasFile('sub_files_paths')) {
+                    $urlStore = Storage::put('public/galery-artist', request()->file('sub_files_paths'));
+                    $linkGalleryNew = Storage::url($urlStore);
                     DB::beginTransaction();
                     GaleryArtist::create([
-                        'artist_id' => 1,
-                        'image' => $linkImgArtist,
+                        'artist_id' => $artist_id->id,
+                        'image' => $linkGalleryNew,
                     ]);
                     DB::commit();
                 }
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Revisa la cantidad de imagenes que se mandarón'
+                    'message' => "Maxímo de imagenes almacenadas"
                 ], 401);
             }
         } catch (\Exception $e) {
-            DB::rollback();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
+        }
+    }
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function updateGaleryArtist(Request $request)
+    {
+        $request->validate([
+            'sub_files_paths' => 'image|max:1024',
+        ]);
+        try {
+            $artist_id = Artist::where('user_id', Auth::user()->id)->firstOrFail();
+            $artistGallery = GaleryArtist::where('artist_id', $artist_id->id)->count();
+            if ($artistGallery < 5) {
+                if ($request->hasFile('sub_files_paths')) {
+                    $urlStore = Storage::put('public/galery-artist', request()->file('sub_files_paths'));
+                    $linkGalleryNew = Storage::url($urlStore);
+                    DB::beginTransaction();
+                    GaleryArtist::create([
+                        'artist_id' => $artist_id->id,
+                        'image' => $linkGalleryNew,
+                    ]);
+                    DB::commit();
+                }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Maxímo de imagenes almacenadas"
+                ], 401);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
+        }
+    }
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function deleteGaleryArtist(Request  $request)
+    {
+        try {
+            $artist_id = Artist::where('user_id', Auth::user()->id)->firstOrFail();
+            $artistGallery = GaleryArtist::where('artist_id', $artist_id->id)->get();
+            foreach ($artistGallery as $artist) {
+                $img = $artist->image;
+                $img = str_replace('storage', 'public', $img);
+                $less = env('APP_URL') . '/public/';
+                $img = str_replace($less, '', $img);
+                Storage::delete($img);
+                DB::beginTransaction();
+                $artist = GaleryArtist::where('id', $artist->id)->first();
+                $artist->delete();
+                DB::commit();
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Imagenes eiminadas'
+            ], 401);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
