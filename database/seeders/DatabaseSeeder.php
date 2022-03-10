@@ -23,6 +23,9 @@ class DatabaseSeeder extends Seeder
         Storage::deleteDirectory('public/artist');
         Storage::makeDirectory('public/artist');
 
+        Storage::deleteDirectory('public/galery-artist');
+        Storage::makeDirectory('public/galery-artist');
+
         Storage::deleteDirectory('public/manager');
         Storage::makeDirectory('public/manager');
 
