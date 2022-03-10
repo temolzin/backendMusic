@@ -69,6 +69,7 @@ class UserApiController extends Controller
             $email = $request->input("email");
             $password = $request->input("password");
             $role_id = $request->input("role_id");
+            $hash =  md5(strtolower(trim($email)));
 
             $role = Role::where('id', $role_id)->first();
 
@@ -78,6 +79,7 @@ class UserApiController extends Controller
             $user->name = $name;
             $user->email = $email;
             $user->password = bcrypt($password);
+            $user->image_profile = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
             $user->save();
             $user->roles()->attach($role->id);
             DB::commit();
