@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\MusicalsGendersController;
 use App\Http\Controllers\Artist\ArtistController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Client\ClientController;
+use App\Http\Controllers\Client\GendersController;
 use App\Http\Controllers\PermissionsApiController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProductController;
@@ -43,6 +44,8 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::resource('/artist-new', ArtistController::class);
     //Route for client
     Route::resource('/client-card', ClientController::class);
+    Route::get('/client/musical-genders', [GendersController::class,'index']);
+    Route::get('/client/musical-genders/{slug}', [GendersController::class,'artistGenders']);
 });
 // Test route
 Route::resource('/product', ProductController::class);
