@@ -41,12 +41,11 @@ class SocialAuthController extends Controller
             $developerRole = Role::where('slug', 'cliente')->first();
             //$developerRole = Role::admin()->first();
             //Crear el usuario y añadir el provedor
-            $hash =  md5(strtolower(trim($user->email)));
             $appUser = User::create([
                 'name' => $user->name,
                 'email' => $user->email,
                 'password' => Hash::make($user->email),
-                'image_profile' => 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro',
+                'image_profile' => $user->avatar,
             ]);
 
             $appUser->roles()->attach($developerRole->id);
