@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ArtistController extends Controller
 {
@@ -76,6 +77,7 @@ class ArtistController extends Controller
             $artist =  Artist::create([
                 'user_id' => Auth::user()->id,
                 'name' => $request->input('name'),
+                'slug' => Str::slug($request->input('name')),
                 'members' => $request->input('members'),
                 'history' => $request->input('history'),
                 'zone' => $request->input('zone'),
@@ -235,6 +237,7 @@ class ArtistController extends Controller
             $artist = Artist::find($request->id);
 
             $artist->name = $request->input('name');
+            $artist->slug = Str::slug($request->input('name'));
             $artist->members = $request->input('members');
             $artist->history = $request->input('history');
             $artist->zone = $request->input('zone');

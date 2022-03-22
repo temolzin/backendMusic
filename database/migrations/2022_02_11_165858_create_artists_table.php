@@ -17,6 +17,7 @@ class CreateArtistsTable extends Migration
             $table->id();
             $table->bigInteger('user_id')->unsigned()->unique();
             $table->string('name')->unique();
+            $table->string('slug')->unique();
             $table->integer('members');
             $table->string('history');
             $table->string('zone');
