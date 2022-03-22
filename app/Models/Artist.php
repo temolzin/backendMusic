@@ -11,6 +11,7 @@ class Artist extends Model
     protected $fillable = [
         'user_id',
         'name',
+        'slug',
         'members',
         'history',
         'zone',
@@ -42,6 +43,6 @@ class Artist extends Model
 
     public function galeryArtists()
     {
-        return $this->belongsTo(GaleryArtist::class);
+        return $this->hasMany(GaleryArtist::class);
     }
 }

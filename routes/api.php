@@ -44,8 +44,9 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::resource('/artist-new', ArtistController::class);
     //Route for client
     Route::resource('/client-card', ClientController::class);
-    Route::get('/client/musical-genders', [GendersController::class,'index']);
-    Route::get('/client/musical-genders/{slug}', [GendersController::class,'artistGenders']);
+    Route::get('/client/musical-genders', [GendersController::class, 'index']);
+    Route::get('/client/musical-genders/{slug}', [GendersController::class, 'artistsGenders']);
+    Route::get('/client/musical-genders/artist/{slug}', [GendersController::class, 'artistGender']);
 });
 // Test route
 Route::resource('/product', ProductController::class);
