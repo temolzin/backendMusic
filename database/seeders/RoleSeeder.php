@@ -65,6 +65,12 @@ class RoleSeeder extends Seeder
         //Ruta de generos musicales
         Permission::create(['name' => 'Ver todos los generos musicales', 'slug' => 'view-all-musicals-genders', 'description' => 'Ver todos los géneros musicales existentes'])->roles()->sync([3]);
         Permission::create(['name' => 'Ver grupos por generos', 'slug' => 'view-groups-by-genders', 'description' => 'Ver grupos dependiendo del género que pertenecen'])->roles()->sync([3]);
+
+        //Ruta del carrito de compras
+        Permission::create(['name' => 'Ver carrito de compras', 'slug' => 'view-shopping-cart', 'description' => 'Ver su carrito de compras'])->roles()->sync([3]);
+        Permission::create(['name' => 'Crear carrito de compras', 'slug' => 'create-shopping-cart', 'description' => 'Crear su carrito de compras'])->roles()->sync([3]);
+        Permission::create(['name' => 'Edita carrito de compras', 'slug' => 'edit-shopping-cart', 'description' => 'Editar su carrito de compras'])->roles()->sync([3]);
+        Permission::create(['name' => 'Eliminar carrito de compras', 'slug' => 'delete-shopping-cart', 'description' => 'Eliminar su carrito de compras'])->roles()->sync([3]);
        
 
 
