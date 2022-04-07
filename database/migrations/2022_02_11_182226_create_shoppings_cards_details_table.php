@@ -17,8 +17,9 @@ class CreateShoppingsCardsDetailsTable extends Migration
             $table->id();
             $table->bigInteger('shopping_card_id')->unsigned();
             $table->bigInteger('artist_id')->unsigned();
-            $table->date('hours');
+            $table->integer('hours');
             $table->double('price');
+            $table->timestamps();
 
         });
 

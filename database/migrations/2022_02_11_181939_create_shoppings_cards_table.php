@@ -17,7 +17,10 @@ class CreateShoppingsCardsTable extends Migration
             $table->id();
             $table->bigInteger('user_id')->unsigned();
             $table->string('status');
-            $table->date('order_date');
+            $table->timestamp('order_date_start');
+            $table->timestamp('order_date_finish');
+            $table->double('total')->nullable();
+            $table->timestamps();
         });
 
         Schema::table('shoppings_cards', function (Blueprint $table) {
