@@ -6,6 +6,7 @@ use App\Http\Controllers\Artist\ArtistController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Client\GendersController;
+use App\Http\Controllers\Client\ShoppingCart\ShoppingCardController;
 use App\Http\Controllers\General\ArtistsGeneralController;
 use App\Http\Controllers\PermissionsApiController;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +49,11 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/client/musical-genders', [GendersController::class, 'index']);
     Route::get('/client/musical-genders/{slug}', [GendersController::class, 'artistsGenders']);
     Route::get('/client/musical-genders/artist/{slug}', [GendersController::class, 'artistGender']);
+    Route::post('/cliente/shopping_card/create', [ShoppingCardController::class, 'create_order']);
+    Route::get('/cliente/shopping_card/listShopingCardDetails', [ShoppingCardController::class, 'list_shopping_card_details']);
+    Route::get('/cliente/shopping_card/countListShopingCardDetails', [ShoppingCardController::class, 'count_list_shopping_card_details']);
+    Route::delete('/cliente/shopping_card/deleteItemShoppingCardDetails/{id}', [ShoppingCardController::class, 'delete_item_shopping_card_details']);
+    Route::post('/cliente/shopping_card/updateHourItemShoppingCart', [ShoppingCardController::class, 'update_item_shopping_card_details']);
 });
 
 //Route for General
