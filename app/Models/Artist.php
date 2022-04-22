@@ -45,4 +45,9 @@ class Artist extends Model
     {
         return $this->hasMany(GaleryArtist::class);
     }
+
+    public function favouriteArtists()
+    {
+       return $this->hasMany(FavouriteArtists::class);
+    }
 }

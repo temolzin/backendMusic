@@ -72,7 +72,10 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'Edita carrito de compras', 'slug' => 'edit-shopping-cart', 'description' => 'Editar su carrito de compras'])->roles()->sync([3]);
         Permission::create(['name' => 'Eliminar carrito de compras', 'slug' => 'delete-shopping-cart', 'description' => 'Eliminar su carrito de compras'])->roles()->sync([3]);
        
-
+        //Ruta de artistas favoritos
+        Permission::create(['name' => 'Ver artistas favoritos', 'slug' => 'view-favourite-artist', 'description' => 'Ver sus grupos favoritos'])->roles()->sync([3]);
+        Permission::create(['name' => 'Agregar artista favorito', 'slug' => 'create-favourite-artist', 'description' => 'Agregar un nuevo grupo a favoritos'])->roles()->sync([3]);
+        Permission::create(['name' => 'Eliminar artista favorito', 'slug' => 'delete-favourite-artist', 'description' => 'Eliminar grupo de favoritos'])->roles()->sync([3]);
 
         // $developerRole = Role::where('slug', 'administrador')->firstOrFail();
         // $developerPermissions = Permission::whereIn('slug', ['view-dashboard'])->get()->pluck('id')->toArray();

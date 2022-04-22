@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\MusicalsGendersController;
 use App\Http\Controllers\Artist\ArtistController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Client\ClientController;
+use App\Http\Controllers\Client\FavouriteArtist\FavouriteArtistsController;
 use App\Http\Controllers\Client\GendersController;
 use App\Http\Controllers\Client\ShoppingCart\ShoppingCardController;
 use App\Http\Controllers\General\ArtistsGeneralController;
@@ -54,6 +55,10 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/cliente/shopping_card/countListShopingCardDetails', [ShoppingCardController::class, 'count_list_shopping_card_details']);
     Route::delete('/cliente/shopping_card/deleteItemShoppingCardDetails/{id}', [ShoppingCardController::class, 'delete_item_shopping_card_details']);
     Route::post('/cliente/shopping_card/updateHourItemShoppingCart', [ShoppingCardController::class, 'update_item_shopping_card_details']);
+    Route::get('/client/favourite_artists/list', [FavouriteArtistsController::class, 'index']);
+    Route::post('/client/favourite_artists/new',[FavouriteArtistsController::class, 'store']);
+    Route::delete('/client/favourite_artists/destroy/{id}', [FavouriteArtistsController::class, 'destroyFavourite']);
+
 });
 
 //Route for General
