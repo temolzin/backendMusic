@@ -100,4 +100,9 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         return $this->hasOne(User::class);
     }
 
+    public function favouriteArtists()
+    {
+       return $this->hasMany(FavouriteArtists::class);
+    }
+
 }
