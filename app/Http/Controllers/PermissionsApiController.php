@@ -2,17 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Permission;
 use Illuminate\Http\Request;
-use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
-class ProductController extends Controller
+class PermissionsApiController extends Controller
 {
-
-    public function __construct()
-    {
-        //$this->middleware('auth:api',['except' => ['index']]);
-    }
     /**
      * Display a listing of the resource.
      *
@@ -21,12 +17,12 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = Product::orderBy('id', 'Asc')->get();
+            $permissions = Permission::orderBy('id', 'Asc')->get(['id as permission_id','name']);
 
             return response()->json([
                 'success' => true,
-                'products' => $products,
-            ]);
+                'permissions' => $permissions,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -56,16 +52,19 @@ class ProductController extends Controller
         try {
             DB::beginTransaction();
 
-            $product = new Product();
-            $product->name = $request->input('name');
-            $product->price = $request->input('price');
-            $product->save();
+            $slug = Str::slug($request->input('name'));
+
+            $permission = new Permission();
+            $permission->name = $request->input('name');
+            $permission->slug = $slug;
+            $permission->description = $request->input('description');
+            $permission->save();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'product' => $product,
+                'permissions' => $permission,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -85,11 +84,11 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::find($id);
+            $permission = Permission::find($id);
 
             return response()->json([
                 'success' => true,
-                'product' => $product,
+                'permission' => $permission,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -98,6 +97,18 @@ class ProductController extends Controller
             ], 401);
         }
     }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+    }
+
 
     /**
      * Update the specified resource in storage.
@@ -110,15 +121,20 @@ class ProductController extends Controller
     {
         try {
             DB::beginTransaction();
-            $product = Product::find($id);
-            $product->fill($request->all());
-            $product->save();
+            $permission = Permission::find($id);
+            $slug = Str::slug($request->input('name'));
+
+            $permission = new Permission();
+            $permission->name = $request->input('name');
+            $permission->slug = $slug;
+            $permission->description = $request->input('description');
+            $permission->save();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'product' => $product,
+                'permission' => $permission,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -139,8 +155,8 @@ class ProductController extends Controller
     {
         try {
             DB::beginTransaction();
-            $product = Product::where('id', $id)->first();
-            $product->delete();
+            $permission = Permission::where('id', $id)->first();
+            $permission->delete();
 
             DB::commit();
             return response()->json([

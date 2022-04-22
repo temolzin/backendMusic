@@ -1,18 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
+use App\Models\MusicalGender;
 use Illuminate\Http\Request;
-use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
-class ProductController extends Controller
+class MusicalsGendersController extends Controller
 {
-
-    public function __construct()
-    {
-        //$this->middleware('auth:api',['except' => ['index']]);
-    }
     /**
      * Display a listing of the resource.
      *
@@ -21,11 +18,11 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = Product::orderBy('id', 'Asc')->get();
+            $musicalGenders = MusicalGender::orderBy('name', 'Asc')->get();
 
             return response()->json([
                 'success' => true,
-                'products' => $products,
+                'musicalGenders' => $musicalGenders,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -54,18 +51,21 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         try {
+            $slug = Str::slug($request->input('name'));
             DB::beginTransaction();
 
-            $product = new Product();
-            $product->name = $request->input('name');
-            $product->price = $request->input('price');
-            $product->save();
+            $musicalGenders = new MusicalGender();
+            $musicalGenders->name = $request->input('name');
+            $musicalGenders->slug = $slug;
+            $musicalGenders->description = $request->input('description');
+            $musicalGenders->color = $request->input('color');
+            $musicalGenders->save();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'product' => $product,
+                'musicalGenders' => $musicalGenders,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -84,19 +84,18 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        try {
-            $product = Product::find($id);
+        //
+    }
 
-            return response()->json([
-                'success' => true,
-                'product' => $product,
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 401);
-        }
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
     }
 
     /**
@@ -109,16 +108,19 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $slug = Str::slug($request->input('name'));
             DB::beginTransaction();
-            $product = Product::find($id);
-            $product->fill($request->all());
-            $product->save();
-
+            $musicalGenders =  MusicalGender::find($id);
+            $musicalGenders->name = $request->input('name');
+            $musicalGenders->slug = $slug;
+            $musicalGenders->description = $request->input('description');
+            $musicalGenders->color = $request->input('color');
+            $musicalGenders->save();
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'product' => $product,
+                'musicalGenders' => $musicalGenders,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -139,12 +141,12 @@ class ProductController extends Controller
     {
         try {
             DB::beginTransaction();
-            $product = Product::where('id', $id)->first();
+            $product = MusicalGender::where('id', $id)->first();
             $product->delete();
-
             DB::commit();
             return response()->json([
                 'success' => true,
+                'message' => 'Genero borrado correctamente'
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();

@@ -2,17 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use Illuminate\Http\Request;
-use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
-class ProductController extends Controller
+class RolesApiController extends Controller
 {
-
-    public function __construct()
-    {
-        //$this->middleware('auth:api',['except' => ['index']]);
-    }
     /**
      * Display a listing of the resource.
      *
@@ -21,12 +17,13 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = Product::orderBy('id', 'Asc')->get();
+            $roles = Role::orderBy('id', 'Asc')
+                ->with('permissions')->get();
 
             return response()->json([
                 'success' => true,
-                'products' => $products,
-            ]);
+                'roles' => $roles,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -56,16 +53,22 @@ class ProductController extends Controller
         try {
             DB::beginTransaction();
 
-            $product = new Product();
-            $product->name = $request->input('name');
-            $product->price = $request->input('price');
-            $product->save();
+            $slug = Str::slug($request->input('name'));
+
+            $role = new Role();
+            $role->name = $request->input('name');
+            $role->slug = $slug;
+            $role->description = $request->input('description');
+            $role->save();
+            $role->permissions()->sync($request->selection);
+
+
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'product' => $product,
+                'role' => $role,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -85,11 +88,11 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::find($id);
+            $role = Role::find($id);
 
             return response()->json([
                 'success' => true,
-                'product' => $product,
+                'role' => $role,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -98,6 +101,17 @@ class ProductController extends Controller
             ], 401);
         }
     }
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+    }
+
 
     /**
      * Update the specified resource in storage.
@@ -106,19 +120,26 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
         try {
+
             DB::beginTransaction();
-            $product = Product::find($id);
-            $product->fill($request->all());
-            $product->save();
+            $role = Role::find($request->input('id'));
+            $slug = Str::slug($request->input('name'));
+
+            $role->name = $request->input('name');
+            $role->slug = $slug;
+            $role->description = $request->input('description');
+            $role->save();
+
+            $role->permissions()->sync($request->selection);
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'product' => $product,
+                'role' => $role,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -139,8 +160,8 @@ class ProductController extends Controller
     {
         try {
             DB::beginTransaction();
-            $product = Product::where('id', $id)->first();
-            $product->delete();
+            $role = Role::where('id', $id)->first();
+            $role->delete();
 
             DB::commit();
             return response()->json([

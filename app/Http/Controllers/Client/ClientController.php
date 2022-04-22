@@ -1,18 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Client;
 
+use App\Http\Controllers\Controller;
+use App\Models\Client;
 use Illuminate\Http\Request;
-use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class ProductController extends Controller
+class ClientController extends Controller
 {
-
-    public function __construct()
-    {
-        //$this->middleware('auth:api',['except' => ['index']]);
-    }
     /**
      * Display a listing of the resource.
      *
@@ -21,12 +18,12 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = Product::orderBy('id', 'Asc')->get();
+            $client = Client::orderBy('id', 'Asc')->where('user_id', Auth::user()->id)->get();
 
             return response()->json([
                 'success' => true,
-                'products' => $products,
-            ]);
+                'client' => $client,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -55,17 +52,18 @@ class ProductController extends Controller
     {
         try {
             DB::beginTransaction();
-
-            $product = new Product();
-            $product->name = $request->input('name');
-            $product->price = $request->input('price');
-            $product->save();
+            $client = new Client();
+            $client->user_id = Auth::user()->id;
+            $client->number_card = $request->input('number_card');
+            $client->name = $request->input('name');
+            $client->expiration_date = $request->input('expiration_date');
+            $client->save();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'product' => $product,
+                'client' => $client,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -85,11 +83,11 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            $product = Product::find($id);
+            $client = Client::find($id);
 
             return response()->json([
                 'success' => true,
-                'product' => $product,
+                'client' => $client,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -97,6 +95,17 @@ class ProductController extends Controller
                 'message' => $e->getMessage()
             ], 401);
         }
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
     }
 
     /**
@@ -110,15 +119,15 @@ class ProductController extends Controller
     {
         try {
             DB::beginTransaction();
-            $product = Product::find($id);
-            $product->fill($request->all());
-            $product->save();
+            $client = Client::find($id);
+            $client->fill($request->all());
+            $client->save();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'product' => $product,
+                'client' => $client,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -139,8 +148,8 @@ class ProductController extends Controller
     {
         try {
             DB::beginTransaction();
-            $product = Product::where('id', $id)->first();
-            $product->delete();
+            $client = Client::where('id', $id)->first();
+            $client->delete();
 
             DB::commit();
             return response()->json([
