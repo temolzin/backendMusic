@@ -65,3 +65,4 @@ Route::group(["middleware" => "auth:api"], function () {
 Route::get('/latest-artists', [ArtistsGeneralController::class, 'latestArtists']);
 // Test route
 Route::resource('/product', ProductController::class);
+// Cors route
