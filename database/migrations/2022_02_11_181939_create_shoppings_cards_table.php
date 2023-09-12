@@ -23,6 +23,7 @@ class CreateShoppingsCardsTable extends Migration
             $table->timestamps();
         });
 
+
         Schema::table('shoppings_cards', function (Blueprint $table) {
             $table->foreign('user_id')->references('id')->on('users');
         });
