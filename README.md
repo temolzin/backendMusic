@@ -35,11 +35,11 @@ Nos ayuda para subir las migraciones y ademas agregar las informaciones que est�
 
 ## php artisan jwt:secret
 
-Sirve para generar el JSON Web Token Secret
+Funciona para generar el JSON Web Token Secret de la aplicación
 
 ## Agregar la variable FRONTEND_APP la url que se le asigna al Front end por defecto (http://localhost:8080)
 
-## Configurar las credenciales de google con las siguientes URI ademas de agregarlas al .env
+## Configurar las credenciales de el login de Google en https://console.cloud.google.com/apis/dashboard con las siguientes URI, activando Google+ como API y configurando las credenciales Secret, ClientID y pasando la pantalla de consentimiento, además, de agregar las credenciales obtenidas al .env
 
 URI 1:
 http://127.0.0.1:8000

@@ -427,7 +427,7 @@ class ArtistController extends Controller
 
 
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource of all Artists with Musical Genders.
      *
      * @return \Illuminate\Http\Response
      */
@@ -444,7 +444,7 @@ class ArtistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 }

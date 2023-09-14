@@ -39,7 +39,6 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::resource('/admin/musical-genders', MusicalsGendersController::class);
 
     //Route for artist
-    
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
     Route::get('/artist-new/gallery', [ArtistController::class, 'artistGalleryIndex']);
     Route::post('/artist-new/gallery-artist', [ArtistController::class, 'storeGaleryArtist']);
