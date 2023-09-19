@@ -61,7 +61,10 @@ Route::group(["middleware" => "auth:api"], function () {
 
 });
 
+
 //Route for General
 Route::get('/latest-artists', [ArtistsGeneralController::class, 'latestArtists']);
 // Test route
 Route::resource('/product', ProductController::class);
+
+Route::get('/artist/getArtist', [ArtistController::class, 'getArtist']);

@@ -424,4 +424,27 @@ class ArtistController extends Controller
             ], 401);
         }
     }
+
+
+    /**
+     * Display a listing of the resource of all Artists with Musical Genders.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getArtist()
+    {
+        try {
+            $artistWithMusicalGender = Artist::with('musicalGenders')->get();
+
+            return response()->json([
+                'success' => true,
+                'artists' => $artistWithMusicalGender,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
