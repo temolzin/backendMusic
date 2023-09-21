@@ -33,7 +33,13 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_OAUTH_ID'),
         'client_secret' => env('GOOGLE_OAUTH_KEY'),
-        'redirect' => env('FRONDEND_APP').'/authorize/google/callback',
+        'redirect' => env('FRONTDEND_APP').'/authorize/google/callback',
+    ],
+
+    'facebook' => [
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect' => 'http://localhost:8080/authorize/facebook/callback',
     ],
 
 ];
