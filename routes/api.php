@@ -24,6 +24,9 @@ Route::get('/refresh', [AuthController::class, 'refresh']);
 // Routes for login with google
 Route::get('/authorize/google/redirect', [SocialAuthController::class, 'redirectToProvider']);
 Route::get('/authorize/google/callback', [SocialAuthController::class, 'handlesProviderCallback']);
+// Routes for login with facebook
+Route::get('/authorize/facebook/redirect', [SocialAuthController::class, 'redirectToFacebookProvider']);
+Route::get('/authorize/facebook/callback', [SocialAuthController::class, 'handleFacebookProviderCallback']);
 // Routes protected by session middleware
 Route::group(["middleware" => "auth:api"], function () {
     Route::get('/me', [UsersController::class, 'me']);
