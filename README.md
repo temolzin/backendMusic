@@ -59,8 +59,18 @@ FACEBOOK_CLIENT_ID=YOU_CLIENT_ID
 FACEBOOK_CLIENT_SECRET=YOU_CLIENT_SECRET
 FACEBOOK_REDIRECT_URL=http://localhost:8080/authorize/facebook/callback
 
+## Configurar las credenciales SMTP para el servicio de newsletter(envío de correos) a los usuarios suscritos
+## Todas te las otorga cualquier servidor SMTP 
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=your_mailtrap_username
+MAIL_PASSWORD=your_mailtrap_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_NAME="Nombre del remitente"
+MAIL_FROM_ADDRESS="example@email.com"
+
 ## php artisan serve
 
 Nos ayuda solo para probar y comenzar su proyecto fácilmente.
-
-
