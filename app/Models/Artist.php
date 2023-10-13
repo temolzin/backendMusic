@@ -50,4 +50,8 @@ class Artist extends Model
     {
        return $this->hasMany(FavouriteArtists::class);
     }
+    public function quotations()
+    {
+        return $this->hasMany(Quotations::class);
+    }
 }
