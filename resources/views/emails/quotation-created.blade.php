@@ -82,7 +82,6 @@
         Invoice was created on a computer and is valid without the signature and seal.
     </footer>
 </body>
-
 </html>
 
 <style>
@@ -128,7 +127,6 @@
         float: right;
         text-align: right;
     }
-
 
     #details {
         margin-bottom: 50px;
@@ -236,7 +234,6 @@
     table tfoot tr td:first-child {
         border: none;
     }
-
 
     #thanks {
         font-size: 2em;

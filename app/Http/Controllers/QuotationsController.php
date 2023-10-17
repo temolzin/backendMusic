@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\QuotationCreated;
 use Carbon\Carbon;
 
-
 class QuotationsController extends Controller
 {
     public function addQuotation(Request $request)
