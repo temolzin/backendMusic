@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\QuotationCreated;
+use Carbon\Carbon;
+
 
 class QuotationsController extends Controller
 {
@@ -39,6 +41,7 @@ class QuotationsController extends Controller
 
         try {
             DB::beginTransaction();
+            $quotationCreatedAt = Carbon::now();
             $quotation = new Quotations();
             $quotation->artist_id = $artistId;
             $quotation->event_hours = $request->input('event_hours');
@@ -49,6 +52,7 @@ class QuotationsController extends Controller
             $quotation->email = $request->input('email');
             $quotation->full_name = $request->input('full_name');
             $quotation->price = $price;
+            $quotation->created_at = $quotationCreatedAt;
             $quotation->save();
             
             DB::commit();
