@@ -91,5 +91,4 @@ class UsersSubscribeController extends Controller
             ], 500);
         }
     }
-
 }
