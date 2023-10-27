@@ -16,6 +16,7 @@ use App\Http\Controllers\RolesApiController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\UserApiController;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\UsersSubscribeController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -72,11 +73,7 @@ Route::resource('/product', ProductController::class);
 
 Route::get('/artist/getArtist', [ArtistController::class, 'getArtist']);
 
-
-
-
-
-
-
-
+Route::post('/users_subscribe/send', [UsersSubscribeController::class, 'sendEmailToSubscribers']);
+Route::post('/users_subscribe/new', [UsersSubscribeController::class, 'store']);
+  
 Route::post('/quotations', [QuotationsController::class, 'addQuotation']);
