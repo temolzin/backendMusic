@@ -27,6 +27,8 @@ RUN mkdir -p /home/$user/.composer && \
 
 WORKDIR /var/www
 
+
 COPY Docker/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
 
 USER $user
+

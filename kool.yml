@@ -1,0 +1,15 @@
+scripts:
+  artisan: kool exec backend php artisan
+  composer: kool exec backend composer
+
+  setup:
+    - kool docker kooldev/bash -c "cp .env.example .env"
+    - kool start
+    - kool run composer install
+    - kool run artisan key:generate
+    - kool run artisan storage:link
+    - kool run artisan jwt:secret
+
+  db-reset:
+    - kool run artisan migrate:fresh --seed
+
