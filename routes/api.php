@@ -75,3 +75,5 @@ Route::get('/artist/getArtist', [ArtistController::class, 'getArtist']);
 
 Route::post('/users_subscribe/send', [UsersSubscribeController::class, 'sendEmailToSubscribers']);
 Route::post('/users_subscribe/new', [UsersSubscribeController::class, 'store']);
+  
+Route::post('/quotations', [QuotationsController::class, 'addQuotation']);
