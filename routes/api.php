@@ -72,4 +72,11 @@ Route::resource('/product', ProductController::class);
 
 Route::get('/artist/getArtist', [ArtistController::class, 'getArtist']);
 
+
+
+
+
+
+
+
 Route::post('/quotations', [QuotationsController::class, 'addQuotation']);
