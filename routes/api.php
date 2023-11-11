@@ -17,6 +17,7 @@ use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\UserApiController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\UsersSubscribeController;
+use App\Http\Controllers\QuotationsController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);

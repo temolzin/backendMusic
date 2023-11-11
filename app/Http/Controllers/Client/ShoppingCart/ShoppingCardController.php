@@ -68,8 +68,8 @@ class ShoppingCardController extends Controller
                     'user_id' => Auth::user()->id,
                     'status' => 1, // 1 es creado 
                     'order_date_start' => $request->input("order_date_start"),
-                    'order_date_finish' =>   $request->input("order_date_finish"),
-                     'total' =>  $price,
+                    'order_date_finish' =>   null,
+                    'total' =>  $price,
                 ]);
 
                 ShoppingCardDetail::create([
@@ -94,7 +94,7 @@ class ShoppingCardController extends Controller
     public function list_shopping_card_details()
     {
         try {
-            $list_shoping_card_details = ShoppingCard::with('shoppingCardDetail', 'shoppingCardDetail.artist')->where('status', 1)->where('user_id', Auth::user()->id)->get();
+            $list_shoping_card_details = ShoppingCard::with('shoppingCardDetail', 'shoppingCardDetail.artist', 'shoppingCardDetail.artist.manager')->where('status', 1)->where('user_id', Auth::user()->id)->get();
             return response()->json([
                 'success' => true,
                 'list_shoping_card_details' => $list_shoping_card_details,
@@ -194,5 +194,5 @@ class ShoppingCardController extends Controller
                 'message' => $e->getMessage()
             ], 401);
         }
-    }
+    } 
 }
