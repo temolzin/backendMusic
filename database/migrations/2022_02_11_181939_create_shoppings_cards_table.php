@@ -18,7 +18,7 @@ class CreateShoppingsCardsTable extends Migration
             $table->bigInteger('user_id')->unsigned();
             $table->string('status');
             $table->timestamp('order_date_start');
-            $table->timestamp('order_date_finish');
+            $table->timestamp('order_date_finish')->nullable();
             $table->double('total')->nullable();
             $table->timestamps();
         });
