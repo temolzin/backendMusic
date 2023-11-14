@@ -9,6 +9,7 @@ scripts:
     - kool run artisan key:generate
     - kool run artisan storage:link
     - kool run artisan jwt:secret
+    - kool run artisan migrate:fresh --seed
 
   db-reset:
     - kool run artisan migrate:fresh --seed
