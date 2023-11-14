@@ -94,7 +94,7 @@ class ShoppingCardController extends Controller
     public function list_shopping_card_details()
     {
         try {
-            $list_shoping_card_details = ShoppingCard::with('shoppingCardDetail', 'shoppingCardDetail.artist')->where('status', 1)->where('user_id', Auth::user()->id)->get();
+            $list_shoping_card_details = ShoppingCard::with('shoppingCardDetail', 'shoppingCardDetail.artist', 'shoppingCardDetail.artist.manager')->where('status', 1)->where('user_id', Auth::user()->id)->get();
             return response()->json([
                 'success' => true,
                 'list_shoping_card_details' => $list_shoping_card_details,
