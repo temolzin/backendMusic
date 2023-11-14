@@ -45,6 +45,14 @@ MAIL_ENCRYPTION=tls
 MAIL_FROM_NAME="Nombre del remitente"
 MAIL_FROM_ADDRESS="example@email.com"
 
+## Configurar OpenPay para el modulo de transacciones
+
+Agregar al .env.example las credenciales que obtienes en OpenPay al registrar y scrollear:
+
+OPENPAY_ID=TU_OPENPAY_ID
+OPENPAY_SECRET=TU_OPENPAY_SECRET(la que comienza con sk)
+OPENPAY_PRODUCTION_MODE=false(Depende si es para pruebas o producción)
+
 ## - curl -fsSL https://kool.dev/install | bash
 
 Para ejecutar correctamente el proyecto correctamente se necesita tener instalado kool, el cual se instala con el comando.
