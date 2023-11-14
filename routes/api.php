@@ -17,6 +17,7 @@ use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\UserApiController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\UsersSubscribeController;
+use App\Http\Controllers\PaymentController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -77,3 +78,6 @@ Route::post('/users_subscribe/send', [UsersSubscribeController::class, 'sendEmai
 Route::post('/users_subscribe/new', [UsersSubscribeController::class, 'store']);
   
 Route::post('/quotations', [QuotationsController::class, 'addQuotation']);
+
+// Route::get('/checkout', [PaymentController::class, 'showCheckoutForm']);
+Route::post('/process-payment', [PaymentController::class, 'processPayment']);
