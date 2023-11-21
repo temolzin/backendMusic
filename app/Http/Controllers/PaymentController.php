@@ -12,6 +12,8 @@ use Openpay\Data\OpenpayApiRequestError;
 use Openpay\Data\OpenpayApiConnectionError;
 use Openpay\Data\OpenpayApiTransactionError;
 use Illuminate\Http\JsonResponse;
+use App\Models\ArtistSale;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
@@ -53,8 +55,17 @@ class PaymentController extends Controller
 
             $charge = $openpay->charges->create($chargeRequest);
 
+            foreach ($request->artistList as $element) {
+                $venta = new ArtistSale();
+                $venta->openpay_transaction_id = $charge->id;
+                $venta->artist_id = $element[0];
+                $venta->customer_id = Auth::user()->id;
+                $venta->amount = $element[1];
+                $venta->save();
+            }
+
             return response()->json([
-                'data' => $charge->id
+                'data' => $charge
             ]);
 
         } catch (OpenpayApiTransactionError $e) {
