@@ -4,11 +4,13 @@ services:
   postgres:
     image: postgres:14
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: bd
-      POSTGRES_DB: estadiauttec
+      POSTGRES_USER: DB_USERNAME
+      POSTGRES_PASSWORD: DB_PASSWORD
+      POSTGRES_DB: DB_DATABASE
     ports:
-      - "5432:5432"
+      - "5432:DB_PORT"
+    env_file:
+      - .env
     networks:
       - network-music
 
