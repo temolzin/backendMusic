@@ -13,4 +13,3 @@ scripts:
 
   db-reset:
     - kool run artisan migrate:fresh --seed
-
