@@ -1,0 +1,43 @@
+version: '3'
+services:
+
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    ports:
+      - "5432:${DB_PORT}"
+    env_file:
+      - .env
+    networks:
+      - network-music
+
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+        - ./:/var/www
+    depends_on:
+      - postgres
+    networks:
+      - network-music
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+        - "8000:8000"
+    volumes:
+        - ./:/var/www
+        - ./Docker/nginx/:/etc/nginx/conf.d/
+    networks:
+        - network-music
+
+networks:
+  network-music:
+    driver: bridge
