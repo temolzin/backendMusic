@@ -30,14 +30,11 @@ class PaymentController extends Controller
                 'last_name' => $request->input("last_name"),
                 'email' => $request->input("email"),
                 'requires_account' => false,
-                'phone_number' => '44209087654',
                 'address' => array(
-                    'line1' => 'Calle 10',
-                    'line2' => 'col. san pablo',
-                    'line3' => 'entre la calle 1 y la 2',
-                    'state' => 'Queretaro',
-                    'city' => 'Queretaro',
-                    'postal_code' => '76000',
+                    'line1' => $request->input("address"),
+                    'state' => $request->input("city"),
+                    'city' => $request->input("state"),
+                    'postal_code' => $request->input("zip_code"),
                     'country_code' => 'MX'
                 )
             );

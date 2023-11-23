@@ -82,4 +82,4 @@ Route::post('/quotations', [QuotationsController::class, 'addQuotation']);
 
 Route::post('/process-payment', [PaymentController::class, 'processPayment']);
 
-Route::get('/artistSales/{id}', [ArtistSalesController::class, 'getSalesByArtistId']);
+Route::get('/artist-sales/{id}', [ArtistSalesController::class, 'getSalesByArtistId']);
