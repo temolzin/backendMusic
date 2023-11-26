@@ -368,24 +368,28 @@ class ArtistController extends Controller
         $request->validate([
             'sub_files_paths' => 'image|max:1024',
         ]);
+    
         try {
-            $artist_id = Artist::where('user_id', Auth::user()->id)->firstOrFail();
-            $artistGallery = GaleryArtist::where('artist_id', $artist_id->id)->count();
-            if ($artistGallery < 5) {
+            $artist = Artist::where('user_id', Auth::user()->id)->firstOrFail();
+            $artistGalleryCount = GaleryArtist::where('artist_id', $artist->id)->count();
+    
+            if ($artistGalleryCount < 5) {
                 if ($request->hasFile('sub_files_paths')) {
                     $urlStore = Storage::put('public/galery-artist', request()->file('sub_files_paths'));
                     $linkGalleryNew = Storage::url($urlStore);
+                    $absolutePath = url($linkGalleryNew);
+    
                     DB::beginTransaction();
                     GaleryArtist::create([
-                        'artist_id' => $artist_id->id,
-                        'image' => $linkGalleryNew,
+                        'artist_id' => $artist->id,
+                        'image' => $absolutePath,
                     ]);
                     DB::commit();
                 }
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => "Maxímo de imagenes almacenadas"
+                    'message' => "Máximo de imágenes almacenadas"
                 ], 401);
             }
         } catch (\Exception $e) {
@@ -394,7 +398,7 @@ class ArtistController extends Controller
                 'message' => $e->getMessage()
             ], 401);
         }
-    }
+    }    
     /**
      * Remove the specified resource from storage.
      *
