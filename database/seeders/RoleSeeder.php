@@ -78,6 +78,9 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'Agregar artista favorito', 'slug' => 'create-favourite-artist', 'description' => 'Agregar un nuevo grupo a favoritos'])->roles()->sync([3]);
         Permission::create(['name' => 'Eliminar artista favorito', 'slug' => 'delete-favourite-artist', 'description' => 'Eliminar grupo de favoritos'])->roles()->sync([3]);
 
+        //Ruta Tienda Cliente
+        Permission::create(['name' => 'Ver tienda', 'slug' => 'view-store', 'description' => 'Ver la tienda'])->roles()->sync([3]);
+        
         // $developerRole = Role::where('slug', 'administrador')->firstOrFail();
         // $developerPermissions = Permission::whereIn('slug', ['view-dashboard'])->get()->pluck('id')->toArray();
         // $role1->permissions()->sync([1, 2]);
