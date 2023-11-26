@@ -36,6 +36,8 @@ class ShoppingCardController extends Controller
                 $update_item = ShoppingCardDetail::where('artist_id', $service_id)
                     ->where('shopping_card_id', $exists_shopping_card->id)->first();
 
+                    $hours = $request->input('hours', 1);
+
                 if ($update_item) {
                     $update_item->hours = $update_item->hours  + 1;
                     $update_item->save();
@@ -43,7 +45,7 @@ class ShoppingCardController extends Controller
                     ShoppingCardDetail::create([
                         'shopping_card_id' => $exists_shopping_card->id,
                         'artist_id' => $service_id,
-                        'hours' => 1,
+                        'hours' => $hours,
                         'price' =>  $price,
                     ]);
                 }
@@ -71,11 +73,11 @@ class ShoppingCardController extends Controller
                     'order_date_finish' =>   $request->input("order_date_finish"),
                      'total' =>  $price,
                 ]);
-
+                $hours = $request->input('hours', 1);
                 ShoppingCardDetail::create([
                     'shopping_card_id' => $shopping_card->id,
                     'artist_id' => $service_id,
-                    'hours' => 1,
+                    'hours' => $hours,
                     'price' =>  $price,
                 ]);
             }
