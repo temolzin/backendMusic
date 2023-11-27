@@ -86,7 +86,6 @@ class ArtistController extends Controller
             ]);
     
             $artist->musicalGenders()->sync(json_decode($request->selection));
-    
             $urlStoreManager = Storage::put('public/manager', request()->file('image_manager'));
             $linkManager = url(Storage::url($urlStoreManager));
     
@@ -240,33 +239,26 @@ class ArtistController extends Controller
             $artist->zone = $request->input('zone');
             $artist->price_hour = $request->input('price_hour');
             $artist->extra_kilometre = $request->input('extra_kilometre');
-    
             $linkArtist =  $artist->image;
             $linkManager =  $artist->manager->image;
     
             if (request()->file('image_artist')) {
                 $urlStore = Storage::put('public/artist', request()->file('image_artist'));
                 $linkArtistNew = url(Storage::url($urlStore));
-    
-                // Eliminar la imagen anterior
                 $img = str_replace('storage', 'public', $linkArtist);
                 $less = env('APP_URL') . '/public/';
                 $img = str_replace($less, '', $img);
                 Storage::delete($img);
-    
                 $linkArtist = $linkArtistNew;
             }
     
             if (request()->file('image_manager')) {
                 $urlStore = Storage::put('public/manager', request()->file('image_manager'));
                 $linkManagerNew = url(Storage::url($urlStore));
-    
-                // Eliminar la imagen anterior
                 $img = str_replace('storage', 'public', $linkManager);
                 $less = env('APP_URL') . '/public/';
                 $img = str_replace($less, '', $img);
                 Storage::delete($img);
-    
                 $linkManager = $linkManagerNew;
             }
     
