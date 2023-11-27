@@ -20,7 +20,7 @@ class ShoppingCardController extends Controller
             $name = $request->input("name");
             $price = $request->input("price");
             $service_id = intval($service_id);
-
+            $hours = $request->input('hours', 1);
 
             //Existe un carrito de compras ya con estatus 1 de creado
             $exists_shopping_card = ShoppingCard::where('status', 1)->where('user_id', Auth::user()->id)
@@ -32,11 +32,8 @@ class ShoppingCardController extends Controller
                 //  $shoping_card_update->order_date_start = $request->input('order_date_start');
                 //  $shoping_card_update->order_date_finish = $request->input('order_date_finish');
 
-
                 $update_item = ShoppingCardDetail::where('artist_id', $service_id)
                     ->where('shopping_card_id', $exists_shopping_card->id)->first();
-
-                    $hours = $request->input('hours', 1);
 
                 if ($update_item) {
                     $update_item->hours = $update_item->hours  + 1;
@@ -58,8 +55,6 @@ class ShoppingCardController extends Controller
                 $shoping_card_update->total = $total;
                 $shoping_card_update->save();
 
-
-
                 DB::commit();
                 return response()->json([
                     'success' => true,
@@ -70,15 +65,14 @@ class ShoppingCardController extends Controller
                     'user_id' => Auth::user()->id,
                     'status' => 1, // 1 es creado 
                     'order_date_start' => $request->input("order_date_start"),
-                    'order_date_finish' =>   $request->input("order_date_finish"),
-                     'total' =>  $price,
+                    'order_date_finish' => $request->input("order_date_finish"),
+                    'total' =>  $price,
                 ]);
-                $hours = $request->input('hours', 1);
                 ShoppingCardDetail::create([
                     'shopping_card_id' => $shopping_card->id,
                     'artist_id' => $service_id,
                     'hours' => $hours,
-                    'price' =>  $price,
+                    'price' => $price,
                 ]);
             }
             return response()->json([
