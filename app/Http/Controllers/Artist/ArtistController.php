@@ -54,56 +54,54 @@ class ArtistController extends Controller
      */
     public function store(Request $request)
     {
-
         try {
-
             $request->validate([
-                'name'    => 'required',
-                'members' => 'required',
-                'history' => 'required',
-                'zone'    => 'required',
+                'name'            => 'required',
+                'members'         => 'required',
+                'history'         => 'required',
+                'zone'            => 'required',
                 'price_hour'      => 'required',
                 'image_artist'    => 'required|image|max:1024',
                 'extra_kilometre' => 'required',
                 'name_manager'    => 'required',
                 'phone_manager'   => 'required',
                 'email_manager'   => 'required|email',
-                'image_manager' => 'required|image|max:1024',
+                'image_manager'   => 'required|image|max:1024',
             ]);
-
+    
             $urlStoreArtist = Storage::put('public/artist', request()->file('image_artist'));
-            $linkArtist = Storage::url($urlStoreArtist);
+            $linkArtist = url(Storage::url($urlStoreArtist));
+    
             DB::beginTransaction();
             $artist =  Artist::create([
-                'user_id' => Auth::user()->id,
-                'name' => $request->input('name'),
-                'slug' => Str::slug($request->input('name')),
-                'members' => $request->input('members'),
-                'history' => $request->input('history'),
-                'zone' => $request->input('zone'),
-                'price_hour' => $request->input('price_hour'),
-                'image' => $linkArtist,
+                'user_id'        => Auth::user()->id,
+                'name'           => $request->input('name'),
+                'slug'           => Str::slug($request->input('name')),
+                'members'        => $request->input('members'),
+                'history'        => $request->input('history'),
+                'zone'           => $request->input('zone'),
+                'price_hour'     => $request->input('price_hour'),
+                'image'          => $linkArtist,
                 'extra_kilometre' => $request->input('extra_kilometre'),
             ]);
-
+    
             $artist->musicalGenders()->sync(json_decode($request->selection));
-
+    
             $urlStoreManager = Storage::put('public/manager', request()->file('image_manager'));
-            $linkManager = Storage::url($urlStoreManager);
-
+            $linkManager = url(Storage::url($urlStoreManager));
+    
             Manager::create([
                 'artist_id' => $artist->id,
-                'name' => $request->input('name_manager'),
-                'phone' => $request->input('phone_manager'),
-                'email' => $request->input('email_manager'),
-                'image' => $linkManager,
+                'name'      => $request->input('name_manager'),
+                'phone'     => $request->input('phone_manager'),
+                'email'     => $request->input('email_manager'),
+                'image'     => $linkManager,
             ]);
             DB::commit();
-
-
+    
             return response()->json([
                 'success' => true,
-                'artist' => $artist,
+                'artist'  => $artist,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -113,7 +111,6 @@ class ArtistController extends Controller
             ], 401);
         }
     }
-
     /**
      * Display the specified resource.
      *
@@ -220,22 +217,22 @@ class ArtistController extends Controller
     {
         try {
             $request->validate([
-                'name'    => 'required',
-                'members' => 'required',
-                'history' => 'required',
-                'zone'    => 'required',
+                'name'            => 'required',
+                'members'         => 'required',
+                'history'         => 'required',
+                'zone'            => 'required',
                 'price_hour'      => 'required',
                 'image_artist'    => 'image|max:1024',
                 'extra_kilometre' => 'required',
                 'name_manager'    => 'required',
                 'phone_manager'   => 'required',
                 'email_manager'   => 'required|email',
-                'image_manager' => 'image|max:1024',
+                'image_manager'   => 'image|max:1024',
             ]);
-
+    
             DB::beginTransaction();
             $artist = Artist::find($request->id);
-
+    
             $artist->name = $request->input('name');
             $artist->slug = Str::slug($request->input('name'));
             $artist->members = $request->input('members');
@@ -243,44 +240,50 @@ class ArtistController extends Controller
             $artist->zone = $request->input('zone');
             $artist->price_hour = $request->input('price_hour');
             $artist->extra_kilometre = $request->input('extra_kilometre');
-
+    
             $linkArtist =  $artist->image;
             $linkManager =  $artist->manager->image;
-
+    
             if (request()->file('image_artist')) {
                 $urlStore = Storage::put('public/artist', request()->file('image_artist'));
-                $linkArtistNew = Storage::url($urlStore);
-                $img = $artist->image;
-                $img = str_replace('storage', 'public', $img);
+                $linkArtistNew = url(Storage::url($urlStore));
+    
+                // Eliminar la imagen anterior
+                $img = str_replace('storage', 'public', $linkArtist);
                 $less = env('APP_URL') . '/public/';
                 $img = str_replace($less, '', $img);
                 Storage::delete($img);
+    
                 $linkArtist = $linkArtistNew;
             }
-
+    
             if (request()->file('image_manager')) {
                 $urlStore = Storage::put('public/manager', request()->file('image_manager'));
-                $linkManagerNew = Storage::url($urlStore);
-                $img = $artist->manager->image;
-                $img = str_replace('storage', 'public', $img);
+                $linkManagerNew = url(Storage::url($urlStore));
+    
+                // Eliminar la imagen anterior
+                $img = str_replace('storage', 'public', $linkManager);
                 $less = env('APP_URL') . '/public/';
                 $img = str_replace($less, '', $img);
                 Storage::delete($img);
+    
                 $linkManager = $linkManagerNew;
             }
+    
             $artist->image = $linkArtist;
             $artist->manager->image = $linkManager;
-
+    
             $artist->manager->name = $request->input('name_manager');
             $artist->manager->phone = $request->input('phone_manager');
             $artist->manager->email = $request->input('email_manager');
-
+    
             $artist->push();
             DB::commit();
             $artist->musicalGenders()->sync(json_decode($request->selection));
+    
             return response()->json([
                 'success' => true,
-                'artist' => $artist,
+                'artist'  => $artist,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -290,8 +293,6 @@ class ArtistController extends Controller
             ], 401);
         }
     }
-
-
     /**
      * Display a listing of the resource.
      *
