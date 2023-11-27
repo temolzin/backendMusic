@@ -398,7 +398,7 @@ class ArtistController extends Controller
                 'message' => $e->getMessage()
             ], 401);
         }
-    }    
+    }
     /**
      * Remove the specified resource from storage.
      *
