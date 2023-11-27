@@ -68,10 +68,10 @@ class ArtistController extends Controller
                 'email_manager'   => 'required|email',
                 'image_manager'   => 'required|image|max:1024',
             ]);
-    
+
             $urlStoreArtist = Storage::put('public/artist', request()->file('image_artist'));
             $linkArtist = url(Storage::url($urlStoreArtist));
-    
+
             DB::beginTransaction();
             $artist =  Artist::create([
                 'user_id'        => Auth::user()->id,
@@ -84,11 +84,11 @@ class ArtistController extends Controller
                 'image'          => $linkArtist,
                 'extra_kilometre' => $request->input('extra_kilometre'),
             ]);
-    
+
             $artist->musicalGenders()->sync(json_decode($request->selection));
             $urlStoreManager = Storage::put('public/manager', request()->file('image_manager'));
             $linkManager = url(Storage::url($urlStoreManager));
-    
+
             Manager::create([
                 'artist_id' => $artist->id,
                 'name'      => $request->input('name_manager'),
@@ -97,7 +97,7 @@ class ArtistController extends Controller
                 'image'     => $linkManager,
             ]);
             DB::commit();
-    
+
             return response()->json([
                 'success' => true,
                 'artist'  => $artist,
@@ -228,10 +228,10 @@ class ArtistController extends Controller
                 'email_manager'   => 'required|email',
                 'image_manager'   => 'image|max:1024',
             ]);
-    
+
             DB::beginTransaction();
             $artist = Artist::find($request->id);
-    
+
             $artist->name = $request->input('name');
             $artist->slug = Str::slug($request->input('name'));
             $artist->members = $request->input('members');
@@ -241,7 +241,7 @@ class ArtistController extends Controller
             $artist->extra_kilometre = $request->input('extra_kilometre');
             $linkArtist =  $artist->image;
             $linkManager =  $artist->manager->image;
-    
+
             if (request()->file('image_artist')) {
                 $urlStore = Storage::put('public/artist', request()->file('image_artist'));
                 $linkArtistNew = url(Storage::url($urlStore));
@@ -251,7 +251,7 @@ class ArtistController extends Controller
                 Storage::delete($img);
                 $linkArtist = $linkArtistNew;
             }
-    
+
             if (request()->file('image_manager')) {
                 $urlStore = Storage::put('public/manager', request()->file('image_manager'));
                 $linkManagerNew = url(Storage::url($urlStore));
@@ -261,18 +261,18 @@ class ArtistController extends Controller
                 Storage::delete($img);
                 $linkManager = $linkManagerNew;
             }
-    
+
             $artist->image = $linkArtist;
             $artist->manager->image = $linkManager;
-    
+
             $artist->manager->name = $request->input('name_manager');
             $artist->manager->phone = $request->input('phone_manager');
             $artist->manager->email = $request->input('email_manager');
-    
+
             $artist->push();
             DB::commit();
             $artist->musicalGenders()->sync(json_decode($request->selection));
-    
+
             return response()->json([
                 'success' => true,
                 'artist'  => $artist,
