@@ -41,5 +41,9 @@ return [
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
         'redirect' => env('FACEBOOK_REDIRECT_URL'),
     ],
-
+    'openpay' => [
+        'id' => env('OPENPAY_ID'),
+        'private_key' => env('OPENPAY_SECRET'),
+    ],
+    
 ];
