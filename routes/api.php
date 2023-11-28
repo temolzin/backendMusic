@@ -17,6 +17,8 @@ use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\UserApiController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\UsersSubscribeController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Artist\ArtistSalesController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -73,7 +75,11 @@ Route::resource('/product', ProductController::class);
 
 Route::get('/artist/getArtist', [ArtistController::class, 'getArtist']);
 
-Route::post('/users_subscribe/send', [UsersSubscribeController::class, 'sendEmailToSubscribers']);
-Route::post('/users_subscribe/new', [UsersSubscribeController::class, 'store']);
+Route::post('/users-subscribe/send', [UsersSubscribeController::class, 'sendEmailToSubscribers']);
+Route::post('/users-subscribe/new', [UsersSubscribeController::class, 'store']);
   
 Route::post('/quotations', [QuotationsController::class, 'addQuotation']);
+
+Route::post('/process-payment', [PaymentController::class, 'processPayment']);
+
+Route::get('/artist-sales/{id}', [ArtistSalesController::class, 'getSalesByArtistId']);
