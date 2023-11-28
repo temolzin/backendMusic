@@ -69,6 +69,7 @@ class RoleSeeder extends Seeder
         //Ruta del carrito de compras
         Permission::create(['name' => 'Ver carrito de compras', 'slug' => 'view-shopping-cart', 'description' => 'Ver su carrito de compras'])->roles()->sync([3]);
         Permission::create(['name' => 'Crear carrito de compras', 'slug' => 'create-shopping-cart', 'description' => 'Crear su carrito de compras'])->roles()->sync([3]);
+        Permission::create(['name' => 'Ver detalles de compras', 'slug' => 'view-my-order-details', 'description' => 'Ver historial de compras'])->roles()->sync([3]);
         Permission::create(['name' => 'Edita carrito de compras', 'slug' => 'edit-shopping-cart', 'description' => 'Editar su carrito de compras'])->roles()->sync([3]);
         Permission::create(['name' => 'Eliminar carrito de compras', 'slug' => 'delete-shopping-cart', 'description' => 'Eliminar su carrito de compras'])->roles()->sync([3]);
        
@@ -77,6 +78,9 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'Agregar artista favorito', 'slug' => 'create-favourite-artist', 'description' => 'Agregar un nuevo grupo a favoritos'])->roles()->sync([3]);
         Permission::create(['name' => 'Eliminar artista favorito', 'slug' => 'delete-favourite-artist', 'description' => 'Eliminar grupo de favoritos'])->roles()->sync([3]);
 
+        //Ruta Tienda Cliente
+        Permission::create(['name' => 'Ver tienda', 'slug' => 'view-store', 'description' => 'Ver la tienda'])->roles()->sync([3]);
+        
         // $developerRole = Role::where('slug', 'administrador')->firstOrFail();
         // $developerPermissions = Permission::whereIn('slug', ['view-dashboard'])->get()->pluck('id')->toArray();
         // $role1->permissions()->sync([1, 2]);
