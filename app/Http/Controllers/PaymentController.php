@@ -13,6 +13,7 @@ use Openpay\Data\OpenpayApiConnectionError;
 use Openpay\Data\OpenpayApiTransactionError;
 use Illuminate\Http\JsonResponse;
 use App\Models\ArtistSale;
+use App\Models\Artist;
 use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
@@ -119,5 +120,24 @@ class PaymentController extends Controller
             return $e;
         }
        
+    }
+
+    public function getSalesByArtist()
+    {
+        try {
+            $user = Auth::user();
+            $artist = Artist::where('user_id', $user->id)->first();
+            $artistId = $artist->id;
+            $sales = ArtistSale::where('artist_id', $artistId)->get();
+            return response()->json([
+                'success' => true,
+                'sales' => $sales,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);        }
     }
 }
