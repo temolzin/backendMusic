@@ -34,10 +34,7 @@ class UsersController extends Controller
             $hash =  md5(strtolower(trim($email)));
 
             if (!empty($name) && !empty($email) && !empty($password)) {
-
-                //Busca en la BD el slug developer y lo guarda en la variable
                 $developerRole = Role::where('slug', 'cliente')->first();
-                //$developerRole = Role::developer()->first();
 
                 DB::beginTransaction();
                 $user = new User();
@@ -46,13 +43,16 @@ class UsersController extends Controller
                 $user->password = bcrypt($password);
                 $user->image_profile = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
                 $user->save();
-                //En la instancia de user busca la relación e inserta el id de usuario y del rol
                 $user->roles()->attach($developerRole->id);
                 DB::commit();
             }
+
+            $absoluteImageUrl = url($user->image_profile);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Usuario registrado',
+                'image_profile' => $absoluteImageUrl,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -193,38 +193,41 @@ class UsersController extends Controller
             ]);
 
             if (request()->file('image_profile')) {
-
                 $urlStore = Storage::put('public/user_profile', request()->file('image_profile'));
                 $link = Storage::url($urlStore);
 
                 $user = User::find(Auth::user()->id);
-                if ($user->image_profile) {
 
+                if ($user->image_profile) {
                     $img = $user->image_profile;
                     $img = str_replace('storage', 'public', $img);
                     $less = env('APP_URL') . '/public/';
                     $img = str_replace($less, '', $img);
 
                     Storage::delete($img);
-                    //actualiza la nueva img del post
                     $user->update([
                         'image_profile' => $link
                     ]);
+
+                    $absoluteImageUrl = url($link);
+
                     return response()->json([
                         'success' => true,
                         'message' => 'Imagen actualizada',
+                        'image_profile' => $absoluteImageUrl,
                     ], 200);
                 } else {
-                    //si no existe ninguna foto
-                    //crea un nuevo registro
                     DB::beginTransaction();
-                    $user = User::find(Auth::user()->id);
                     $user->image_profile = $link;
                     $user->save();
                     DB::commit();
+
+                    $absoluteImageUrl = url($link);
+
                     return response()->json([
                         'success' => true,
                         'message' => 'Imagen actualizada',
+                        'image_profile' => $absoluteImageUrl,
                     ], 200);
                 }
             }
