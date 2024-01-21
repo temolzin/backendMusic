@@ -15,8 +15,8 @@ class CreateFavouriteArtistsTable extends Migration
     {
         Schema::create('favourite_artists', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('artist_id');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('artist_id')->nullable();
             $table->timestamps();
         });
         Schema::table('favourite_artists', function (Blueprint $table) {

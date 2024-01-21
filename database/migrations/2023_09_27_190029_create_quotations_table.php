@@ -15,7 +15,7 @@ class CreateQuotationsTable extends Migration
     {
         Schema::create('quotations', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('artist_id');
+            $table->unsignedBigInteger('artist_id');
             $table->date('event_date')->nullable();;
             $table->integer('event_hours');
             $table->string('city');
