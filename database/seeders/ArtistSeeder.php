@@ -120,7 +120,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 6000,
             'extra_kilometre' => '200',
-            'image' => 'https://hora724.com/wp-content/uploads/2020/08/WhatsApp-Image-2020-08-20-at-6.13.44-PM-e1598286461660.jpeg',
+            'image' => 'https://cdn.pixabay.com/photo/2017/08/01/01/33/beanie-2562646_960_720.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -166,7 +166,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 10000,
             'extra_kilometre' => '1000',
-            'image' => 'https://www.elsoldehermosillo.com.mx/gossip/celebridades/hmh8mq-luis-r.-conriquez/ALTERNATES/LANDSCAPE_960/Luis%20R.%20Conr%C3%ADquez',
+            'image' => 'https://cdn.pixabay.com/photo/2016/11/23/15/48/audience-1853662_960_720.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -212,7 +212,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 15000,
             'extra_kilometre' => '1500',
-            'image' => 'https://www.sanborns.com.mx/imagenes-sanborns-ii/1200/602547853516.jpg',
+            'image' => 'https://www.kebuena.com.mx/wp-content/uploads/2020/02/76938364_569215157163013_2885042099839587826_n-e1581105217462.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -228,8 +228,8 @@ class ArtistSeeder extends Seeder
         //Artista No.10
         Artist::create([
             'user_id' => 11,
-            'name' => 'Junion H',
-            'slug' => 'junion-h',
+            'name' => 'Junior H',
+            'slug' => 'junior-h',
             'members' => 1,
             'history' => "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
             'zone' => 'Ciudad de México. Méx.',
@@ -258,7 +258,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 35000,
             'extra_kilometre' => '3500',
-            'image' => 'https://www.elsoldemexico.com.mx/incoming/hnjle6-inspector.jpg/ALTERNATES/LANDSCAPE_1140/inspector.jpg',
+            'image' => 'https://cdn.pixabay.com/photo/2015/03/08/17/25/musician-664432_960_720.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -281,7 +281,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 30000,
             'extra_kilometre' => '3000',
-            'image' => 'https://faroenlascmx.com/wp-content/uploads/2021/06/image_processing20190403-20399-11gyela.jpeg',
+            'image' => 'https://cdn.pixabay.com/photo/2016/11/22/19/15/audience-1850119_960_720.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
@@ -305,7 +305,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 45000,
             'extra_kilometre' => '4500',
-            'image' => 'https://www.elsoldetijuana.com.mx/incoming/qba933-charles-ans/alternates/FREE_400/Charles%20Ans',
+            'image' => 'https://cdn.pixabay.com/photo/2016/11/23/15/48/audience-1853662_960_720.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
@@ -329,7 +329,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 25000,
             'extra_kilometre' => '2500',
-            'image' => 'https://e.snmc.io/i/600/s/e28ee9b8bda442e1437cfd7959368da0/8199238/grupo-fernandez-la-fuga-del-dorian-Cover-Art.jpg',
+            'image' => 'https://cdn.pixabay.com/photo/2020/02/06/08/19/band-4823341_960_720.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
