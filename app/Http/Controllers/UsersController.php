@@ -239,4 +239,12 @@ class UsersController extends Controller
             ], 401);
         }
     }
+
+    public function updateDarkMode(Request $request)
+    {
+        $user = auth()->user();
+        $user->dark_mode = $request->dark_mode;
+        $user->save();
+        return response()->json(['dark_mode' => $user->dark_mode], 200);
+    }
 }

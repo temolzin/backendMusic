@@ -37,7 +37,8 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::put('/user/change-details', [UsersController::class, 'updateDetails']);
     Route::put('/user/change-password', [UsersController::class, 'updatePassword']);
     Route::post('/user/change-image-profile', [UsersController::class, 'updateImageProfile']);
-
+    Route::put('/user/dark-mode', [UsersController::class, 'updateDarkMode']);
+    
     //Route for admin
     Route::resource('/admin/users', UserApiController::class);
     Route::resource('/admin/roles', RolesApiController::class);
