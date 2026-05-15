@@ -20,13 +20,14 @@ class UserResource extends JsonResource
         $userPermissions = $rolesPermissions->merge($this->permissions->pluck('slug'));
 
         return [
-            //'id' => $this->id,
+            'id'          => $this->id,
             'name'        => $this->name,
             'email'       => $this->email,
             'created_at'  => $this->created_at->format('d-m-Y'),
             'role'        => $roles,
             "permissions" => $userPermissions,
             "image"       => $this->image_profile,
+            "dark_mode"   => $this->dark_mode,
         ];
     }
 }
