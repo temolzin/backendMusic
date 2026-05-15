@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\MusicalsGenders;
 use App\Http\Controllers\Admin\MusicalsGendersController;
 use App\Http\Controllers\Artist\ArtistController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\QuotationsController;
 use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Client\FavouriteArtist\FavouriteArtistsController;
 use App\Http\Controllers\Client\GendersController;
