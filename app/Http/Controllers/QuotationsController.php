@@ -7,8 +7,8 @@ use App\Models\Quotations;
 use App\Models\Artist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-//use Illuminate\Support\Facades\Mail;
-//use App\Mail\QuotationCreated;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\QuotationCreated;
 use Carbon\Carbon;
 
 class QuotationsController extends Controller
@@ -56,7 +56,7 @@ class QuotationsController extends Controller
 
             DB::commit();
 
-            //Mail::to($request->input('email'))->send(new QuotationCreated($quotation));
+            Mail::to($request->input('email'))->send(new QuotationCreated($quotation));
 
             return response()->json([
                 'success' => true,
@@ -71,9 +71,9 @@ class QuotationsController extends Controller
             DB::rollback();
             return response()->json([
                 'success' => false,
-                'mesaje real' => $e->getMessage(),
+                'real message' => $e->getMessage(),
                 'message' => 'Error al crear la cotización. Por favor, inténtalo de nuevo más tarde.',
-                'linea' => $e->getLine(),
+                'line' => $e->getLine(),
             ], 500);
         }
     }
