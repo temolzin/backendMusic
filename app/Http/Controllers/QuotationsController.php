@@ -16,7 +16,7 @@ class QuotationsController extends Controller
     public function addQuotation(Request $request)
     {
         $request->validate([
-            'artist_id.value' => 'required|exists:artists,id',
+            'artist_id' => 'required|exists:artists,id',
             'event_hours' => 'required|integer',
             'event_date' => 'required|date',
             'city' => 'required|string',
@@ -26,7 +26,7 @@ class QuotationsController extends Controller
             'full_name' => 'required|string',
         ]);
 
-        $artistId = $request->input('artist_id.value');
+        $artistId = $request->input('artist_id');
         $artist = Artist::find($artistId);
 
         if (!$artist) {
@@ -53,7 +53,7 @@ class QuotationsController extends Controller
             $quotation->price = $price;
             $quotation->created_at = $quotationCreatedAt;
             $quotation->save();
-            
+
             DB::commit();
 
             Mail::to($request->input('email'))->send(new QuotationCreated($quotation));
@@ -61,6 +61,7 @@ class QuotationsController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Cotización creada exitosamente',
+                'id' => $quotation->id,
                 'data' => [
                     'label' => $artist->name,
                     'value' => $artistId,
@@ -70,7 +71,9 @@ class QuotationsController extends Controller
             DB::rollback();
             return response()->json([
                 'success' => false,
+                'real message' => $e->getMessage(),
                 'message' => 'Error al crear la cotización. Por favor, inténtalo de nuevo más tarde.',
+                'line' => $e->getLine(),
             ], 500);
         }
     }
