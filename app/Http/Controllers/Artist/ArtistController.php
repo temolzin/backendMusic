@@ -83,6 +83,7 @@ class ArtistController extends Controller
                 'price_hour'     => $request->input('price_hour'),
                 'image'          => $linkArtist,
                 'extra_kilometre' => $request->input('extra_kilometre'),
+                'social_media' => $request->input('social_media') ? json_decode($request->input('social_media'), true) : null,
             ]);
 
             $artist->musicalGenders()->sync(json_decode($request->selection));
@@ -239,6 +240,7 @@ class ArtistController extends Controller
             $artist->zone = $request->input('zone');
             $artist->price_hour = $request->input('price_hour');
             $artist->extra_kilometre = $request->input('extra_kilometre');
+            $artist->social_media = $request->input('social_media') ? json_decode($request->input('social_media'), true) : null;
             $linkArtist =  $artist->image;
             $linkManager =  $artist->manager->image;
 

@@ -18,7 +18,12 @@ class Artist extends Model
         'price_hour',
         'image',
         'extra_kilometre',
-        'points'
+        'points',
+        'social_media'
+    ];
+
+    protected $casts = [
+        'social_media' => 'array',
     ];
 
     public function user()
