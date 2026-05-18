@@ -16,7 +16,6 @@ class CreateUsersSubscribeTable extends Migration
         Schema::create('users_subscribe', function (Blueprint $table) {
             $table->id();
             $table->string('email');
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
