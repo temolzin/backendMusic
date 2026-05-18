@@ -46,6 +46,7 @@ class UsersSubscribeController extends Controller
 
             $UserSuscribe = new UsersSubscribe();
             $UserSuscribe->email = $request->input('email');
+            $UserSuscribe->user_id = auth()->id();
             $UserSuscribe->save();
 
             DB::commit();
