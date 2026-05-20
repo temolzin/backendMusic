@@ -123,7 +123,7 @@ class ShoppingCardController extends Controller
     public function list_purchase_history()
     {
         try {
-            $auth_user = \Auth::user();
+            $auth_user = Auth::user();
             if (!$auth_user) {
                 return response()->json([
                     'success' => false,
@@ -153,6 +153,7 @@ class ShoppingCardController extends Controller
             ], 500);
         }
     }
+
     public function delete_item_shopping_card_details(Request $request)
     {
         try {
@@ -238,13 +239,15 @@ class ShoppingCardController extends Controller
                 ], 401);
             }
 
-            // Update user with address information
+            $fullName = trim(($request->input('first_name', '') . ' ' . $request->input('last_name', '')));
+
             $user->update([
+                'name' => $fullName !== '' ? $fullName : $user->name,
                 'address' => $request->input('address'),
                 'city' => $request->input('city'),
                 'state' => $request->input('state'),
                 'zip_code' => $request->input('zip_code'),
-                'country' => $request->input('country', 'MX'),
+                'country' => $request->input('country'),
             ]);
 
             return response()->json([
