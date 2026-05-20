@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client\ShoppingCart;
 use App\Http\Controllers\Controller;
 use App\Models\ShoppingCard;
 use App\Models\ShoppingCardDetail;
+use App\Models\ArtistSale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -118,6 +119,40 @@ class ShoppingCardController extends Controller
             ], 401);
         }
     }
+
+    public function list_purchase_history()
+    {
+        try {
+            $auth_user = \Auth::user();
+            if (!$auth_user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado',
+                    'error' => 'No authenticated user found'
+                ], 401);
+            }
+
+            $user_id = $auth_user->id;
+
+            $purchases = ArtistSale::where('customer_id', $user_id)
+                ->with('artist', 'artist.manager', 'customer')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'purchases' => $purchases,
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error("Error in list_purchase_history: " . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
     public function delete_item_shopping_card_details(Request $request)
     {
         try {
@@ -191,4 +226,38 @@ class ShoppingCardController extends Controller
             ], 401);
         }
     }
+
+    public function save_address(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Update user with address information
+            $user->update([
+                'address' => $request->input('address'),
+                'city' => $request->input('city'),
+                'state' => $request->input('state'),
+                'zip_code' => $request->input('zip_code'),
+                'country' => $request->input('country', 'MX'),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dirección guardada correctamente',
+                'user' => $user
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
+
