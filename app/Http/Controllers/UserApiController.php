@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\User\UserApiCreateRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Artist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -198,6 +199,15 @@ class UserApiController extends Controller
         try {
             DB::beginTransaction();
             $user = User::where('id', $id)->first();
+            $artist = Artist::where('user_id', $id)->first();
+            if ($artist) {
+                DB::table('managers')->where('artist_id', $artist->id)->delete();
+                DB::table('historys_shoppings')->where('artist_id', $artist->id)->delete();
+                DB::table('shoppings_cards_details')->where('artist_id', $artist->id)->delete();
+                DB::table('artist_musical_gender')->where('artist_id', $artist->id)->delete();
+                DB::table('quotations')->where('artist_id', $artist->id)->delete();
+                DB::table('artists')->where('id', $artist->id)->delete();
+            }
             $user->delete();
 
             DB::commit();
