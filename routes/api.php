@@ -56,14 +56,17 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::resource('/artist-new', ArtistController::class);
     //Route for client
     Route::resource('/client-card', ClientController::class);
+    Route::get('/client/profile', [ClientController::class, 'getProfile']);
     Route::get('/client/musical-genders', [GendersController::class, 'index']);
     Route::get('/client/musical-genders/{slug}', [GendersController::class, 'artistsGenders']);
     Route::get('/client/musical-genders/artist/{slug}', [GendersController::class, 'artistGender']);
     Route::post('/cliente/shopping_card/create', [ShoppingCardController::class, 'create_order']);
     Route::get('/cliente/shopping_card/listShopingCardDetails', [ShoppingCardController::class, 'list_shopping_card_details']);
     Route::get('/cliente/shopping_card/countListShopingCardDetails', [ShoppingCardController::class, 'count_list_shopping_card_details']);
+    Route::get('/cliente/shopping_card/purchaseHistory', [ShoppingCardController::class, 'list_purchase_history']);
     Route::delete('/cliente/shopping_card/deleteItemShoppingCardDetails/{id}', [ShoppingCardController::class, 'delete_item_shopping_card_details']);
     Route::post('/cliente/shopping_card/updateHourItemShoppingCart', [ShoppingCardController::class, 'update_item_shopping_card_details']);
+    Route::post('/client/save-address', [ShoppingCardController::class, 'save_address']);
     Route::get('/client/favourite_artists/list', [FavouriteArtistsController::class, 'index']);
     Route::post('/client/favourite_artists/new',[FavouriteArtistsController::class, 'store']);
     Route::delete('/client/favourite_artists/destroy/{id}', [FavouriteArtistsController::class, 'destroyFavourite']);
@@ -84,6 +87,8 @@ Route::post('/users-subscribe/new', [UsersSubscribeController::class, 'store']);
 
 Route::post('/quotations', [QuotationsController::class, 'addQuotation']);
 
-Route::post('/process-payment', [PaymentController::class, 'processPayment']);
+Route::group(["middleware" => "auth:api"], function () {
+    Route::post('/process-payment', [PaymentController::class, 'processPayment']);
+});
 
 Route::get('/artist-sales', [PaymentController::class, 'getSalesByArtist']);

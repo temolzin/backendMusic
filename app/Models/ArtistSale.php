@@ -16,7 +16,7 @@ class ArtistSale extends Model
 
     public function artist()
     {
-        return $this->belongsTo(User::class, 'artist_id');
+        return $this->belongsTo(Artist::class, 'artist_id');
     }
 
     public function customer()
