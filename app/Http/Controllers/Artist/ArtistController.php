@@ -437,7 +437,9 @@ class ArtistController extends Controller
     public function getArtist()
     {
         try {
-            $artistWithMusicalGender = Artist::with('musicalGenders')->get();
+            $artistWithMusicalGender = Artist::with('musicalGenders')
+                ->withAvg("ratings","rating")
+                ->get();
 
             return response()->json([
                 'success' => true,

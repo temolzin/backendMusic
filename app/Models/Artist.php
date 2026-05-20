@@ -53,10 +53,16 @@ class Artist extends Model
 
     public function favouriteArtists()
     {
-       return $this->hasMany(FavouriteArtists::class);
+        return $this->hasMany(FavouriteArtists::class);
     }
+
     public function quotations()
     {
         return $this->hasMany(Quotations::class);
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(ArtistRating::class);
     }
 }

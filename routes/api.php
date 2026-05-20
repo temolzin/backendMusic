@@ -20,6 +20,7 @@ use App\Http\Controllers\UsersController;
 use App\Http\Controllers\UsersSubscribeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Artist\ArtistSalesController;
+use App\Http\Controllers\ArtistRatingController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -66,7 +67,8 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/client/favourite_artists/list', [FavouriteArtistsController::class, 'index']);
     Route::post('/client/favourite_artists/new',[FavouriteArtistsController::class, 'store']);
     Route::delete('/client/favourite_artists/destroy/{id}', [FavouriteArtistsController::class, 'destroyFavourite']);
-
+    Route::post('/client/artists/{id}/rate', [ArtistRatingController::class, 'rateArtist']);
+    Route::get('/client/artists/{id}/my-rating', [ArtistRatingController::class, 'getUserRating']);
 });
 
 
