@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\UsersSubscribe;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendNewsletter;
 
@@ -72,6 +73,8 @@ class UsersSubscribeController extends Controller
     public function sendEmailToSubscribers(Request $request)
     {
         try {
+            Gate::authorize('send-newsletters');
+
             $validated = $request->validate([
                 'subject' => ['required', 'string', 'max:255'],
                 'content' => ['required', 'string'],
@@ -100,8 +103,11 @@ class UsersSubscribeController extends Controller
                 ], 422);
             }
 
+            $subject = $validated['subject'];
+            $content = $validated['content'];
+
             foreach ($emailSubscribers as $email) {
-                Mail::to($email)->send(new SendNewsletter($validated['subject'], $validated['content']));
+                Mail::to($email)->queue(new SendNewsletter($subject, $content));
             }
 
             return response()->json([
