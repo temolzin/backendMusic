@@ -25,7 +25,7 @@
                         <tr>
                             <td class="newsletter-content">
                                 <div class="newsletter-body">
-                                    { $content }
+                                    {!! nl2br(e($content)) !!}
                                 </div>
                             </td>
                         </tr>
