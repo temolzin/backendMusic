@@ -5,11 +5,14 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\ShoppingCard;
 use App\Models\ShoppingCardDetail;
+use Illuminate\Support\Facades\DB;
 
 class ShoppingCardDetailsSeeder extends Seeder
 {
     public function run()
     {
+        DB::statement('TRUNCATE TABLE shoppings_cards_details, shoppings_cards RESTART IDENTITY CASCADE;');
+
         $shoppingCard = ShoppingCard::create([
             'user_id' => 18,
             'status' => 1,
