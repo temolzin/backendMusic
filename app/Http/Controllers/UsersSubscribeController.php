@@ -72,13 +72,36 @@ class UsersSubscribeController extends Controller
     public function sendEmailToSubscribers(Request $request)
     {
         try {
-            $emailSubscribers = UsersSubscribe::pluck('email')->toArray();
+            $validated = $request->validate([
+                'subject' => ['required', 'string', 'max:255'],
+                'content' => ['required', 'string'],
+                'role_ids' => ['required', 'array', 'min:1'],
+                'role_ids.*' => ['integer', 'exists:roles,id'],
+            ]);
 
-            $subject = $request->input('subject');
-            $content = $request->input('content');
+            $roleIds = collect($validated['role_ids'])->unique()->values()->all();
+
+            $emailSubscribers = UsersSubscribe::whereHas('user.roles', function ($query) use ($roleIds) {
+                $query->whereIn('roles.id', $roleIds);
+            })
+            ->pluck('email')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+            if (empty($emailSubscribers)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay destinatarios disponibles con los roles seleccionados.',
+                    'errors' => [
+                        'role_ids' => ['No hay destinatarios disponibles con esos roles.'],
+                    ],
+                ], 422);
+            }
 
             foreach ($emailSubscribers as $email) {
-                Mail::to($email)->send(new SendNewsletter($subject, $content));
+                Mail::to($email)->send(new SendNewsletter($validated['subject'], $validated['content']));
             }
 
             return response()->json([
