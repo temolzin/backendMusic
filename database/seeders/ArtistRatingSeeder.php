@@ -52,8 +52,6 @@ class ArtistRatingSeeder extends Seeder
             ['user_id' => 1, 'artist_id' => 10, 'rating' => 3],
             ['user_id' => 1, 'artist_id' => 13, 'rating' => 4],
 
-            // Artistas califican a otros artistas (no a sí mismos)
-            // user_id 2 es artist_id 1, así que no puede calificar artist_id 1
             ['user_id' => 2,  'artist_id' => 2,  'rating' => 4],
             ['user_id' => 2,  'artist_id' => 5,  'rating' => 3],
             ['user_id' => 2,  'artist_id' => 9,  'rating' => 5],
