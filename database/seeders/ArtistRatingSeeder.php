@@ -45,7 +45,6 @@ class ArtistRatingSeeder extends Seeder
             ['user_id' => 18, 'artist_id' => 14, 'rating' => 4],
             ['user_id' => 18, 'artist_id' => 15, 'rating' => 5],
 
-            // Admin califica algunos
             ['user_id' => 1, 'artist_id' => 1,  'rating' => 5],
             ['user_id' => 1, 'artist_id' => 3,  'rating' => 4],
             ['user_id' => 1, 'artist_id' => 6,  'rating' => 5],
