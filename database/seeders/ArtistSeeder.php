@@ -28,7 +28,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 10000,
             'extra_kilometre' => '1000',
-            'image' => 'http://localhost:8000/storage/artists/grupo-firme.jpg',
+            'image' => 'https://i.pinimg.com/1200x/cc/df/36/ccdf3618be3546b80b281f1c5a4804a9.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
@@ -52,7 +52,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 15000,
             'extra_kilometre' => '1500',
-            'image' => 'http://localhost:8000/storage/artists/joan-sebastian.jpg',
+            'image' => 'https://i.pinimg.com/736x/0a/d7/00/0ad700ef77db65b7724f029d8327ab70.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
@@ -76,7 +76,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 12000,
             'extra_kilometre' => '1200',
-            'image' => 'http://localhost:8000/storage/artists/hombres-g.jpg',
+            'image' => 'https://i.pinimg.com/736x/23/ea/2f/23ea2f44d0c87703f57c2b3bea5d78ac.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -99,7 +99,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 8000,
             'extra_kilometre' => '200',
-            'image' => 'http://localhost:8000/storage/artists/voz-de-mando.jpg',
+            'image' => 'https://i.pinimg.com/736x/e9/50/13/e95013b2e8b7d7f53838c2f781da9dcb.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
@@ -123,7 +123,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 6000,
             'extra_kilometre' => '200',
-            'image' => 'http://localhost:8000/storage/artists/pancho-uresti.jpg',
+            'image' => 'https://i.pinimg.com/736x/96/6c/b4/966cb48cb7837789152ddb0e2e3f2ade.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -146,7 +146,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 9000,
             'extra_kilometre' => '250',
-            'image' => 'http://localhost:8000/storage/artists/adriel-favela.jpg',
+            'image' => 'https://i.pinimg.com/736x/03/e1/67/03e167ed063f427feba2b426dd4e174b.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -169,7 +169,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 10000,
             'extra_kilometre' => '1000',
-            'image' => 'http://localhost:8000/storage/artists/luis-r-conriquez.jpg',
+            'image' => 'https://i.pinimg.com/736x/d1/c6/48/d1c648c1e63daca81628d58dff214249.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -192,7 +192,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 13000,
             'extra_kilometre' => '1300',
-            'image' => 'http://localhost:8000/storage/artists/los-2-de-la-s.jpg',
+            'image' => 'https://i.pinimg.com/1200x/91/06/60/910660eee38a08159a5b35aa79c0c163.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -215,7 +215,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 15000,
             'extra_kilometre' => '1500',
-            'image' => 'http://localhost:8000/storage/artists/remmy-valenzuela.jpg',
+            'image' => 'https://i.pinimg.com/1200x/50/1b/14/501b144d5376547e6686e36ad4bde81b.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -238,7 +238,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 25000,
             'extra_kilometre' => '2500',
-            'image' => 'http://localhost:8000/storage/artists/junior-h.jpg',
+            'image' => 'https://i.pinimg.com/1200x/71/1b/e2/711be2b654a23146aa9ae0ad31e7cb31.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -261,7 +261,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 35000,
             'extra_kilometre' => '3500',
-            'image' => 'http://localhost:8000/storage/artists/inspector.jpg',
+            'image' => 'https://i.pinimg.com/1200x/23/b9/82/23b98262e658f93a72822a667918e2fa.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
@@ -284,7 +284,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 30000,
             'extra_kilometre' => '3000',
-            'image' => 'http://localhost:8000/storage/artists/los-caligaris.jpg',
+            'image' => 'https://i.pinimg.com/1200x/1d/76/a6/1d76a6acedc7acee80295d2f8ddc36a4.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
@@ -308,7 +308,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 45000,
             'extra_kilometre' => '4500',
-            'image' => 'http://localhost:8000/storage/artists/charles-ans.jpg',
+            'image' => 'https://i.pinimg.com/736x/04/1d/3d/041d3da152a762abb95262f430ff3ab6.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
@@ -332,7 +332,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 25000,
             'extra_kilometre' => '2500',
-            'image' => 'http://localhost:8000/storage/artists/grupo-fernandez.jpg',
+            'image' => 'https://i.pinimg.com/1200x/a4/65/92/a46592f025e0e84faec139809716fda6.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
@@ -356,7 +356,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 35000,
             'extra_kilometre' => '3500',
-            'image' => 'http://localhost:8000/storage/artists/los-plebes-del-rancho.jpg',
+            'image' => 'https://i.pinimg.com/736x/38/15/e7/3815e71510f30c0cf528c997d6b6af76.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
