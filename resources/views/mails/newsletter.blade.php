@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $subject }}</title>
-    <style>
-        {{ file_get_contents(resource_path('css/app.css')) }}
-    </style>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ $subject }}</title>
+        <style>
+            {{ file_get_contents(resource_path('css/app.css')) }}
+        </style>
+    </head>
     <body>
         <table class="newsletter-shell" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
             <tr>
