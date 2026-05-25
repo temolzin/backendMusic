@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\UsersSubscribe;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendNewsletter;
 
@@ -72,13 +73,41 @@ class UsersSubscribeController extends Controller
     public function sendEmailToSubscribers(Request $request)
     {
         try {
-            $emailSubscribers = UsersSubscribe::pluck('email')->toArray();
+            Gate::authorize('send-newsletters');
 
-            $subject = $request->input('subject');
-            $content = $request->input('content');
+            $validated = $request->validate([
+                'subject' => ['required', 'string', 'max:255'],
+                'content' => ['required', 'string'],
+                'role_ids' => ['required', 'array', 'min:1'],
+                'role_ids.*' => ['integer', 'exists:roles,id'],
+            ]);
+
+            $roleIds = collect($validated['role_ids'])->unique()->values()->all();
+
+            $emailSubscribers = UsersSubscribe::whereHas('user.roles', function ($query) use ($roleIds) {
+                $query->whereIn('roles.id', $roleIds);
+            })
+            ->pluck('email')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+            if (empty($emailSubscribers)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay destinatarios disponibles con los roles seleccionados.',
+                    'errors' => [
+                        'role_ids' => ['No hay destinatarios disponibles con esos roles.'],
+                    ],
+                ], 422);
+            }
+
+            $subject = $validated['subject'];
+            $content = $validated['content'];
 
             foreach ($emailSubscribers as $email) {
-                Mail::to($email)->send(new SendNewsletter($subject, $content));
+                Mail::to($email)->queue(new SendNewsletter($subject, $content));
             }
 
             return response()->json([

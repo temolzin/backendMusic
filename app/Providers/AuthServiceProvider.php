@@ -25,6 +25,8 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        Gate::define('send-newsletters', function ($user) {
+            return $user->hasRole('administrador') || $user->hasPermissionTo('send-newsletters');
+        });
     }
 }
