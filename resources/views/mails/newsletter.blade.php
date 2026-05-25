@@ -16,7 +16,7 @@
                     <table class="newsletter-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                         <tr>
                             <td class="newsletter-hero">
-                                <img src="{{ $message->embed(public_path('images/logo.png')) }}" alt="Música GSM" class="newsletter-logo">
+                                <img src="{{ $message->embed(public_path('logovibeer.png')) }}" alt="Música GSM" class="newsletter-logo">
                                 <p class="newsletter-kicker">Música GSM</p>
                                 <h1 class="newsletter-title">{{ $subject }}</h1>
                                 <p class="newsletter-subtitle">Novedades, avisos y contenido especial para tu comunidad.</p>
