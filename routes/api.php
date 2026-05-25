@@ -18,6 +18,7 @@ use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\UserApiController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\UsersSubscribeController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Artist\ArtistSalesController;
 use App\Http\Controllers\ArtistRatingController;
@@ -25,6 +26,8 @@ use App\Http\Controllers\ArtistRatingController;
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [UsersController::class, 'create']);
+Route::post('/password/email', [ForgotPasswordController::class, 'sendResetLinkEmail']);
+Route::post('/password/reset', [ForgotPasswordController::class, 'resetPassword']);
 Route::get('/refresh', [AuthController::class, 'refresh']);
 // Routes for login with google
 Route::get('/authorize/google/redirect', [SocialAuthController::class, 'redirectToProvider']);
