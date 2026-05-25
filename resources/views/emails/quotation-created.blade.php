@@ -11,13 +11,13 @@
 <body>
     <header class="clearfix">
         <div id="logo">
-            <img src="https://i.ibb.co/2vF8tz3/sgm.png">
+            <img src="/logovibeer.png">
         </div>
         <div id="company">
-            <h2 class="name">Musica SGM</h2>
+            <h2 class="name">Vibeer</h2>
             <div>455 Foggy Heights, AZ 85004, US</div>
             <div>(602) 519-0450</div>
-            <div><a href="mailto:company@example.com">MusicaSGM@gmail.com</a></div>
+            <div><a href="mailto:company@example.com">Vibeer@gmail.com</a></div>
         </div>
         </div>
     </header>
@@ -74,7 +74,7 @@
         <br>
         <div id="thanks">Gracias por solicitar tu Cotizacion.</div>
         <div id="notices">
-            <div>Musica GSM</div>
+            <div>Vibeer</div>
             <div class="notice">Saludos.</div>
         </div>
     </main>
