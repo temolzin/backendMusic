@@ -201,4 +201,23 @@ class PaymentController extends Controller
                 'message' => $e->getMessage()
             ], 500);        }
     }
+    
+    public function statsByArtist()
+    {
+        try {
+            $artist = Artist::where('user_id', Auth::user()->id)->first();
+            $total = ArtistSale::where('artist_id', $artist->id)->sum('amount');
+            $count = ArtistSale::where('artist_id', $artist->id)->count();
+            return response()->json([
+                'success' => true,
+                'total' => $total,
+                'count' => $count,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

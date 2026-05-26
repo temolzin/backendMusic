@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Artist;
 use App\Models\ArtistRating;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ArtistRatingController extends Controller
 {
@@ -44,5 +45,24 @@ class ArtistRatingController extends Controller
         return response()->json([
             'rating' => $rating ? $rating->rating : 0
         ]);
+    }
+    
+    public function averageRating()
+    {
+        try {
+            $artist = Artist::where('user_id', Auth::user()->id)->first();
+            $avg = ArtistRating::where('artist_id', $artist->id)->avg('rating');
+            $total = ArtistRating::where('artist_id', $artist->id)->count();
+            return response()->json([
+                'success' => true,
+                'average' => round($avg ?? 0, 1),
+                'total' => $total,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
+        }
     }
 }

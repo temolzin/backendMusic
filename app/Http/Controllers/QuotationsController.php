@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\QuotationCreated;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class QuotationsController extends Controller
 {
@@ -75,6 +76,27 @@ class QuotationsController extends Controller
                 'message' => 'Error al crear la cotización. Por favor, inténtalo de nuevo más tarde.',
                 'line' => $e->getLine(),
             ], 500);
+        }
+    }
+    
+    public function countByArtist()
+    {
+        try {
+            $artist = Artist::where('user_id', Auth::user()->id)->first();
+            $count = \App\Models\Quotations::where('artist_id', $artist->id)->count();
+            $latest = \App\Models\Quotations::where('artist_id', $artist->id)
+                ->orderBy('event_date', 'asc')
+                ->first();
+            return response()->json([
+                'success' => true,
+                'count' => $count,
+                'next_event' => $latest ? $latest->event_date : null,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
         }
     }
 }
