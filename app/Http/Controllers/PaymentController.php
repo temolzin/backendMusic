@@ -180,7 +180,6 @@ class PaymentController extends Controller
                 ]
             ]);
         }
-       
     }
 
     public function getSalesByArtist()
@@ -205,9 +204,9 @@ class PaymentController extends Controller
     public function statsByArtist()
     {
         try {
-            $artist = Artist::where('user_id', Auth::user()->id)->first();
-            $total = ArtistSale::where('artist_id', $artist->id)->sum('amount');
-            $count = ArtistSale::where('artist_id', $artist->id)->count();
+            $artistUserId = Auth::user()->id;
+            $total = ArtistSale::where('artist_id', $artistUserId)->sum('amount');
+            $count = ArtistSale::where('artist_id', $artistUserId)->count();
             return response()->json([
                 'success' => true,
                 'total' => $total,

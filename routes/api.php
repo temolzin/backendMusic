@@ -75,7 +75,6 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::delete('/client/favourite_artists/destroy/{id}', [FavouriteArtistsController::class, 'destroyFavourite']);
     Route::get('/artist/favourite_artists/count', [FavouriteArtistsController::class, 'countByArtist']);
     Route::get('/artist/ratings/average', [ArtistRatingController::class, 'averageRating']);
-    Route::get('/artist/quotations/count', [QuotationsController::class, 'countByArtist']);
     Route::get('/artist/sales/stats', [PaymentController::class, 'statsByArtist']);
     Route::get('/artist/favourite_artists/count', [FavouriteArtistsController::class, 'countByArtist']);
     Route::post('/client/artists/{id}/rate', [ArtistRatingController::class, 'rateArtist']);
