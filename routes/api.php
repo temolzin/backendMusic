@@ -73,8 +73,13 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/client/favourite_artists/list', [FavouriteArtistsController::class, 'index']);
     Route::post('/client/favourite_artists/new',[FavouriteArtistsController::class, 'store']);
     Route::delete('/client/favourite_artists/destroy/{id}', [FavouriteArtistsController::class, 'destroyFavourite']);
+    Route::get('/artist/favourite_artists/count', [FavouriteArtistsController::class, 'countByArtist']);
+    Route::get('/artist/ratings/average', [ArtistRatingController::class, 'averageRating']);
+    Route::get('/artist/sales/stats', [PaymentController::class, 'statsByArtist']);
+    Route::get('/artist/favourite_artists/count', [FavouriteArtistsController::class, 'countByArtist']);
     Route::post('/client/artists/{id}/rate', [ArtistRatingController::class, 'rateArtist']);
     Route::get('/client/artists/{id}/my-rating', [ArtistRatingController::class, 'getUserRating']);
+    Route::get('/artist/ratings/average', [ArtistRatingController::class, 'averageRating']);
 });
 
 
@@ -90,6 +95,9 @@ Route::post('/users-subscribe/send', [UsersSubscribeController::class, 'sendEmai
 Route::post('/users-subscribe/new', [UsersSubscribeController::class, 'store']);
 
 Route::post('/quotations', [QuotationsController::class, 'addQuotation']);
+Route::group(["middleware" => "auth:api"], function () {
+    Route::get('/artist/quotations/count', [QuotationsController::class, 'countByArtist']);
+});
 
 Route::group(["middleware" => "auth:api"], function () {
     Route::post('/process-payment', [PaymentController::class, 'processPayment']);

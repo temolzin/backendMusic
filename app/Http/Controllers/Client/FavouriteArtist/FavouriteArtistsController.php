@@ -7,6 +7,7 @@ use App\Models\FavouriteArtists;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Artist;
 
 class FavouriteArtistsController extends Controller
 {
@@ -90,6 +91,23 @@ class FavouriteArtistsController extends Controller
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
+        }
+    }
+    
+    public function countByArtist()
+    {
+        try {
+            $artist = Artist::where('user_id', Auth::user()->id)->first();
+            $count = FavouriteArtists::where('artist_id', $artist->id)->count();
+            return response()->json([
+                'success' => true,
+                'count' => $count,
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
