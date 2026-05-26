@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\MusicalsGenders;
 use App\Http\Controllers\Admin\MusicalsGendersController;
 use App\Http\Controllers\Artist\ArtistController;
+use App\Http\Controllers\Artist\ArtistBookingsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\QuotationsController;
 use App\Http\Controllers\Client\ClientController;
@@ -57,6 +58,12 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::post('/artist-new/gallery-artist-update', [ArtistController::class, 'updateGaleryArtist']);
     Route::delete('/artist-new/gallery-artist-delete', [ArtistController::class, 'deleteGaleryArtist']);
     Route::resource('/artist-new', ArtistController::class);
+    
+    Route::get('/artist/my-bookings', [ArtistBookingsController::class, 'getMyBookings']);
+    Route::get('/artist/{artistId}/bookings', [ArtistBookingsController::class, 'getArtistBookings']);
+    Route::get('/artist/{artistId}/bookings/status/{status}', [ArtistBookingsController::class, 'getBookingsByStatus']);
+    Route::put('/bookings/{bookingId}/status', [ArtistBookingsController::class, 'updateBookingStatus']);
+    
     //Route for client
     Route::resource('/client-card', ClientController::class);
     Route::get('/client/profile', [ClientController::class, 'getProfile']);

@@ -11,6 +11,7 @@ class Quotations extends Model
 
     protected $fillable = [
         'artist_id',
+        'event_name',
         'event_date',
         'event_hours',
         'city',
@@ -18,7 +19,8 @@ class Quotations extends Model
         'phone',
         'email',
         'full_name',
-        'price'
+        'price',
+        'status'
     ];
 
     public function artist()
