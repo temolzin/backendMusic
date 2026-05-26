@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Notifications\ResetPasswordQueuedNotification;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
@@ -109,6 +110,11 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     public function favouriteArtists()
     {
        return $this->hasMany(FavouriteArtists::class);
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordQueuedNotification($token));
     }
 
 }
