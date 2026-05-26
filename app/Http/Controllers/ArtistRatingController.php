@@ -11,20 +11,20 @@ class ArtistRatingController extends Controller
     public function rateArtist(Request $request, $id)
     {
         $request->validate([
-            'rating' => 'required|integer|min:1|max:5'
+            'rating' => 'required|integer|min:0|max:5'
         ]);
 
         $artist = Artist::findOrFail($id);
 
-        ArtistRating::updateOrCreate(
-            [
-                'user_id' => auth()->id(),
-                'artist_id' => $artist->id
-            ],
-            [
-                'rating' => $request->rating
-            ]
-        );
+        match ((int)$request->rating) {
+            0 => ArtistRating::where('user_id', auth()->id())->where('artist_id', $artist->id)->delete(),
+            default => ArtistRating::updateOrCreate(
+                ['user_id' => auth()->id(), 'artist_id' => $artist->id],
+                ['rating' => $request->rating]
+            ),
+        };
+
+        $message = ($request->rating == 0) ? 'Calificación eliminada' : '¡Calificación guardada con éxito!';
 
         $newAverage = ArtistRating::where('artist_id', $artist->id)->avg('rating');
 
