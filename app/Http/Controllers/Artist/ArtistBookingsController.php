@@ -9,12 +9,6 @@ use Illuminate\Http\Request;
 
 class ArtistBookingsController extends Controller
 {
-    /**
-     * Get all bookings/quotations for a specific artist
-     * 
-     * @param int $artistId
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getArtistBookings($artistId)
     {
         try {
@@ -68,12 +62,6 @@ class ArtistBookingsController extends Controller
         }
     }
 
-    /**
-     * Get bookings for authenticated artist
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getMyBookings(Request $request)
     {
         try {
@@ -99,13 +87,6 @@ class ArtistBookingsController extends Controller
         }
     }
 
-    /**
-     * Get bookings by status
-     * 
-     * @param int $artistId
-     * @param string $status
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getBookingsByStatus($artistId, $status)
     {
         try {
@@ -141,7 +122,6 @@ class ArtistBookingsController extends Controller
                     ];
                 });
             
-            // Keep only one booking per day
             $bookings = $this->groupBookingsByDate($bookings);
 
             return response()->json([
@@ -160,13 +140,6 @@ class ArtistBookingsController extends Controller
         }
     }
 
-    /**
-     * Update booking status
-     * 
-     * @param int $bookingId
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function updateBookingStatus($bookingId, Request $request)
     {
         try {
@@ -202,13 +175,6 @@ class ArtistBookingsController extends Controller
         }
     }
 
-    /**
-     * Group bookings by date and keep only one per day
-     * Returns the first booking for each date
-     * 
-     * @param \Illuminate\Support\Collection $bookings
-     * @return \Illuminate\Support\Collection
-     */
     private function groupBookingsByDate($bookings)
     {
         $grouped = [];
