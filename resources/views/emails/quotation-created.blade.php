@@ -11,7 +11,7 @@
 <body>
     <header class="clearfix">
         <div id="logo">
-            <img src="/logovibeer.png">
+            <img src="{{ $message->embed(public_path('logovibeer.png')) }}" alt="Vibeer" style="height: 70px;">
         </div>
         <div id="company">
             <h2 class="name">Vibeer</h2>

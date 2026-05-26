@@ -72,12 +72,27 @@ class UsersSubscribeController extends Controller
     public function sendEmailToSubscribers(Request $request)
     {
         try {
-            $emailSubscribers = UsersSubscribe::pluck('email')->toArray();
 
+            $roleIds = $request->input('role_ids', []);
             $subject = $request->input('subject');
             $content = $request->input('content');
+            $emailsToSend = []; 
 
-            foreach ($emailSubscribers as $email) {
+            if (in_array('newsletter_users', $roleIds)) {
+                $subscriberEmails = UsersSubscribe::pluck('email')->toArray();
+                $emailsToSend = array_merge($emailsToSend, $subscriberEmails);
+                $roleIds = array_diff($roleIds, ['newsletter_users']);
+            }
+
+            if (count($roleIds) > 0) {
+                $userEmails = \App\Models\User::whereHas('roles', function($query) use ($roleIds) {
+                    $query->whereIn('id', $roleIds);
+                })->pluck('email')->toArray();
+                $emailsToSend = array_merge($emailsToSend, $userEmails);
+            }
+            $emailsToSend = array_unique($emailsToSend);
+
+            foreach ($emailsToSend as $email) {
                 Mail::to($email)->send(new SendNewsletter($subject, $content));
             }
 
