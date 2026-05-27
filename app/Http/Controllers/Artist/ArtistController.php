@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Artist;
 use App\Models\GaleryArtist;
 use App\Models\Manager;
+use App\Rules\ValidImageUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -61,12 +62,12 @@ class ArtistController extends Controller
                 'history'         => 'required',
                 'zone'            => 'required',
                 'price_hour'      => 'required',
-                'image_artist'    => 'required|image|max:1024',
+                'image_artist'    => ['required', 'file', 'max:1024', new ValidImageUpload()],
                 'extra_kilometre' => 'required',
                 'name_manager'    => 'required',
                 'phone_manager'   => 'required',
                 'email_manager'   => 'required|email',
-                'image_manager'   => 'required|image|max:1024',
+                'image_manager'   => ['required', 'file', 'max:1024', new ValidImageUpload()],
             ]);
 
             $urlStoreArtist = Storage::put('public/artist', request()->file('image_artist'));
@@ -222,12 +223,12 @@ class ArtistController extends Controller
                 'history'         => 'required',
                 'zone'            => 'required',
                 'price_hour'      => 'required',
-                'image_artist'    => 'image|max:1024',
+                'image_artist'    => ['nullable', 'file', 'max:1024', new ValidImageUpload()],
                 'extra_kilometre' => 'required',
                 'name_manager'    => 'required',
                 'phone_manager'   => 'required',
                 'email_manager'   => 'required|email',
-                'image_manager'   => 'image|max:1024',
+                'image_manager'   => ['nullable', 'file', 'max:1024', new ValidImageUpload()],
             ]);
 
             DB::beginTransaction();
@@ -318,7 +319,7 @@ class ArtistController extends Controller
     public function storeGaleryArtist(Request $request)
     {
         $request->validate([
-            'sub_files_paths' => 'image|max:1024',
+            'sub_files_paths' => ['required', 'file', 'max:1024', new ValidImageUpload()],
         ]);
     
         try {
@@ -361,7 +362,7 @@ class ArtistController extends Controller
     public function updateGaleryArtist(Request $request)
     {
         $request->validate([
-            'sub_files_paths' => 'image|max:1024',
+            'sub_files_paths' => ['required', 'file', 'max:1024', new ValidImageUpload()],
         ]);
     
         try {

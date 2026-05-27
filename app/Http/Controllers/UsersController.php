@@ -6,6 +6,7 @@ use App\Http\Requests\Auth\UserRegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Role;
 use App\Models\User;
+use App\Rules\ValidImageUpload;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -32,6 +33,7 @@ class UsersController extends Controller
             $email = $request->input("email");
             $password = $request->input("password");
             $hash =  md5(strtolower(trim($email)));
+            $user = null;
 
             if (!empty($name) && !empty($email) && !empty($password)) {
                 $developerRole = Role::where('slug', 'cliente')->first();
@@ -45,6 +47,11 @@ class UsersController extends Controller
                 $user->save();
                 $user->roles()->attach($developerRole->id);
                 DB::commit();
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error por campos vacíos',
+                ], 422);
             }
 
             $absoluteImageUrl = url($user->image_profile);
@@ -189,14 +196,15 @@ class UsersController extends Controller
     {
         try {
             $request->validate([
-                'image_profile' => 'required|image|max:1024'
+                'image_profile' => ['required', 'file', 'max:1024', new ValidImageUpload()],
             ]);
 
             if (request()->file('image_profile')) {
                 $urlStore = Storage::put('public/user_profile', request()->file('image_profile'));
                 $link = Storage::url($urlStore);
 
-                $user = User::find(Auth::user()->id);
+                /** @var User $user */
+                $user = User::query()->findOrFail(Auth::id());
 
                 if ($user->image_profile) {
                     $img = $user->image_profile;
@@ -218,8 +226,11 @@ class UsersController extends Controller
                     ], 200);
                 } else {
                     DB::beginTransaction();
+                    /** @var User $user */
                     $user->image_profile = $link;
-                    $user->save();
+                    $user->update([
+                        'image_profile' => $link,
+                    ]);
                     DB::commit();
 
                     $absoluteImageUrl = url($link);
@@ -242,9 +253,11 @@ class UsersController extends Controller
 
     public function updateDarkMode(Request $request)
     {
-        $user = auth()->user();
-        $user->dark_mode = $request->dark_mode;
-        $user->save();
+        User::query()->whereKey(Auth::id())->update([
+            'dark_mode' => $request->dark_mode,
+        ]);
+
+        $user = User::query()->findOrFail(Auth::id());
         return response()->json(['dark_mode' => $user->dark_mode], 200);
     }
 }
