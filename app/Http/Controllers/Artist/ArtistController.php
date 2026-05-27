@@ -328,16 +328,23 @@ class ArtistController extends Controller
     
             if ($artistGalleryCount < 5) {
                 if ($request->hasFile('sub_files_paths')) {
-                    $urlStore = Storage::put('public/galery-artist', request()->file('sub_files_paths'));
+                    $uploadedFile = $request->file('sub_files_paths');
+                    $urlStore = Storage::put('public/galery-artist', $uploadedFile);
                     $linkGalleryNew = Storage::url($urlStore);
                     $absolutePath = url($linkGalleryNew);
     
                     DB::beginTransaction();
-                    GaleryArtist::create([
+                    $gallery = GaleryArtist::create([
                         'artist_id' => $artist->id,
                         'image' => $absolutePath,
                     ]);
                     DB::commit();
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Imagen almacenada',
+                        'artistGallery' => $gallery,
+                    ], 201);
                 }
             } else {
                 return response()->json([
@@ -371,16 +378,23 @@ class ArtistController extends Controller
     
             if ($artistGalleryCount < 5) {
                 if ($request->hasFile('sub_files_paths')) {
-                    $urlStore = Storage::put('public/galery-artist', request()->file('sub_files_paths'));
+                    $uploadedFile = $request->file('sub_files_paths');
+                    $urlStore = Storage::put('public/galery-artist', $uploadedFile);
                     $linkGalleryNew = Storage::url($urlStore);
                     $absolutePath = url($linkGalleryNew);
     
                     DB::beginTransaction();
-                    GaleryArtist::create([
+                    $gallery = GaleryArtist::create([
                         'artist_id' => $artist->id,
                         'image' => $absolutePath,
                     ]);
                     DB::commit();
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Imagen actualizada',
+                        'artistGallery' => $gallery,
+                    ], 201);
                 }
             } else {
                 return response()->json([

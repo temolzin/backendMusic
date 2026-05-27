@@ -199,49 +199,33 @@ class UsersController extends Controller
                 'image_profile' => ['required', 'file', 'max:1024', new ValidImageUpload()],
             ]);
 
-            if (request()->file('image_profile')) {
-                $urlStore = Storage::put('public/user_profile', request()->file('image_profile'));
-                $link = Storage::url($urlStore);
+            $imageProfile = $request->file('image_profile');
+            $urlStore = Storage::put('public/user_profile', $imageProfile);
+            $link = Storage::url($urlStore);
 
-                /** @var User $user */
-                $user = User::query()->findOrFail(Auth::id());
+            /** @var User $user */
+            $user = User::query()->findOrFail(Auth::id());
 
-                if ($user->image_profile) {
-                    $img = $user->image_profile;
-                    $img = str_replace('storage', 'public', $img);
-                    $less = env('APP_URL') . '/public/';
-                    $img = str_replace($less, '', $img);
+            if ($user->image_profile) {
+                $img = $user->image_profile;
+                $img = str_replace('storage', 'public', $img);
+                $less = env('APP_URL') . '/public/';
+                $img = str_replace($less, '', $img);
 
-                    Storage::delete($img);
-                    $user->update([
-                        'image_profile' => $link
-                    ]);
-
-                    $absoluteImageUrl = url($link);
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Imagen actualizada',
-                        'image_profile' => $absoluteImageUrl,
-                    ], 200);
-                } else {
-                    DB::beginTransaction();
-                    /** @var User $user */
-                    $user->image_profile = $link;
-                    $user->update([
-                        'image_profile' => $link,
-                    ]);
-                    DB::commit();
-
-                    $absoluteImageUrl = url($link);
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Imagen actualizada',
-                        'image_profile' => $absoluteImageUrl,
-                    ], 200);
-                }
+                Storage::delete($img);
             }
+
+            $user->update([
+                'image_profile' => $link,
+            ]);
+
+            $absoluteImageUrl = url($link);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Imagen actualizada',
+                'image_profile' => $absoluteImageUrl,
+            ], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
