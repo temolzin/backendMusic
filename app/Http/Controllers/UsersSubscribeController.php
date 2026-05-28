@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\UsersSubscribe;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
@@ -72,31 +73,55 @@ class UsersSubscribeController extends Controller
      */
     public function sendEmailToSubscribers(Request $request)
     {
+            $validated = $request->validate([
+            'subject' => ['required', 'string', 'max:255'],
+            'content' => ['required', 'string'],
+            'role_ids' => ['required', 'array', 'min:1'],
+            'role_ids.*' => [
+                'integer',
+                function ($attribute, $value, $fail) {
+                    if ($value !== 0 && !DB::table('roles')->where('id', $value)->exists()) {
+                        $fail('Uno de los roles seleccionados no existe.');
+                    }
+                },
+            ],
+        ]);
+
         try {
             Gate::authorize('send-newsletters');
 
-            $validated = $request->validate([
-                'subject' => ['required', 'string', 'max:255'],
-                'content' => ['required', 'string'],
-                'role_ids' => ['required', 'array', 'min:1'],
-                'role_ids.*' => ['integer', 'exists:roles,id'],
-            ]);
-
             $roleIds = collect($validated['role_ids'])->unique()->values()->all();
+            
+            $listaFinalCorreos = [];
 
-            $emailSubscribers = UsersSubscribe::whereHas('user.roles', function ($query) use ($roleIds) {
-                $query->whereIn('roles.id', $roleIds);
-            })
-            ->pluck('email')
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+            $rolesReales = array_filter($roleIds, function($id) {
+                return $id !== 0;
+            });
+
+            if (!empty($rolesReales)) {
+                $correosPorRol = User::whereHas('roles', function ($query) use ($rolesReales) {
+                    $query->whereIn('roles.id', $rolesReales);
+                })
+                ->pluck('email')
+                ->toArray();
+                
+                $listaFinalCorreos = array_merge($listaFinalCorreos, $correosPorRol);
+            }
+
+            if (in_array(0, $roleIds)) {
+                $correosInvitados = UsersSubscribe::whereNull('user_id')
+                ->pluck('email')
+                ->toArray();
+
+                $listaFinalCorreos = array_merge($listaFinalCorreos, $correosInvitados);
+            }
+
+            $emailSubscribers = collect($listaFinalCorreos)->filter()->unique()->values()->all();
 
             if (empty($emailSubscribers)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No hay destinatarios disponibles con los roles seleccionados.',
+                    'message' => 'No hay destinatarios disponibles con las opciones seleccionadas.',
                     'errors' => [
                         'role_ids' => ['No hay destinatarios disponibles con esos roles.'],
                     ],
@@ -107,7 +132,12 @@ class UsersSubscribeController extends Controller
             $content = $validated['content'];
 
             foreach ($emailSubscribers as $email) {
-                Mail::to($email)->queue(new SendNewsletter($subject, $content));
+                try {
+                    Mail::to($email)->queue(new SendNewsletter($subject, $content));
+                    sleep(3); 
+                } catch (\Throwable $th) {
+                    continue;
+                }
             }
 
             return response()->json([
