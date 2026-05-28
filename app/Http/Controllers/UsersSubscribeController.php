@@ -92,31 +92,31 @@ class UsersSubscribeController extends Controller
 
             $roleIds = collect($validated['role_ids'])->unique()->values()->all();
             
-            $listaFinalCorreos = [];
+            $finalEmailList = [];
 
-            $rolesReales = array_filter($roleIds, function($id) {
+            $validRoleIds = array_filter($roleIds, function($id) {
                 return $id !== 0;
             });
 
-            if (!empty($rolesReales)) {
-                $correosPorRol = User::whereHas('roles', function ($query) use ($rolesReales) {
-                    $query->whereIn('roles.id', $rolesReales);
+            if (!empty($validRoleIds)) {
+                $emailsByRole = User::whereHas('roles', function ($query) use ($validRoleIds) {
+                    $query->whereIn('roles.id', $validRoleIds);
                 })
                 ->pluck('email')
                 ->toArray();
                 
-                $listaFinalCorreos = array_merge($listaFinalCorreos, $correosPorRol);
+                $finalEmailList = array_merge($finalEmailList, $emailsByRole);
             }
 
             if (in_array(0, $roleIds)) {
-                $correosInvitados = UsersSubscribe::whereNull('user_id')
+                $guestEmails = UsersSubscribe::whereNull('user_id')
                 ->pluck('email')
                 ->toArray();
 
-                $listaFinalCorreos = array_merge($listaFinalCorreos, $correosInvitados);
+                $finalEmailList = array_merge($finalEmailList, $guestEmails);
             }
 
-            $emailSubscribers = collect($listaFinalCorreos)->filter()->unique()->values()->all();
+            $emailSubscribers = collect($finalEmailList)->filter()->unique()->values()->all();
 
             if (empty($emailSubscribers)) {
                 return response()->json([
