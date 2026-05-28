@@ -35,9 +35,50 @@ class PaymentController extends Controller
             $city = $request->input("city") ?? $request->input("order_details.city");
             $state = $request->input("state") ?? $request->input("order_details.state");
             $zip_code = $request->input("zip_code") ?? $request->input("order_details.zip_code");
-            $amount = $request->input("amount");
-            
-            $amount = $amount / 100;
+
+            $clientAmountCents = (int) $request->input("amount");
+
+            $rawArtistList = $request->input('artistList', []);
+            $calculatedTotalCents = 0;
+            $itemsForSales = [];
+
+            foreach ($rawArtistList as $element) {
+                if (is_array($element) && array_key_exists('artist_id', $element)) {
+                    $artistId = (int) $element['artist_id'];
+                    $hours = isset($element['hours']) ? (int) $element['hours'] : 1;
+                } elseif (is_array($element) && array_key_exists(0, $element)) {
+                    $artistId = (int) $element[0];
+                    $maybe = $element[1] ?? 1;
+                    $hours = (is_numeric($maybe) && (int)$maybe > 0 && (int)$maybe <= 24) ? (int)$maybe : 1;
+                } else {
+                    continue;
+                }
+
+                $artist = Artist::find($artistId);
+                if (!$artist) {
+                    return response()->json(['error' => 'Artista no encontrado', 'artist_id' => $artistId], 404);
+                }
+
+                $pricePerHour = (float) $artist->price_hour;
+                $lineTotalPesos = $pricePerHour * $hours;
+                $calculatedTotalCents += (int) round($lineTotalPesos * 100);
+
+                $itemsForSales[] = [
+                    'artist_id' => $artistId,
+                    'hours' => $hours,
+                    'amount' => $lineTotalPesos
+                ];
+            }
+
+            if ($calculatedTotalCents !== $clientAmountCents) {
+                return response()->json([
+                    'error' => 'Monto inválido: el total enviado no coincide con el calculado por el servidor',
+                    'calculated_total' => $calculatedTotalCents,
+                    'client_total' => $clientAmountCents
+                ], 400);
+            }
+
+            $amount = $calculatedTotalCents / 100;
             
             if ($request->input("transaction_id")) {
                 $charge = new \stdClass();
@@ -87,12 +128,13 @@ class PaymentController extends Controller
                 $charge = $openpay->charges->create($chargeRequest);
             }
             
-            foreach ($request->artistList as $element) {
+            // Guardar ventas usando los importes calculados por servidor
+            foreach ($itemsForSales as $item) {
                 $venta = new ArtistSale();
                 $venta->openpay_transaction_id = $charge->id;
-                $venta->artist_id = $element[0];
+                $venta->artist_id = $item['artist_id'];
                 $venta->customer_id = Auth::user()?->id ?? $request->input("customer_id") ?? 1;
-                $venta->amount = $element[1];
+                $venta->amount = $item['amount']; // en pesos
                 $venta->save();
             }
 
