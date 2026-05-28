@@ -35,24 +35,24 @@ class UsersController extends Controller
             $hash =  md5(strtolower(trim($email)));
             $user = null;
 
-            if (!empty($name) && !empty($email) && !empty($password)) {
-                $developerRole = Role::where('slug', 'cliente')->first();
-
-                DB::beginTransaction();
-                $user = new User();
-                $user->name = $name;
-                $user->email = $email;
-                $user->password = bcrypt($password);
-                $user->image_profile = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
-                $user->save();
-                $user->roles()->attach($developerRole->id);
-                DB::commit();
-            } else {
+            if (empty($name) || empty($email) || empty($password)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error por campos vacíos',
                 ], 422);
             }
+
+            $developerRole = Role::where('slug', 'cliente')->first();
+
+            DB::beginTransaction();
+            $user = new User();
+            $user->name = $name;
+            $user->email = $email;
+            $user->password = bcrypt($password);
+            $user->image_profile = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
+            $user->save();
+            $user->roles()->attach($developerRole->id);
+            DB::commit();
 
             $absoluteImageUrl = url($user->image_profile);
 
