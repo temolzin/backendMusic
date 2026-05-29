@@ -134,7 +134,6 @@ class UsersSubscribeController extends Controller
             foreach ($emailSubscribers as $email) {
                 try {
                     Mail::to($email)->queue(new SendNewsletter($subject, $content));
-                    sleep(3); 
                 } catch (\Throwable $th) {
                     continue;
                 }
