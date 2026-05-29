@@ -17,6 +17,7 @@ use App\Models\Artist;
 use App\Models\ShoppingCard;
 use App\Models\ShoppingCardDetail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PaymentController extends Controller
 {
@@ -35,9 +36,47 @@ class PaymentController extends Controller
             $city = $request->input("city") ?? $request->input("order_details.city");
             $state = $request->input("state") ?? $request->input("order_details.state");
             $zip_code = $request->input("zip_code") ?? $request->input("order_details.zip_code");
-            $amount = $request->input("amount");
-            
-            $amount = $amount / 100;
+
+            $clientAmountCents = (int) $request->input("amount");
+            $artistList = $request->input('artistList', []);
+            $calculatedTotalCents = 0;
+            $itemsForSales = [];
+
+            foreach ($artistList as $element) {
+                if (!is_array($element) || !array_key_exists('artist_id', $element)) {
+                    return response()->json([
+                        'error' => 'Formato inválido en artistList'
+                    ], 400);
+                }
+
+                $artistId = (int) $element['artist_id'];
+                $hours = isset($element['hours']) ? (int) $element['hours'] : 1;
+
+                $artist = Artist::find($artistId);
+                if (!$artist) {
+                    return response()->json([
+                        'error' => 'Artista no encontrado',
+                        'artist_id' => $artistId
+                    ], 404);
+                }
+
+                $lineTotalPesos = (float) $artist->price_hour * $hours;
+                $calculatedTotalCents += (int) round($lineTotalPesos * 100);
+                $itemsForSales[] = [
+                    'artist_id' => $artistId,
+                    'amount' => $lineTotalPesos,
+                ];
+            }
+
+            if ($calculatedTotalCents !== $clientAmountCents) {
+                return response()->json([
+                    'error' => 'Monto inválido: el total enviado no coincide con el calculado por el servidor',
+                    'calculated_total' => $calculatedTotalCents,
+                    'client_total' => $clientAmountCents,
+                ], 400);
+            }
+
+            $amount = $calculatedTotalCents / 100;
             
             if ($request->input("transaction_id")) {
                 $charge = new \stdClass();
@@ -87,16 +126,17 @@ class PaymentController extends Controller
                 $charge = $openpay->charges->create($chargeRequest);
             }
             
-            foreach ($request->artistList as $element) {
-                $venta = new ArtistSale();
-                $venta->openpay_transaction_id = $charge->id;
-                $venta->artist_id = $element[0];
-                $venta->customer_id = Auth::user()?->id ?? $request->input("customer_id") ?? 1;
-                $venta->amount = $element[1];
-                $venta->save();
-            }
-
+            DB::beginTransaction();
             try {
+                foreach ($itemsForSales as $item) {
+                    $venta = new ArtistSale();
+                    $venta->openpay_transaction_id = $charge->id;
+                    $venta->artist_id = $item['artist_id'];
+                    $venta->customer_id = Auth::user()?->id ?? $request->input("customer_id") ?? 1;
+                    $venta->amount = $item['amount'];
+                    $venta->save();
+                }
+
                 $user_id = Auth::user()?->id ?? $request->input("customer_id");
                 if (!$user_id) {
                     throw new \Exception('No user ID available for cart cleanup');
@@ -112,8 +152,11 @@ class PaymentController extends Controller
                     $shoppingCard->total = 0;
                     $shoppingCard->save();
                 }
+
+                DB::commit();
             } catch (\Exception $e) {
-                // ignore cleanup errors
+                DB::rollBack();
+                throw $e;
             }
 
             return response()->json([
