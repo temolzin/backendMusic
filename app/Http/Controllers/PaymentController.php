@@ -129,12 +129,12 @@ class PaymentController extends Controller
             DB::beginTransaction();
             try {
                 foreach ($itemsForSales as $item) {
-                    $venta = new ArtistSale();
-                    $venta->openpay_transaction_id = $charge->id;
-                    $venta->artist_id = $item['artist_id'];
-                    $venta->customer_id = Auth::user()?->id ?? $request->input("customer_id") ?? 1;
-                    $venta->amount = $item['amount'];
-                    $venta->save();
+                    $sale = new ArtistSale();
+                    $sale->openpay_transaction_id = $charge->id;
+                    $sale->artist_id = $item['artist_id'];
+                    $sale->customer_id = Auth::user()?->id ?? $request->input("customer_id") ?? 1;
+                    $sale->amount = $item['amount'];
+                    $sale->save();
                 }
 
                 $user_id = Auth::user()?->id ?? $request->input("customer_id");
