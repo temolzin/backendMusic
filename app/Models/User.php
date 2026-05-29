@@ -17,6 +17,10 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 
     use HasApiTokens, HasFactory, Notifiable, HasPermissions;
 
+    public const ROLE_ADMIN = 'administrador';
+    public const ROLE_ARTIST = 'artista';
+    public const ROLE_CLIENT = 'cliente';
+
     /**
      * The attributes that are mass assignable.
      *

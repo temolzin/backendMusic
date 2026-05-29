@@ -19,7 +19,7 @@ class CardSeeder extends Seeder
         DB::statement('TRUNCATE TABLE clients RESTART IDENTITY CASCADE;');
 
         $users = User::whereHas('roles', function ($query) {
-            $query->where('slug', 'cliente');
+            $query->where('slug', User::ROLE_CLIENT);
         })->orderBy('id')->get();
 
         foreach ($users as $index => $user) {
