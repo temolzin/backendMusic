@@ -24,9 +24,15 @@ class AddArtistSalesArtistForeignKey extends Migration
             $table->dropForeign(['artist_id']);
         });
 
-        DB::table('artist_sales')
-            ->join('artists', 'artist_sales.artist_id', '=', 'artists.user_id')
-            ->update(['artist_sales.artist_id' => DB::raw('artists.id')]);
+        $artistMappings = DB::table('artists')
+            ->select('user_id', 'id')
+            ->get();
+
+        foreach ($artistMappings as $mapping) {
+            DB::table('artist_sales')
+                ->where('artist_id', $mapping->user_id)
+                ->update(['artist_id' => $mapping->id]);
+        }
 
         Schema::table('artist_sales', function (Blueprint $table) {
             $table->foreign('artist_id')
@@ -53,9 +59,15 @@ class AddArtistSalesArtistForeignKey extends Migration
             $table->dropForeign(['artist_id']);
         });
 
-        DB::table('artist_sales')
-            ->join('artists', 'artist_sales.artist_id', '=', 'artists.id')
-            ->update(['artist_sales.artist_id' => DB::raw('artists.user_id')]);
+        $artistMappings = DB::table('artists')
+            ->select('id', 'user_id')
+            ->get();
+
+        foreach ($artistMappings as $mapping) {
+            DB::table('artist_sales')
+                ->where('artist_id', $mapping->id)
+                ->update(['artist_id' => $mapping->user_id]);
+        }
 
         Schema::table('artist_sales', function (Blueprint $table) {
             $table->foreign('artist_id')
