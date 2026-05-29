@@ -135,7 +135,7 @@ class UsersSubscribeController extends Controller
                 try {
                     Mail::to($email)->queue(new SendNewsletter($subject, $content));
                 } catch (\Throwable $th) {
-                    continue; 
+                    continue;
                 }
             }
 
