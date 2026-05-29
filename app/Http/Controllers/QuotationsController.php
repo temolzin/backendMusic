@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\QuotationCreated;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class QuotationsController extends Controller
 {

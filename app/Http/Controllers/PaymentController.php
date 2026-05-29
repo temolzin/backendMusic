@@ -225,7 +225,6 @@ class PaymentController extends Controller
                 ]
             ]);
         }
-       
     }
 
     public function getSalesByArtist()
@@ -247,4 +246,23 @@ class PaymentController extends Controller
             ], 500);        }
     }
 
+    
+    public function statsByArtist()
+    {
+        try {
+            $artistUserId = Auth::user()->id;
+            $total = ArtistSale::where('artist_id', $artistUserId)->sum('amount');
+            $count = ArtistSale::where('artist_id', $artistUserId)->count();
+            return response()->json([
+                'success' => true,
+                'total' => $total,
+                'count' => $count,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -6,6 +6,7 @@ use App\Http\Requests\Auth\UserRegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Role;
 use App\Models\User;
+use App\Rules\ValidImageUpload;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -32,20 +33,26 @@ class UsersController extends Controller
             $email = $request->input("email");
             $password = $request->input("password");
             $hash =  md5(strtolower(trim($email)));
+            $user = null;
 
-            if (!empty($name) && !empty($email) && !empty($password)) {
-                $developerRole = Role::where('slug', 'cliente')->first();
-
-                DB::beginTransaction();
-                $user = new User();
-                $user->name = $name;
-                $user->email = $email;
-                $user->password = bcrypt($password);
-                $user->image_profile = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
-                $user->save();
-                $user->roles()->attach($developerRole->id);
-                DB::commit();
+            if (empty($name) || empty($email) || empty($password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error por campos vacíos',
+                ], 422);
             }
+
+            $developerRole = Role::where('slug', 'cliente')->first();
+
+            DB::beginTransaction();
+            $user = new User();
+            $user->name = $name;
+            $user->email = $email;
+            $user->password = bcrypt($password);
+            $user->image_profile = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
+            $user->save();
+            $user->roles()->attach($developerRole->id);
+            DB::commit();
 
             $absoluteImageUrl = url($user->image_profile);
 
@@ -99,29 +106,29 @@ class UsersController extends Controller
             $name = $request->input("name");
             $email = $request->input("email");
 
-            if (!empty($name) && !empty($email)) {
-
-                $valiEmail = User::where('email', $email)->Where('id', '!=', Auth::user()->id)->first();
-                if (!empty($valiEmail['email'])) {
-                    return response()->json(['message' => 'El correo electrónico ya esta en uso'], 401);
-                }
-
-                DB::beginTransaction();
-                $user = User::find(Auth::user()->id);
-                $user->name = $name;
-                $user->email = $email;
-                $user->save();
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Usuario actualizado',
-                ], 200);
-            } else
+            if (empty($name) || empty($email)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error por campos vacíos',
                 ], 401);
+            }
+
+            $valiEmail = User::where('email', $email)->Where('id', '!=', Auth::user()->id)->first();
+            if (!empty($valiEmail['email'])) {
+                return response()->json(['message' => 'El correo electrónico ya esta en uso'], 401);
+            }
+
+            DB::beginTransaction();
+            $user = User::find(Auth::user()->id);
+            $user->name = $name;
+            $user->email = $email;
+            $user->save();
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuario actualizado',
+            ], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -145,37 +152,37 @@ class UsersController extends Controller
             $confirmPassword = $request->input("confirmPassword");
             $currentPassword = $request->input("currentPassword");
 
-            if (!empty($newPassword) && !empty($confirmPassword) && !empty($currentPassword)) {
-                if ($newPassword != $confirmPassword) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Las contraseñas no coinciden',
-                    ], 401);
-                } else {
-
-                    if (Hash::check($currentPassword, Auth::user()->password)) {
-                        DB::beginTransaction();
-                        $user = User::find(Auth::user()->id);
-                        $user->password = Hash::make($newPassword);
-                        $user->save();
-                        DB::commit();
-
-                        return response()->json([
-                            'success' => true,
-                            'message' => 'Contraseña actualizada',
-                        ], 200);
-                    } else {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'La contraseña actual no coincide',
-                        ], 401);
-                    }
-                }
-            } else
+            if (empty($newPassword) || empty($confirmPassword) || empty($currentPassword)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Error por campos vacíos',
                 ], 401);
+            }
+
+            if ($newPassword != $confirmPassword) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Las contraseñas no coinciden',
+                ], 401);
+            }
+
+            if (!Hash::check($currentPassword, Auth::user()->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La contraseña actual no coincide',
+                ], 401);
+            }
+
+            DB::beginTransaction();
+            $user = User::find(Auth::user()->id);
+            $user->password = Hash::make($newPassword);
+            $user->save();
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Contraseña actualizada',
+            ], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -189,48 +196,36 @@ class UsersController extends Controller
     {
         try {
             $request->validate([
-                'image_profile' => 'required|image|max:1024'
+                'image_profile' => ['required', 'file', 'max:1024', new ValidImageUpload()],
             ]);
 
-            if (request()->file('image_profile')) {
-                $urlStore = Storage::put('public/user_profile', request()->file('image_profile'));
-                $link = Storage::url($urlStore);
+            $imageProfile = $request->file('image_profile');
+            $urlStore = Storage::put('public/user_profile', $imageProfile);
+            $link = Storage::url($urlStore);
 
-                $user = User::find(Auth::user()->id);
+            /** @var User $user */
+            $user = User::query()->findOrFail(Auth::id());
 
-                if ($user->image_profile) {
-                    $img = $user->image_profile;
-                    $img = str_replace('storage', 'public', $img);
-                    $less = env('APP_URL') . '/public/';
-                    $img = str_replace($less, '', $img);
+            if ($user->image_profile) {
+                $img = $user->image_profile;
+                $img = str_replace('storage', 'public', $img);
+                $less = env('APP_URL') . '/public/';
+                $img = str_replace($less, '', $img);
 
-                    Storage::delete($img);
-                    $user->update([
-                        'image_profile' => $link
-                    ]);
-
-                    $absoluteImageUrl = url($link);
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Imagen actualizada',
-                        'image_profile' => $absoluteImageUrl,
-                    ], 200);
-                } else {
-                    DB::beginTransaction();
-                    $user->image_profile = $link;
-                    $user->save();
-                    DB::commit();
-
-                    $absoluteImageUrl = url($link);
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Imagen actualizada',
-                        'image_profile' => $absoluteImageUrl,
-                    ], 200);
-                }
+                Storage::delete($img);
             }
+
+            $user->update([
+                'image_profile' => $link,
+            ]);
+
+            $absoluteImageUrl = url($link);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Imagen actualizada',
+                'image_profile' => $absoluteImageUrl,
+            ], 200);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -242,9 +237,11 @@ class UsersController extends Controller
 
     public function updateDarkMode(Request $request)
     {
-        $user = auth()->user();
-        $user->dark_mode = $request->dark_mode;
-        $user->save();
+        User::query()->whereKey(Auth::id())->update([
+            'dark_mode' => $request->dark_mode,
+        ]);
+
+        $user = User::query()->findOrFail(Auth::id());
         return response()->json(['dark_mode' => $user->dark_mode], 200);
     }
 }
