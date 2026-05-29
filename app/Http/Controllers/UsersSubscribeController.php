@@ -48,7 +48,6 @@ class UsersSubscribeController extends Controller
 
             $UserSuscribe = new UsersSubscribe();
             $UserSuscribe->email = $request->input('email');
-            $UserSuscribe->user_id = auth()->id();
             $UserSuscribe->save();
 
             DB::commit();
@@ -109,10 +108,7 @@ class UsersSubscribeController extends Controller
             }
 
             if (in_array(0, $roleIds)) {
-                $guestEmails = UsersSubscribe::whereNull('user_id')
-                ->pluck('email')
-                ->toArray();
-
+                $guestEmails = UsersSubscribe::pluck('email')->toArray();
                 $finalEmailList = array_merge($finalEmailList, $guestEmails);
             }
 

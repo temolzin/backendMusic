@@ -10,10 +10,6 @@ class UsersSubscribe extends Model
     use HasFactory;
 
     protected $table = 'users_subscribe';
-    protected $fillable = ['email', 'user_id'];
+    protected $fillable = ['email'];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 }
