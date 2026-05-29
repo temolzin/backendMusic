@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\QuotationsController;
 use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Client\FavouriteArtist\FavouriteArtistsController;
+use App\Http\Controllers\Client\PaymentController as ClientPaymentController;
 use App\Http\Controllers\Client\GendersController;
 use App\Http\Controllers\Client\ShoppingCart\ShoppingCardController;
 use App\Http\Controllers\General\ArtistsGeneralController;
@@ -92,7 +93,7 @@ Route::post('/users-subscribe/new', [UsersSubscribeController::class, 'store']);
 Route::post('/quotations', [QuotationsController::class, 'addQuotation']);
 
 Route::group(["middleware" => "auth:api"], function () {
-    Route::post('/process-payment', [PaymentController::class, 'processPayment']);
+    Route::post('/process-payment', [ClientPaymentController::class, 'processPayment']);
 });
 
 Route::get('/artist-sales', [PaymentController::class, 'getSalesByArtist']);

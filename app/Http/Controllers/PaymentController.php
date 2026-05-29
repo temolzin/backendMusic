@@ -39,6 +39,7 @@ class PaymentController extends Controller
 
             $clientAmountCents = (int) $request->input("amount");
             $artistList = $request->input('artistList', []);
+
             $calculatedTotalCents = 0;
             $itemsForSales = [];
 
@@ -156,6 +157,7 @@ class PaymentController extends Controller
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 throw $e;
             }
 
@@ -244,4 +246,5 @@ class PaymentController extends Controller
                 'message' => $e->getMessage()
             ], 500);        }
     }
+
 }
