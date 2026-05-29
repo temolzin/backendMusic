@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(RoleSeeder::class);
         $this->call(UserSeeder::class);
+        $this->call(CardSeeder::class);
         $this->call(MusicalGendersSeeder::class);
         $this->call(ArtistSeeder::class);
         $this->call(ShoppingCardDetailsSeeder::class);

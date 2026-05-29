@@ -12,9 +12,13 @@ class ArtistSalesSeeder extends Seeder
     {
         DB::statement('TRUNCATE TABLE artist_sales RESTART IDENTITY CASCADE;');
 
-        $artistIds   = range(2, 16);
+        $artistIds   = DB::table('artists')->orderBy('id')->pluck('id')->all();
         $customerIds = [17, 18];
         $amounts     = [6000, 9000, 12000];
+
+        if (empty($artistIds)) {
+            throw new \RuntimeException('No hay artistas sembrados para generar artist_sales.');
+        }
 
         foreach ($artistIds as $artistId) {
             foreach ($amounts as $index => $amount) {
