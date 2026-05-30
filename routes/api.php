@@ -23,6 +23,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Artist\ArtistSalesController;
 use App\Http\Controllers\ArtistRatingController;
+use App\Http\Controllers\Admin\DashboardStatsController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -50,6 +51,7 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::resource('/admin/roles', RolesApiController::class);
     Route::resource('/admin/permissions', PermissionsApiController::class);
     Route::resource('/admin/musical-genders', MusicalsGendersController::class);
+    Route::get('/admin/dashboard-overview', [DashboardStatsController::class, 'index']);
 
     //Route for artist
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
