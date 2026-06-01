@@ -14,13 +14,13 @@ class FavouriteArtistsSeeder extends Seeder
 
         $customerIds = [17, 18, 19, 20, 21];
         $artistIds   = range(1, 15);
-        $cantidades  = [2, 3, 5];
+        $quantities  = [2, 3, 5];
 
         foreach ($customerIds as $index => $customerId) {
-            $limite = $cantidades[$index % count($cantidades)];
-            $vueltas = range(1, $limite);
+            $limit = $quantities[$index % count($quantities)];
+            $iterations = range(1, $limit);
 
-            foreach ($vueltas as $i => $vuelta) {
+            foreach ($iterations as $i => $iteration) {
                 FavouriteArtists::create([
                     'user_id'   => $customerId,
                     'artist_id' => $artistIds[($index + $i) % count($artistIds)],
