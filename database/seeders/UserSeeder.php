@@ -142,5 +142,26 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
             'image_profile' => 'https://secure.gravatar.com/avatar/' . md5(strtolower(trim('fernando@gmail.com'))) . '?s=800&d=retro',
         ])->roles()->sync(3);
+
+        User::create([
+            'name' => 'Carlos Ramirez Lopez',
+            'email' => 'carlosramirez@gmail.com',
+            'password' => bcrypt('password'),
+            'image_profile' => 'https://secure.gravatar.com/avatar/' . md5(strtolower(trim('carlosramirez@gmail.com'))) . '?s=800&d=retro',
+        ])->roles()->sync(3);
+
+        User::create([
+            'name' => 'Valeria Torres Silva',
+            'email' => 'valeriatorres@gmail.com',
+            'password' => bcrypt('password'),
+            'image_profile' => 'https://secure.gravatar.com/avatar/' . md5(strtolower(trim('valeriatorres@gmail.com'))) . '?s=800&d=retro',
+        ])->roles()->sync(3);
+
+        User::create([
+            'name' => 'Diego Hernandez Ruiz',
+            'email' => 'diegohernandez@gmail.com',
+            'password' => bcrypt('password'),
+            'image_profile' => 'https://secure.gravatar.com/avatar/' . md5(strtolower(trim('diegohernandez@gmail.com'))) . '?s=800&d=retro',
+        ])->roles()->sync(3);
     }
 }
