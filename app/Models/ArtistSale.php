@@ -11,6 +11,16 @@ class ArtistSale extends Model
         'artist_id',
         'customer_id',
         'amount',
+        'customer_first_name',
+        'customer_last_name',
+        'customer_email',
+        'customer_phone',
+        'customer_address',
+        'customer_city',
+        'customer_state',
+        'customer_zip_code',
+        'event_date',
+        'event_hour',
         'openpay_transaction_id',
     ];
 

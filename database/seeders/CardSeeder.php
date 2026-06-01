@@ -23,11 +23,9 @@ class CardSeeder extends Seeder
         })->orderBy('id')->get();
 
         foreach ($users as $index => $user) {
-            $cardSuffix = str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT);
-
             Client::create([
                 'user_id' => $user->id,
-                'number_card' => '411111111111' . $cardSuffix,
+                'number_card' => '4111111111111111',
                 'name' => $user->name,
                 'expiration_date' => '12/28',
             ]);
