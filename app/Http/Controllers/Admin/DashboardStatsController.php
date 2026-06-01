@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Artist;
+use App\Models\ArtistSale;
 use App\Models\MusicalGender;
-use App\Models\Quotations;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -18,24 +18,19 @@ class DashboardStatsController extends Controller
             $periodDays = (int) $request->input('period_days', 30);
             $periodDays = $periodDays > 0 ? $periodDays : 30;
             $periodStart = Carbon::now()->subDays($periodDays);
+            $clients = User::whereHas('roles', function ($query) {
+                $query->where('roles.id', 3);
+            });
 
             $cards = [
                 $this->makeCard(
                     'users',
-                    'Usuarios registrados',
-                    User::count(),
+                    'Clientes registrados',
+                    (clone $clients)->count(),
                     [
                         [
-                            'label' => 'Verificados',
-                            'value' => User::whereNotNull('email_verified_at')->count(),
-                        ],
-                        [
-                            'label' => 'Sin verificar',
-                            'value' => User::whereNull('email_verified_at')->count(),
-                        ],
-                        [
                             'label' => 'Nuevos últimos ' . $periodDays . ' días',
-                            'value' => User::where('created_at', '>=', $periodStart)->count(),
+                            'value' => (clone $clients)->where('created_at', '>=', $periodStart)->count(),
                         ],
                     ]
                 ),
@@ -78,17 +73,21 @@ class DashboardStatsController extends Controller
                     ]
                 ),
                 $this->makeCard(
-                    'quotations',
-                    'Cotizaciones',
-                    Quotations::count(),
+                    'sales',
+                    'Ventas',
+                    ArtistSale::count(),
                     [
                         [
-                            'label' => 'Últimos ' . $periodDays . ' días',
-                            'value' => Quotations::where('created_at', '>=', $periodStart)->count(),
+                            'label' => 'Monto acumulado',
+                            'value' => (float) ArtistSale::sum('amount'),
                         ],
                         [
-                            'label' => 'Este mes',
-                            'value' => Quotations::whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()])->count(),
+                            'label' => 'Monto últimos ' . $periodDays . ' días',
+                            'value' => (float) ArtistSale::where('created_at', '>=', $periodStart)->sum('amount'),
+                        ],
+                        [
+                            'label' => 'Ticket promedio últimos ' . $periodDays . ' días',
+                            'value' => round((float) ArtistSale::where('created_at', '>=', $periodStart)->avg('amount'), 2),
                         ],
                     ]
                 ),
