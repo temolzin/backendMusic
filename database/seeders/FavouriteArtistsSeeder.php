@@ -2,51 +2,30 @@
 
 namespace Database\Seeders;
 
+use App\Models\FavouriteArtists;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class FavouriteArtistsSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
     public function run()
     {
         DB::statement('TRUNCATE TABLE favourite_artists RESTART IDENTITY CASCADE;');
 
-        $favourites = [
-            ['user_id' => 17, 'artist_id' => 1],
-            ['user_id' => 17, 'artist_id' => 5],
-            ['user_id' => 17, 'artist_id' => 9],
-            ['user_id' => 17, 'artist_id' => 12],
-            ['user_id' => 17, 'artist_id' => 15],
+        $customerIds = [17, 18, 19, 20, 21];
+        $artistIds   = range(1, 15);
+        $cantidades  = [2, 3, 5];
 
-            ['user_id' => 18, 'artist_id' => 2],
-            ['user_id' => 18, 'artist_id' => 6],
-            ['user_id' => 18, 'artist_id' => 10],
+        foreach ($customerIds as $index => $customerId) {
+            $limite = $cantidades[$index % count($cantidades)];
+            $vueltas = range(1, $limite);
 
-            ['user_id' => 19, 'artist_id' => 3],
-            ['user_id' => 19, 'artist_id' => 7],
-
-            ['user_id' => 20, 'artist_id' => 4],
-            ['user_id' => 20, 'artist_id' => 8],
-            ['user_id' => 20, 'artist_id' => 11],
-            ['user_id' => 20, 'artist_id' => 13],
-            ['user_id' => 20, 'artist_id' => 14],
-
-            ['user_id' => 21, 'artist_id' => 4],
-
-        ];
-
-        foreach ($favourites as $favourite) {
-            DB::table('favourite_artists')->insert([
-                'user_id'    => $favourite['user_id'],
-                'artist_id'  => $favourite['artist_id'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            foreach ($vueltas as $i => $vuelta) {
+                FavouriteArtists::create([
+                    'user_id'   => $customerId,
+                    'artist_id' => $artistIds[($index + $i) % count($artistIds)],
+                ]);
+            }
         }
     }
 }
