@@ -19,7 +19,7 @@ class DashboardStatsController extends Controller
             $periodDays = $periodDays > 0 ? $periodDays : 30;
             $periodStart = Carbon::now()->subDays($periodDays);
             $clients = User::whereHas('roles', function ($query) {
-                $query->where('roles.id', 3);
+                $query->where('roles.slug', User::ROLE_CLIENT);
             });
 
             $cards = [
