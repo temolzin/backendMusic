@@ -18,6 +18,7 @@ use App\Models\ShoppingCard;
 use App\Models\ShoppingCardDetail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class PaymentController extends Controller
 {
@@ -36,6 +37,9 @@ class PaymentController extends Controller
             $city = $request->input("city") ?? $request->input("order_details.city");
             $state = $request->input("state") ?? $request->input("order_details.state");
             $zip_code = $request->input("zip_code") ?? $request->input("order_details.zip_code");
+            $phone = $request->input("phone") ?? $request->input("order_details.phone");
+            $eventDate = $request->input('event_date') ?? $request->input('order_details.event_date');
+            $eventHour = $request->input('event_hour') ?? $request->input('order_details.event_hour');
 
             $clientAmountCents = (int) $request->input("amount");
             $artistList = $request->input('artistList', []);
@@ -52,6 +56,10 @@ class PaymentController extends Controller
 
                 $artistId = (int) $element['artist_id'];
                 $hours = isset($element['hours']) ? (int) $element['hours'] : 1;
+                $itemEventDate = $element['event_date'] ?? $eventDate;
+                $itemEventHour = $element['event_hour'] ?? $eventHour;
+                $normalizedEventDate = $itemEventDate ? Carbon::parse($itemEventDate)->toDateString() : null;
+                $normalizedEventHour = $itemEventHour ? Carbon::parse($itemEventHour)->format('H:i:s') : null;
 
                 $artist = Artist::find($artistId);
                 if (!$artist) {
@@ -135,6 +143,16 @@ class PaymentController extends Controller
                     $sale->artist_id = $item['artist_id'];
                     $sale->customer_id = Auth::user()?->id ?? $request->input("customer_id") ?? 1;
                     $sale->amount = $item['amount'];
+                    $sale->customer_first_name = $name;
+                    $sale->customer_last_name = $last_name;
+                    $sale->customer_email = $email;
+                    $sale->customer_phone = $phone;
+                    $sale->customer_address = $address;
+                    $sale->customer_city = $city;
+                    $sale->customer_state = $state;
+                    $sale->customer_zip_code = $zip_code;
+                    $sale->event_date = $normalizedEventDate;
+                    $sale->event_hour = $normalizedEventHour;
                     $sale->save();
                 }
 
