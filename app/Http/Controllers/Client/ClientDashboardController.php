@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\ShoppingCard;
-use App\Models\ShoppingCardDetail;
 use App\Models\ArtistSale;
 use App\Models\FavouriteArtists;
 use Illuminate\Http\Request;
