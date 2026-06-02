@@ -23,6 +23,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Artist\ArtistSalesController;
 use App\Http\Controllers\ArtistRatingController;
+use App\Http\Controllers\ChatController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -81,6 +82,8 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::post('/client/artists/{id}/rate', [ArtistRatingController::class, 'rateArtist']);
     Route::get('/client/artists/{id}/my-rating', [ArtistRatingController::class, 'getUserRating']);
     Route::get('/artist/ratings/average', [ArtistRatingController::class, 'averageRating']);
+    Route::get('/chat/messages/{artistSaleId}', [ChatController::class, 'getMessages']);
+    Route::post('/chat/messages', [ChatController::class, 'sendMessage']);
 });
 
 
