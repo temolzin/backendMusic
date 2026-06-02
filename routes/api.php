@@ -25,6 +25,7 @@ use App\Http\Controllers\Artist\ArtistSalesController;
 use App\Http\Controllers\ArtistRatingController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\DashboardStatsController;
+use App\Http\Controllers\Client\ClientDashboardController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -53,7 +54,7 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::resource('/admin/permissions', PermissionsApiController::class);
     Route::resource('/admin/musical-genders', MusicalsGendersController::class);
     Route::get('/admin/dashboard-overview', [DashboardStatsController::class, 'index']);
-
+    
     //Route for artist
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
     Route::get('/artist-new/gallery', [ArtistController::class, 'artistGalleryIndex']);
@@ -62,6 +63,7 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::delete('/artist-new/gallery-artist-delete', [ArtistController::class, 'deleteGaleryArtist']);
     Route::resource('/artist-new', ArtistController::class);
     //Route for client
+    Route::get('/client/dashboard-overview', [ClientDashboardController::class, 'index']);
     Route::resource('/client-card', ClientController::class);
     Route::get('/client/profile', [ClientController::class, 'getProfile']);
     Route::get('/client/musical-genders', [GendersController::class, 'index']);
