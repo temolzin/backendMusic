@@ -54,7 +54,6 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::resource('/admin/permissions', PermissionsApiController::class);
     Route::resource('/admin/musical-genders', MusicalsGendersController::class);
     Route::get('/admin/dashboard-overview', [DashboardStatsController::class, 'index']);
-    
     //Route for artist
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
     Route::get('/artist-new/gallery', [ArtistController::class, 'artistGalleryIndex']);
