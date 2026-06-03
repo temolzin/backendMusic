@@ -245,12 +245,17 @@ class PaymentController extends Controller
         }
     }
 
-    public function getSalesByArtist()
+    public function getSalesByArtist(Request $request)
     {
         try {
             $user = Auth::user();
-            $artist = Artist::where('user_id', $user->id)->first();
-            $artistId = $artist->id;
+            $artistId = $request->query('artist_id');
+            
+            if (!$artistId) {
+                $artist = Artist::where('user_id', $user->id)->first();
+                $artistId = $artist->id;
+            }
+            
             $sales = ArtistSale::where('artist_id', $artistId)->get();
             return response()->json([
                 'success' => true,
@@ -261,7 +266,40 @@ class PaymentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 500);        }
+            ], 500);
+        }
+    }
+
+    public function getLastClientOrder()
+    {
+        try {
+            $userId = Auth::user()->id;
+            
+            $lastOrder = ArtistSale::where('customer_id', $userId)
+                ->orderBy('created_at', 'desc')
+                ->first();
+            
+            (is_null($lastOrder)) ? $orderData = null : $orderData = [
+                'first_name' => $lastOrder->customer_first_name,
+                'last_name' => $lastOrder->customer_last_name,
+                'email' => $lastOrder->customer_email,
+                'phone' => $lastOrder->customer_phone,
+                'address' => $lastOrder->customer_address,
+                'city' => $lastOrder->customer_city,
+                'state' => $lastOrder->customer_state,
+                'zip_code' => $lastOrder->customer_zip_code,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'order' => $orderData,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     

@@ -107,6 +107,7 @@ Route::group(["middleware" => "auth:api"], function () {
 
 Route::group(["middleware" => "auth:api"], function () {
     Route::post('/process-payment', [ClientPaymentController::class, 'processPayment']);
+    Route::get('/client/last-order', [PaymentController::class, 'getLastClientOrder']);
 });
 
 Route::get('/artist-sales', [PaymentController::class, 'getSalesByArtist']);
