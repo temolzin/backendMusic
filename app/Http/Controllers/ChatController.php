@@ -10,7 +10,13 @@ class ChatController extends Controller
 {
     public function getMessages($artistSaleId)
     {
-        $messages = Message::where('artist_sale_id', $artistSaleId)
+        Message::where('artist_sale_id', $artistSaleId)
+            ->where('created_by', '!=', Auth::id())
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
+        $messages = Message::with('sender')
+            ->where('artist_sale_id', $artistSaleId)
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -34,6 +40,8 @@ class ChatController extends Controller
             'is_read' => false
         ]);
 
+        $message->load('sender');
+        
         return response()->json([
             'success' => true,
             'message' => $message
