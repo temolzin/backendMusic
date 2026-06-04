@@ -248,15 +248,62 @@ class PaymentController extends Controller
     public function getSalesByArtist(Request $request)
     {
         try {
-            $user = Auth::user();
             $artistId = $request->query('artist_id');
-            
+
             if (!$artistId) {
-                $artist = Artist::where('user_id', $user->id)->first();
-                $artistId = $artist->id;
+                return response()->json([
+                    'success' => false,
+                    'message' => 'artist_id query parameter is required'
+                ], 400);
             }
             
-            $sales = ArtistSale::where('artist_id', $artistId)->get();
+            $artist = Artist::find($artistId);
+            if (!$artist) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Artist not found'
+                ], 404);
+            }
+            
+            $sales = ArtistSale::where('artist_id', $artistId)
+                ->select('id', 'artist_id', 'event_date', 'event_hour', 'created_at')
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'sales' => $sales,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error'
+            ], 500);
+        }
+    }
+
+    public function getArtistSalesDetails(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+            
+            $artist = Artist::where('user_id', $user->id)->first();
+            if (!$artist) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Artist profile not found for this user'
+                ], 404);
+            }
+            
+            $sales = ArtistSale::where('artist_id', $artist->id)->get();
+            
             return response()->json([
                 'success' => true,
                 'sales' => $sales,
