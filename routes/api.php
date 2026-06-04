@@ -111,5 +111,4 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/artist/sales/details', [PaymentController::class, 'getArtistSalesDetails']);
 });
 
-// Public endpoint: calendar-blocking fields only (no PII)
 Route::get('/artist-sales', [PaymentController::class, 'getSalesByArtist']);
