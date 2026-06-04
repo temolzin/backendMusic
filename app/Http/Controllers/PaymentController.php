@@ -353,9 +353,28 @@ class PaymentController extends Controller
     public function statsByArtist()
     {
         try {
-            $artistUserId = Auth::user()->id;
-            $total = ArtistSale::where('artist_id', $artistUserId)->sum('amount');
-            $count = ArtistSale::where('artist_id', $artistUserId)->count();
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+
+            $artist = Artist::where('user_id', $user->id)->first();
+
+            if (!$artist) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Artist profile not found for this user'
+                ], 404);
+            }
+
+            $salesQuery = ArtistSale::where('artist_id', $artist->id);
+            $total = (float) $salesQuery->sum('amount');
+            $count = (clone $salesQuery)->count();
+
             return response()->json([
                 'success' => true,
                 'total' => $total,
