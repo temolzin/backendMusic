@@ -245,13 +245,65 @@ class PaymentController extends Controller
         }
     }
 
-    public function getSalesByArtist()
+    public function getSalesByArtist(Request $request)
+    {
+        try {
+            $artistId = $request->query('artist_id');
+
+            if (!$artistId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'artist_id query parameter is required'
+                ], 400);
+            }
+            
+            $artist = Artist::find($artistId);
+            if (!$artist) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Artist not found'
+                ], 404);
+            }
+            
+            $sales = ArtistSale::where('artist_id', $artistId)
+                ->select('id', 'artist_id', 'event_date', 'event_hour', 'created_at')
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'sales' => $sales,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error'
+            ], 500);
+        }
+    }
+
+    public function getArtistSalesDetails(Request $request)
     {
         try {
             $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated'
+                ], 401);
+            }
+            
             $artist = Artist::where('user_id', $user->id)->first();
-            $artistId = $artist->id;
-            $sales = ArtistSale::where('artist_id', $artistId)->get();
+            if (!$artist) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Artist profile not found for this user'
+                ], 404);
+            }
+            
+            $sales = ArtistSale::where('artist_id', $artist->id)->get();
+            
             return response()->json([
                 'success' => true,
                 'sales' => $sales,
@@ -261,7 +313,40 @@ class PaymentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 500);        }
+            ], 500);
+        }
+    }
+
+    public function getLastClientOrder()
+    {
+        try {
+            $userId = Auth::user()->id;
+            
+            $lastOrder = ArtistSale::where('customer_id', $userId)
+                ->orderBy('created_at', 'desc')
+                ->first();
+            
+            (is_null($lastOrder)) ? $orderData = null : $orderData = [
+                'first_name' => $lastOrder->customer_first_name,
+                'last_name' => $lastOrder->customer_last_name,
+                'email' => $lastOrder->customer_email,
+                'phone' => $lastOrder->customer_phone,
+                'address' => $lastOrder->customer_address,
+                'city' => $lastOrder->customer_city,
+                'state' => $lastOrder->customer_state,
+                'zip_code' => $lastOrder->customer_zip_code,
+            ];
+
+            return response()->json([
+                'success' => true,
+                'order' => $orderData,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     
