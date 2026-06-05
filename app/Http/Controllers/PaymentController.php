@@ -26,8 +26,9 @@ class PaymentController extends Controller
     public function processPayment(Request $request)
     {
         try {
-            $openpay = Openpay::getInstance(env('OPENPAY_ID'), env('OPENPAY_SECRET'), "MX");
-            Openpay::setProductionMode(env('OPENPAY_PRODUCTION_MODE'));
+            $keys = \App\Models\OpenpayKey::first();
+            $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
+            Openpay::setProductionMode(false);
             
             $token = $request->input("token");
             $name = $request->input("name") ?? $request->input("order_details.first_name");

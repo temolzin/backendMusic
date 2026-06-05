@@ -25,6 +25,7 @@ use App\Http\Controllers\Artist\ArtistSalesController;
 use App\Http\Controllers\ArtistRatingController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\DashboardStatsController;
+use App\Http\Controllers\Admin\OpenpayKeysController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -80,15 +81,18 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/artist/favourite_artists/count', [FavouriteArtistsController::class, 'countByArtist']);
     Route::get('/artist/ratings/average', [ArtistRatingController::class, 'averageRating']);
     Route::get('/artist/sales/stats', [PaymentController::class, 'statsByArtist']);
+    Route::get('/artist/sales/details', [PaymentController::class, 'getSalesByArtist']);
     Route::get('/artist/favourite_artists/count', [FavouriteArtistsController::class, 'countByArtist']);
     Route::post('/client/artists/{id}/rate', [ArtistRatingController::class, 'rateArtist']);
     Route::get('/client/artists/{id}/my-rating', [ArtistRatingController::class, 'getUserRating']);
     Route::get('/artist/ratings/average', [ArtistRatingController::class, 'averageRating']);
     Route::get('/chat/messages/{artistSaleId}', [ChatController::class, 'getMessages']);
     Route::post('/chat/messages', [ChatController::class, 'sendMessage']);
+    Route::get('/admin/openpay-keys', [OpenpayKeysController::class, 'getKeys']);
+    Route::put('/admin/openpay-keys', [OpenpayKeysController::class, 'updateKeys']);
 });
 
-
+Route::get('/openpay-keys/public', [OpenpayKeysController::class, 'getPublicKeys']);
 //Route for General
 Route::get('/latest-artists', [ArtistsGeneralController::class, 'latestArtists']);
 // Test route
@@ -108,5 +112,3 @@ Route::group(["middleware" => "auth:api"], function () {
 Route::group(["middleware" => "auth:api"], function () {
     Route::post('/process-payment', [ClientPaymentController::class, 'processPayment']);
 });
-
-Route::get('/artist-sales', [PaymentController::class, 'getSalesByArtist']);
