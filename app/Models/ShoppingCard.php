@@ -19,7 +19,7 @@ class ShoppingCard extends Model
 
     public function shoppingCardDetail()
     {
-        return $this->hasMany(shoppingCardDetail::class);
+        return $this->hasMany(ShoppingCardDetail::class);
     }
 
     public function user()
