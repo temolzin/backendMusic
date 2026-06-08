@@ -46,21 +46,14 @@ class OpenpayKeysController extends Controller
                 'openpay_public_key'   => 'required|string',
             ]);
 
-            $keys = OpenpayKey::first();
-
-            if ($keys) {
-                $keys->update($request->only([
+            OpenpayKey::updateOrCreate(
+                ['id' => 1],
+                $request->only([
                     'openpay_id',
                     'openpay_secret',
                     'openpay_public_key',
-                ]));
-            } else {
-                OpenpayKey::create($request->only([
-                    'openpay_id',
-                    'openpay_secret',
-                    'openpay_public_key',
-                ]));
-            }
+                ])
+            );
 
             return response()->json(['success' => true, 'message' => 'Credenciales actualizadas'], 200);
         } catch (\Exception $e) {

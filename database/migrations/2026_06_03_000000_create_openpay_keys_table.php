@@ -11,9 +11,9 @@ return new class extends Migration
     {
         Schema::create('openpay_keys', function (Blueprint $table) {
             $table->id();
-            $table->string('openpay_id')->nullable();
-            $table->string('openpay_secret')->nullable();
-            $table->string('openpay_public_key')->nullable();
+            $table->text('openpay_id')->nullable();
+            $table->text('openpay_secret')->nullable();
+            $table->text('openpay_public_key')->nullable();
             $table->timestamps();
         });
     }

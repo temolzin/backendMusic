@@ -19,6 +19,7 @@ use App\Models\ShoppingCardDetail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\OpenpayKey;
 
 class PaymentController extends Controller
 {
@@ -26,7 +27,7 @@ class PaymentController extends Controller
     public function processPayment(Request $request)
     {
         try {
-            $keys = \App\Models\OpenpayKey::first();
+            $keys = OpenpayKey::first();
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
             Openpay::setProductionMode(false);
             

@@ -15,6 +15,9 @@ class OpenpayKey extends Model
     ];
 
     protected $casts = [
+        'openpay_id' => 'encrypted',
+        'openpay_secret' => 'encrypted',
+        'openpay_public_key' => 'encrypted',
         'openpay_sandbox_mode' => 'boolean',
     ];
 }
