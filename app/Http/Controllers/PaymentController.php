@@ -163,11 +163,11 @@ class PaymentController extends Controller
                     throw new \Exception('No user ID available for cart cleanup');
                 }
 
-                $shoppingCard = ShoppingCard::where('user_id', $user_id)
+                $shoppingCards = ShoppingCard::where('user_id', $user_id)
                     ->where('status', 1)
-                    ->first();
+                    ->get();
 
-                if ($shoppingCard) {
+                foreach ($shoppingCards as $shoppingCard) {
                     ShoppingCardDetail::where('shopping_card_id', $shoppingCard->id)->delete();
                     $shoppingCard->status = 2;
                     $shoppingCard->total = 0;
