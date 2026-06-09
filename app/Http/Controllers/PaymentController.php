@@ -43,6 +43,13 @@ class PaymentController extends Controller
             $eventDate = $request->input('event_date') ?? $request->input('order_details.event_date');
             $eventHour = $request->input('event_hour') ?? $request->input('order_details.event_hour');
 
+            $userId = Auth::user()?->id ?? $request->input('customer_id');
+            if (!$userId) {
+                return response()->json([
+                    'error' => 'Usuario no autenticado o no se proporcionó un ID de cliente válido'
+                ], 401);
+            }
+
             $clientAmountCents = (int) $request->input("amount");
             $artistList = $request->input('artistList', []);
 
@@ -143,7 +150,7 @@ class PaymentController extends Controller
                     $sale = new ArtistSale();
                     $sale->openpay_transaction_id = $charge->id;
                     $sale->artist_id = $item['artist_id'];
-                    $sale->customer_id = Auth::user()?->id ?? $request->input("customer_id") ?? 1;
+                    $sale->customer_id = $userId;
                     $sale->amount = $item['amount'];
                     $sale->customer_first_name = $name;
                     $sale->customer_last_name = $last_name;
@@ -158,12 +165,12 @@ class PaymentController extends Controller
                     $sale->save();
                 }
 
-                $user_id = Auth::user()?->id ?? $request->input("customer_id");
-                if (!$user_id) {
+                $userId = Auth::user()?->id ?? $request->input("customer_id");
+                if (!$userId) {
                     throw new \Exception('No user ID available for cart cleanup');
                 }
 
-                $shoppingCards = ShoppingCard::where('user_id', $user_id)
+                $shoppingCards = ShoppingCard::where('user_id', $userId)
                     ->where('status', 1)
                     ->get();
 
@@ -304,7 +311,7 @@ class PaymentController extends Controller
                 ], 404);
             }
             
-            $sales = ArtistSale::where('artist_id', $artist->id)->get();
+            $sales = ArtistSale::where('artist_id', $artist->id)->where('status', 'completed')->get();
             
             return response()->json([
                 'success' => true,
@@ -373,7 +380,7 @@ class PaymentController extends Controller
                 ], 404);
             }
 
-            $salesQuery = ArtistSale::where('artist_id', $artist->id);
+            $salesQuery = ArtistSale::where('artist_id', $artist->id)->where('status', 'completed');
             $total = (float) $salesQuery->sum('amount');
             $count = (clone $salesQuery)->count();
 
@@ -388,5 +395,188 @@ class PaymentController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function processCashPayment(Request $request)
+    {
+        try {
+            $keys = OpenpayKey::first();
+            $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
+            Openpay::setProductionMode(false);
+
+            $dueDateInstance = Carbon::now()->addDays(3);
+
+            $name        = $request->input('order_details.first_name') ?? $request->input('customer_name');
+            $last_name   = $request->input('order_details.last_name', '');
+            $email       = $request->input('order_details.email') ?? $request->input('customer_email');
+            $phone       = $request->input('order_details.phone') ?? $request->input('customer_phone');
+            $address     = $request->input('order_details.address', '');
+            $city        = $request->input('order_details.city', '');
+            $state       = $request->input('order_details.state', '');
+            $zip_code    = $request->input('order_details.zip_code', '');
+            $eventDate   = $request->input('order_details.event_date') ?? $request->input('event_date');
+            $eventHour   = $request->input('order_details.event_hour') ?? $request->input('event_hour');
+            $store       = $request->input('store'); 
+
+            $userId = Auth::user()?->id ?? $request->input('customer_id');
+            if (!$userId) {
+                return response()->json([
+                    'error' => 'Usuario no autenticado o no se proporcionó un ID de cliente válido'
+                ], 401);
+            }
+
+            $clientAmountCents = (int) $request->input('amount');
+            $artistList        = $request->input('artistList', []);
+
+            $calculatedTotalCents = 0;
+            $itemsForSales = [];
+
+            foreach ($artistList as $element) {
+                if (!is_array($element) || !array_key_exists('artist_id', $element)) {
+                    return response()->json(['error' => 'Formato inválido en artistList'], 400);
+                }
+
+                $artistId = (int) $element['artist_id'];
+                $hours    = isset($element['hours']) ? (int) $element['hours'] : 1;
+                $normalizedEventDate = $eventDate ? Carbon::parse($eventDate)->toDateString() : null;
+                $normalizedEventHour = $eventHour ? Carbon::parse($eventHour)->format('H:i:s') : null;
+
+                $artist = Artist::find($artistId);
+                if (!$artist) {
+                    return response()->json(['error' => 'Artista no encontrado', 'artist_id' => $artistId], 404);
+                }
+
+                $lineTotalPesos        = (float) $artist->price_hour * $hours;
+                $calculatedTotalCents += (int) round($lineTotalPesos * 100);
+                $itemsForSales[]       = [
+                    'artist_id'    => $artistId,
+                    'amount'       => $lineTotalPesos,
+                    'event_date'   => $normalizedEventDate,
+                    'event_hour'   => $normalizedEventHour,
+                ];
+            }
+
+            if ($calculatedTotalCents !== $clientAmountCents) {
+                return response()->json([
+                    'error'            => 'Monto inválido: el total enviado no coincide con el calculado',
+                    'calculated_total' => $calculatedTotalCents,
+                    'client_total'     => $clientAmountCents,
+                ], 400);
+            }
+
+            $amount = $calculatedTotalCents / 100;
+
+            $customerData = [
+                'name'             => $name,
+                'last_name'        => $last_name,
+                'email'            => $email,
+                'requires_account' => false,
+                'address'          => [
+                    'line1'        => $address,
+                    'state'        => $state,
+                    'city'         => $city,
+                    'postal_code'  => $zip_code,
+                    'country_code' => 'MX',
+                ],
+            ];
+
+            $chargeRequest = [
+                'method'      => 'store',
+                'amount'      => $amount,
+                'currency'    => 'MXN',
+                'description' => 'Reserva artista - Pago en efectivo (' . $store . ')',
+                'customer'    => $customerData,
+                'due_date'    => Carbon::now()->addDays(3)->format('Y-m-d\TH:i:s'),
+            ];
+
+            $charge = $openpay->charges->create($chargeRequest);
+
+            DB::beginTransaction();
+            try {
+                foreach ($itemsForSales as $item) {
+                    $sale = new ArtistSale();
+                    $sale->openpay_transaction_id = $charge->id;
+                    $sale->status = 'pending';
+                    $sale->artist_id              = $item['artist_id'];
+                    $sale->customer_id            = $userId;
+                    $sale->amount                 = $item['amount'];
+                    $sale->customer_first_name    = $name;
+                    $sale->customer_last_name     = $last_name;
+                    $sale->customer_email         = $email;
+                    $sale->customer_phone         = $phone;
+                    $sale->customer_address       = $address;
+                    $sale->customer_city          = $city;
+                    $sale->customer_state         = $state;
+                    $sale->customer_zip_code      = $zip_code;
+                    $sale->event_date             = $item['event_date'];
+                    $sale->event_hour             = $item['event_hour'];
+                    $sale->save();
+                }
+
+                $shoppingCard = ShoppingCard::where('user_id', $userId)->where('status', 1)->first();
+
+                if ($shoppingCard) {
+                    ShoppingCardDetail::where('shopping_card_id', $shoppingCard->id)->delete();
+                    $shoppingCard->status = 2;
+                    $shoppingCard->total  = 0;
+                    $shoppingCard->save();
+                }
+
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
+
+            return response()->json([
+                'data'      => [
+                    'id'        => $charge->id,
+                    'amount'    => $charge->amount,
+                    'status'    => $charge->status,
+                    'store'     => $store,
+                    'reference' => $charge->payment_method->reference ?? null,
+                    'barcode'   => $charge->payment_method->barcode_url ?? null,
+                    'due_date'  => $dueDateInstance->toDateTimeString(),
+                ],
+                'message'   => 'Referencia de pago generada correctamente',
+            ]);
+
+        } catch (OpenpayApiTransactionError $e) {
+            return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
+        } catch (OpenpayApiRequestError $e) {
+            return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
+        } catch (OpenpayApiConnectionError $e) {
+            return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
+        } catch (OpenpayApiAuthError $e) {
+            return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
+        } catch (OpenpayApiError $e) {
+            return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
+        } catch (Exception $e) {
+            return response()->json(['error' => ['category' => 'Generic Error', 'error_code' => 'GENERIC_ERROR', 'description' => $e->getMessage()]], 500);
+        }
+    }
+
+    public function confirmPayment(string $transactionId)
+    {
+        $sale = ArtistSale::where('openpay_transaction_id', $transactionId)->first();
+
+        if (!$sale) {
+            return response()->json(['message' => 'No se encontró la transacción en el sistema'], 404);
+        }
+
+        if ($sale->status === 'completed') {
+            return response()->json([
+                'message' => 'El pago ya había sido confirmado previamente',
+                'updated' => 0,
+            ], 200);
+        }
+
+        $sale->status = 'completed';
+        $sale->save();
+
+        return response()->json([
+            'message' => 'Pago confirmado correctamente',
+            'updated' => 1,
+        ]);
     }
 }
