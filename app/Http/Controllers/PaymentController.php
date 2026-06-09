@@ -43,6 +43,13 @@ class PaymentController extends Controller
             $eventDate = $request->input('event_date') ?? $request->input('order_details.event_date');
             $eventHour = $request->input('event_hour') ?? $request->input('order_details.event_hour');
 
+            $userId = Auth::user()?->id ?? $request->input('customer_id');
+            if (!$userId) {
+                return response()->json([
+                    'error' => 'Usuario no autenticado o no se proporcionó un ID de cliente válido'
+                ], 401);
+            }
+
             $clientAmountCents = (int) $request->input("amount");
             $artistList = $request->input('artistList', []);
 
@@ -143,7 +150,7 @@ class PaymentController extends Controller
                     $sale = new ArtistSale();
                     $sale->openpay_transaction_id = $charge->id;
                     $sale->artist_id = $item['artist_id'];
-                    $sale->customer_id = Auth::user()?->id ?? $request->input("customer_id") ?? 1;
+                    $sale->customer_id = $userId;
                     $sale->amount = $item['amount'];
                     $sale->customer_first_name = $name;
                     $sale->customer_last_name = $last_name;
@@ -158,12 +165,7 @@ class PaymentController extends Controller
                     $sale->save();
                 }
 
-                $user_id = Auth::user()?->id ?? $request->input("customer_id");
-                if (!$user_id) {
-                    throw new \Exception('No user ID available for cart cleanup');
-                }
-
-                $shoppingCard = ShoppingCard::where('user_id', $user_id)
+                $shoppingCard = ShoppingCard::where('user_id', $userId)
                     ->where('status', 1)
                     ->first();
 
@@ -397,6 +399,8 @@ class PaymentController extends Controller
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
             Openpay::setProductionMode(false);
 
+            $dueDateInstance = Carbon::now()->addDays(3);
+
             $name        = $request->input('order_details.first_name') ?? $request->input('customer_name');
             $last_name   = $request->input('order_details.last_name', '');
             $email       = $request->input('order_details.email') ?? $request->input('customer_email');
@@ -407,7 +411,14 @@ class PaymentController extends Controller
             $zip_code    = $request->input('order_details.zip_code', '');
             $eventDate   = $request->input('order_details.event_date') ?? $request->input('event_date');
             $eventHour   = $request->input('order_details.event_hour') ?? $request->input('event_hour');
-            $store       = $request->input('store'); // BBVA, Oxxo, etc.
+            $store       = $request->input('store'); 
+
+            $userId = Auth::user()?->id ?? $request->input('customer_id');
+            if (!$userId) {
+                return response()->json([
+                    'error' => 'Usuario no autenticado o no se proporcionó un ID de cliente válido'
+                ], 401);
+            }
 
             $clientAmountCents = (int) $request->input('amount');
             $artistList        = $request->input('artistList', []);
@@ -482,7 +493,7 @@ class PaymentController extends Controller
                     $sale->openpay_transaction_id = $charge->id;
                     $sale->status = 'pending';
                     $sale->artist_id              = $item['artist_id'];
-                    $sale->customer_id            = Auth::user()?->id ?? $request->input('customer_id') ?? 1;
+                    $sale->customer_id            = $userId;
                     $sale->amount                 = $item['amount'];
                     $sale->customer_first_name    = $name;
                     $sale->customer_last_name     = $last_name;
@@ -497,15 +508,13 @@ class PaymentController extends Controller
                     $sale->save();
                 }
 
-                $user_id = Auth::user()?->id ?? $request->input('customer_id');
-                if ($user_id) {
-                    $shoppingCard = ShoppingCard::where('user_id', $user_id)->where('status', 1)->first();
-                    if ($shoppingCard) {
-                        ShoppingCardDetail::where('shopping_card_id', $shoppingCard->id)->delete();
-                        $shoppingCard->status = 2;
-                        $shoppingCard->total  = 0;
-                        $shoppingCard->save();
-                    }
+                $shoppingCard = ShoppingCard::where('user_id', $userId)->where('status', 1)->first();
+
+                if ($shoppingCard) {
+                    ShoppingCardDetail::where('shopping_card_id', $shoppingCard->id)->delete();
+                    $shoppingCard->status = 2;
+                    $shoppingCard->total  = 0;
+                    $shoppingCard->save();
                 }
 
                 DB::commit();
@@ -522,7 +531,7 @@ class PaymentController extends Controller
                     'store'     => $store,
                     'reference' => $charge->payment_method->reference ?? null,
                     'barcode'   => $charge->payment_method->barcode_url ?? null,
-                    'due_date'  => Carbon::now()->addDays(3)->toDateTimeString(),
+                    'due_date'  => $dueDateInstance->toDateTimeString(),
                 ],
                 'message'   => 'Referencia de pago generada correctamente',
             ]);
@@ -544,15 +553,25 @@ class PaymentController extends Controller
 
     public function confirmPayment(string $transactionId)
     {
-        $updated = ArtistSale::where('openpay_transaction_id', $transactionId)
-        ->where('status', 'pending')
-        ->update(['status' => 'completed']);
+        $sale = ArtistSale::where('openpay_transaction_id', $transactionId)->first();
 
-        $updated === 0 && abort(404, 'No se encontraron ventas pendientes para esa transacción');
+        if (!$sale) {
+            return response()->json(['message' => 'No se encontró la transacción en el sistema'], 404);
+        }
+
+        if ($sale->status === 'completed') {
+            return response()->json([
+                'message' => 'El pago ya había sido confirmado previamente',
+                'updated' => 0,
+            ], 200);
+        }
+
+        $sale->status = 'completed';
+        $sale->save();
 
         return response()->json([
-            'message' => "Pago confirmado correctamente",
-            'updated' => $updated,
+            'message' => 'Pago confirmado correctamente',
+            'updated' => 1,
         ]);
     }
 }
