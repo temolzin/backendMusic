@@ -21,6 +21,8 @@ class ArtistSale extends Model
         'customer_zip_code',
         'event_date',
         'event_hour',
+        'event_hours',
+        'event_status',
         'openpay_transaction_id',
     ];
 

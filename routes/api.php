@@ -88,6 +88,8 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/artist/ratings/average', [ArtistRatingController::class, 'averageRating']);
     Route::get('/chat/messages/{artistSaleId}', [ChatController::class, 'getMessages']);
     Route::post('/chat/messages', [ChatController::class, 'sendMessage']);
+    Route::put('/artist/sales/{id}/complete', [PaymentController::class, 'markAsCompleted']);
+    Route::put('/artist/sales/check-expired', [PaymentController::class, 'checkExpiredStatuses']);
     Route::get('/admin/openpay-keys', [OpenpayKeysController::class, 'getKeys']);
     Route::put('/admin/openpay-keys', [OpenpayKeysController::class, 'updateKeys']);
 });
@@ -113,4 +115,5 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::post('/process-payment', [ClientPaymentController::class, 'processPayment']);
     Route::get('/client/last-order', [PaymentController::class, 'getLastClientOrder']);
     Route::get('/artist/sales/details', [PaymentController::class, 'getArtistSalesDetails']);
+    Route::get('/artist-sales', [PaymentController::class, 'getSalesByArtist']);
 });

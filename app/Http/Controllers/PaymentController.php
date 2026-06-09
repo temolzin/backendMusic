@@ -76,6 +76,7 @@ class PaymentController extends Controller
                 $itemsForSales[] = [
                     'artist_id' => $artistId,
                     'amount' => $lineTotalPesos,
+                    'hours' => $hours,
                 ];
             }
 
@@ -155,6 +156,8 @@ class PaymentController extends Controller
                     $sale->customer_zip_code = $zip_code;
                     $sale->event_date = $normalizedEventDate;
                     $sale->event_hour = $normalizedEventHour;
+                    $sale->event_hours = $item['hours'] ?? null;
+                    $sale->event_status = 'pending';
                     $sale->save();
                 }
 
@@ -268,7 +271,7 @@ class PaymentController extends Controller
             }
             
             $sales = ArtistSale::where('artist_id', $artistId)
-                ->select('id', 'artist_id', 'event_date', 'event_hour', 'created_at')
+                ->select('id', 'artist_id', 'event_date', 'event_hour', 'event_hours', 'event_status', 'created_at')
                 ->get();
             
             return response()->json([
@@ -305,6 +308,12 @@ class PaymentController extends Controller
             }
             
             $sales = ArtistSale::where('artist_id', $artist->id)->get();
+            
+            $sales = $sales->map(function ($sale) {
+                $this->computeStatus($sale);
+                $sale->can_complete = $this->canComplete($sale);
+                return $sale;
+            });
             
             return response()->json([
                 'success' => true,
@@ -350,8 +359,151 @@ class PaymentController extends Controller
             ], 500);
         }
     }
-
     
+    public function markAsCompleted($id)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+            }
+
+            $artist = Artist::where('user_id', $user->id)->first();
+            if (!$artist) {
+                return response()->json(['success' => false, 'message' => 'Artist profile not found'], 404);
+            }
+
+            $sale = ArtistSale::where('id', $id)->where('artist_id', $artist->id)->first();
+            if (!$sale) {
+                return response()->json(['success' => false, 'message' => 'Sale not found'], 404);
+            }
+
+            if ($sale->event_status === 'completed') {
+                return response()->json(['success' => false, 'message' => 'Evento ya completado'], 400);
+            }
+
+            if ($sale->event_status === 'expired') {
+                return response()->json(['success' => false, 'message' => 'Evento expirado, no se puede marcar como completado'], 400);
+            }
+
+            $sale->event_status = 'completed';
+            $sale->save();
+
+            return response()->json(['success' => true, 'message' => 'Evento marcado como completado']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function checkExpiredStatuses()
+    {
+        try {
+            $now = Carbon::now();
+            $cutoff = $now->copy()->subDay();
+
+            $expiredSales = ArtistSale::where('event_status', 'pending')
+                ->whereNotNull('event_date')
+                ->whereNotNull('event_hour')
+                ->get()
+                ->filter(function ($sale) use ($cutoff) {
+                    $eventDateStr = $sale->event_date instanceof Carbon ? $sale->event_date->format('Y-m-d') : $sale->event_date;
+                    $eventHourStr = $sale->event_hour instanceof Carbon ? $sale->event_hour->format('H:i:s') : $sale->event_hour;
+                    $eventEnd = Carbon::parse($eventDateStr . ' ' . $eventHourStr);
+                    $hours = $sale->event_hours ?? 0;
+                    $eventEnd->addHours($hours);
+                    return $eventEnd < $cutoff;
+                });
+
+            $count = 0;
+            foreach ($expiredSales as $sale) {
+                $sale->event_status = 'expired';
+                $sale->save();
+                $count++;
+            }
+
+            return response()->json(['success' => true, 'expired_count' => $count]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getEventStatus($id)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+            }
+
+            $artist = Artist::where('user_id', $user->id)->first();
+            if (!$artist) {
+                return response()->json(['success' => false, 'message' => 'Artist profile not found'], 404);
+            }
+
+            $sale = ArtistSale::where('id', $id)->where('artist_id', $artist->id)->first();
+            if (!$sale) {
+                return response()->json(['success' => false, 'message' => 'Sale not found'], 404);
+            }
+
+            $computedStatus = $this->computeStatus($sale);
+
+            return response()->json([
+                'success' => true,
+                'event_status' => $computedStatus,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    private function computeStatus($sale)
+    {
+        if ($sale->event_status === 'completed') {
+            return 'completed';
+        }
+
+        if ($sale->event_status === 'expired') {
+            return 'expired';
+        }
+
+        if (!$sale->event_date || !$sale->event_hour) {
+            return 'pending';
+        }
+
+        $now = Carbon::now();
+        $eventDateStr = $sale->event_date instanceof Carbon ? $sale->event_date->format('Y-m-d') : $sale->event_date;
+        $eventHourStr = $sale->event_hour instanceof Carbon ? $sale->event_hour->format('H:i:s') : $sale->event_hour;
+        $eventEnd = Carbon::parse($eventDateStr . ' ' . $eventHourStr);
+        $hours = $sale->event_hours ?? 0;
+        $eventEnd->addHours($hours);
+
+        if ($eventEnd < $now) {
+            $cutoff = $eventEnd->copy()->addDay();
+            if ($now > $cutoff) {
+                $sale->event_status = 'expired';
+                $sale->save();
+                return 'expired';
+            }
+        }
+
+        return $sale->event_status;
+    }
+
+    private function canComplete($sale)
+    {
+        if ($sale->event_status !== 'pending') return false;
+        if (!$sale->event_date || !$sale->event_hour) return false;
+
+        $now = Carbon::now();
+        $eventDateStr = $sale->event_date instanceof Carbon ? $sale->event_date->format('Y-m-d') : $sale->event_date;
+        $eventHourStr = $sale->event_hour instanceof Carbon ? $sale->event_hour->format('H:i:s') : $sale->event_hour;
+        $eventEnd = Carbon::parse($eventDateStr . ' ' . $eventHourStr);
+        $hours = $sale->event_hours ?? 0;
+        $eventEnd->addHours($hours);
+
+        return $eventEnd < $now;
+    }
+
     public function statsByArtist()
     {
         try {

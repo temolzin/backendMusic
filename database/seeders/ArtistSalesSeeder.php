@@ -46,6 +46,8 @@ class ArtistSalesSeeder extends Seeder
                     'customer_zip_code'      => '28001',
                     'event_date'             => now()->addDays($index + 1)->format('Y-m-d'),
                     'event_hour'             => $eventHours[$index % count($eventHours)],
+                    'event_hours'            => rand(2, 5),
+                    'event_status'           => 'pending',
                 ]);
             }
         }
