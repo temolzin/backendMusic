@@ -26,25 +26,25 @@ class ValidSocialMedia implements Rule
         $networks = is_string($value) ? json_decode($value, true) : $value;
 
         foreach ($networks as $network) {
-            $nombre = $network['nombre'] ?? '';
+            $name = $network['name'] ?? '';
             $url    = $network['url'] ?? '';
 
-            if (empty($nombre) || empty($url)) {
+            if (empty($name) || empty($url)) {
                 $this->errorMessage = 'Cada red social debe tener nombre y URL.';
                 return false;
             }
 
             if (!filter_var($url, FILTER_VALIDATE_URL)) {
-                $this->errorMessage = "La URL de $nombre no es válida.";
+                $this->errorMessage = "La URL de $name no es válida.";
                 return false;
             }
 
-            $expectedDomain = $this->domainMap[$nombre] ?? null;
+            $expectedDomain = $this->domainMap[$name] ?? null;
             $actualHost     = parse_url($url, PHP_URL_HOST) ?? '';
             $actualHost     = strtolower(str_replace('www.', '', $actualHost));
 
             if ($expectedDomain && !str_contains($actualHost, $expectedDomain)) {
-                $this->errorMessage = "La URL de $nombre debe pertenecer a $expectedDomain.";
+                $this->errorMessage = "La URL de $name debe pertenecer a $expectedDomain.";
                 return false;
             }
         }
