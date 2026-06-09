@@ -165,11 +165,16 @@ class PaymentController extends Controller
                     $sale->save();
                 }
 
-                $shoppingCard = ShoppingCard::where('user_id', $userId)
-                    ->where('status', 1)
-                    ->first();
+                $userId = Auth::user()?->id ?? $request->input("customer_id");
+                if (!$userId) {
+                    throw new \Exception('No user ID available for cart cleanup');
+                }
 
-                if ($shoppingCard) {
+                $shoppingCards = ShoppingCard::where('user_id', $userId)
+                    ->where('status', 1)
+                    ->get();
+
+                foreach ($shoppingCards as $shoppingCard) {
                     ShoppingCardDetail::where('shopping_card_id', $shoppingCard->id)->delete();
                     $shoppingCard->status = 2;
                     $shoppingCard->total = 0;
