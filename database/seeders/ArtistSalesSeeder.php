@@ -48,6 +48,7 @@ class ArtistSalesSeeder extends Seeder
                     'event_hour'             => $eventHours[$index % count($eventHours)],
                     'event_hours'            => rand(2, 5),
                     'event_status'           => 'pending',
+                    'status'     => 'completed',
                 ]);
             }
         }
