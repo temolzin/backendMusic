@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Rules\ValidSocialMedia;
+use App\Models\ArtistVideo;
 
 class ArtistController extends Controller
 {
@@ -461,6 +462,73 @@ class ArtistController extends Controller
             return response()->json([
                 'success' => true,
                 'artists' => $artistWithMusicalGender,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function artistVideosIndex()
+    {
+        try {
+            $artist_id = Artist::where('user_id', Auth::user()->id)->first();
+            $videos = ArtistVideo::where('artist_id', $artist_id->id)->get();
+
+            return response()->json([
+                'success' => true,
+                'artistVideos' => $videos,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeArtistVideo(Request $request)
+    {
+        try {
+            $artist = Artist::where('user_id', Auth::user()->id)->first();
+            $count = ArtistVideo::where('artist_id', $artist->id)->count();
+
+            if ($count >= 3) {
+                return response()->json(['message' => 'Máximo 3 videos permitidos'], 422);
+            }
+
+            $url = $request->youtube_url;
+            preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $url, $matches);
+
+            if (empty($matches[1])) {
+                return response()->json(['message' => 'URL de YouTube no válida'], 422);
+            }
+
+            $video = ArtistVideo::create([
+                'artist_id'   => $artist->id,
+                'youtube_url' => $matches[1],
+                'title'       => $oembed['title'] ?? null,
+                'thumbnail'   => $oembed['thumbnail_url'] ?? "https://img.youtube.com/vi/{$matches[1]}/hqdefault.jpg",
+            ]);
+
+            return response()->json(['success' => true, 'artistVideo' => $video], 201);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteArtistVideo($id)
+    {
+        try {
+            $artist = Artist::where('user_id', Auth::user()->id)->first();
+            $video = ArtistVideo::where('id', $id)->where('artist_id', $artist->id)->firstOrFail();
+            $video->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Video eliminado',
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
