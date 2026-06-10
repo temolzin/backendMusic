@@ -2,15 +2,11 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ResetPasswordQueuedNotification extends Notification implements ShouldQueue
+class ResetPasswordQueuedNotification extends Notification
 {
-    use Queueable;
-
     public $token;
 
     public function __construct($token)
@@ -37,7 +33,6 @@ class ResetPasswordQueuedNotification extends Notification implements ShouldQueu
             ->action('Cambiar contraseña', $resetUrl)
             ->line('Este enlace expirará en 60 minutos.')
             ->line('Si no realizaste esta solicitud, puedes ignorar este correo.')
-            ->salutation('Saludos,
-Vibeer');
+            ->salutation('Saludos, Vibeer');
     }
 }
