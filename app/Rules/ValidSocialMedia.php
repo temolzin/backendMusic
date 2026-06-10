@@ -10,7 +10,7 @@ class ValidSocialMedia implements Rule
 
     private array $domainMap = [
         'Instagram'   => 'instagram.com',
-        'X (Twitter)' => 'twitter.com',
+        'X (Twitter)' => 'x.com',
         'YouTube'     => 'youtube.com',
         'Facebook'    => 'facebook.com',
         'TikTok'      => 'tiktok.com',
