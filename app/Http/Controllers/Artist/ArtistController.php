@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Rules\ValidSocialMedia;
 
 class ArtistController extends Controller
 {
@@ -229,6 +230,7 @@ class ArtistController extends Controller
                 'phone_manager'   => 'required',
                 'email_manager'   => 'required|email',
                 'image_manager'   => ['nullable', 'file', 'max:1024', new ValidImageUpload()],
+                'social_media' => ['nullable', new ValidSocialMedia()],
             ]);
 
             DB::beginTransaction();
