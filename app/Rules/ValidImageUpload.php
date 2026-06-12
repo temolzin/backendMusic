@@ -48,12 +48,16 @@ class ValidImageUpload implements Rule
             return false;
         }
 
+        if ($imageInfo !== false && $imageInfo[0] <= $imageInfo[1]) {
+            return false;
+        }
+
         return true;
     }
 
     public function message()
     {
-        return 'El archivo debe ser una imagen válida (jpg, jpeg, png, gif, webp o bmp) y pasar la verificación de contenido.';
+        return 'La imagen debe ser horizontal (apaisada, ancho mayor que alto).';
     }
 
     private function detectMimeType(string $path): ?string
