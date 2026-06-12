@@ -663,6 +663,7 @@ class PaymentController extends Controller
                     $sale->event_date             = $item['event_date'];
                     $sale->event_hour             = $item['event_hour'];
                     $sale->payment_method = 'cash';
+                    $sale->store = $store;
                     $sale->save();
                 }
 
@@ -764,8 +765,6 @@ class PaymentController extends Controller
             $barcodeUrl = $charge->payment_method->barcode_url ?? null;
             $dueDateStr = $dueDateInstance->toDateTimeString();
 
-            $store = $request->input('store', 'Tienda');
-
             $relatedSales = ArtistSale::where('customer_id', $sale->customer_id)
                 ->where('openpay_transaction_id', $sale->openpay_transaction_id)
                 ->get();
@@ -780,7 +779,7 @@ class PaymentController extends Controller
                     'id'        => $charge->id,
                     'amount'    => $charge->amount,
                     'status'    => $charge->status,
-                    'store'     => $store,
+                    'store'     => $sale->store ?? 'Tienda',
                     'reference' => $cashRef,
                     'barcode'   => $barcodeUrl,
                     'due_date'  => $dueDateStr,
