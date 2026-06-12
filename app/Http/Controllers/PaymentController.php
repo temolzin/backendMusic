@@ -556,7 +556,7 @@ class PaymentController extends Controller
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
             Openpay::setProductionMode(false);
 
-            $dueDateInstance = Carbon::now()->addDays(3);
+            $dueDateInstance = Carbon::now()->addHours(24);
 
             $name        = $request->input('order_details.first_name') ?? $request->input('customer_name');
             $last_name   = $request->input('order_details.last_name', '');
@@ -638,7 +638,7 @@ class PaymentController extends Controller
                 'currency'    => 'MXN',
                 'description' => 'Reserva artista - Pago en efectivo (' . $store . ')',
                 'customer'    => $customerData,
-                'due_date'    => Carbon::now()->addDays(3)->format('Y-m-d\TH:i:s'),
+                'due_date'    => Carbon::now()->addHours(24)->format('Y-m-d\TH:i:s'),
             ];
 
             $charge = $openpay->charges->create($chargeRequest);
@@ -662,6 +662,7 @@ class PaymentController extends Controller
                     $sale->customer_zip_code      = $zip_code;
                     $sale->event_date             = $item['event_date'];
                     $sale->event_hour             = $item['event_hour'];
+                    $sale->payment_method = 'cash';
                     $sale->save();
                 }
 
@@ -693,6 +694,99 @@ class PaymentController extends Controller
                 'message'   => 'Referencia de pago generada correctamente',
             ]);
 
+        } catch (OpenpayApiTransactionError $e) {
+            return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
+        } catch (OpenpayApiRequestError $e) {
+            return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
+        } catch (OpenpayApiConnectionError $e) {
+            return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
+        } catch (OpenpayApiAuthError $e) {
+            return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
+        } catch (OpenpayApiError $e) {
+            return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
+        } catch (Exception $e) {
+            return response()->json(['error' => ['category' => 'Generic Error', 'error_code' => 'GENERIC_ERROR', 'description' => $e->getMessage()]], 500);
+        }
+    }
+
+    public function regenerateCashReference(Request $request)
+    {
+        try {
+            $saleId = $request->input('artist_sale_id');
+            if (!$saleId) {
+                return response()->json(['error' => 'Se requiere el ID de la venta'], 400);
+            }
+
+            $sale = ArtistSale::where('id', $saleId)
+                ->where('payment_method', 'cash')
+                ->first();
+
+            if (!$sale) {
+                return response()->json(['error' => 'Venta no encontrada o no es un pago en efectivo'], 404);
+            }
+
+            if ($sale->status === 'completed') {
+                return response()->json(['error' => 'Esta venta ya fue pagada'], 400);
+            }
+
+            $keys = OpenpayKey::first();
+            $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
+            Openpay::setProductionMode(false);
+
+            $dueDateInstance = Carbon::now()->addHours(24);
+
+            $customerData = [
+                'name'             => $sale->customer_first_name,
+                'last_name'        => $sale->customer_last_name,
+                'email'            => $sale->customer_email,
+                'requires_account' => false,
+                'address'          => [
+                    'line1'        => $sale->customer_address ?? 'Sin dirección',
+                    'city'         => $sale->customer_city ?? 'Ciudad',
+                    'state'        => $sale->customer_state ?? 'Estado',
+                    'postal_code'  => $sale->customer_zip_code ?? '00000',
+                    'country_code' => 'MX',
+                ],
+            ];
+
+            $chargeRequest = [
+                'method'      => 'store',
+                'amount'      => (float) $sale->amount,
+                'currency'    => 'MXN',
+                'description' => 'Re-generación referencia - Reserva artista',
+                'customer'    => $customerData,
+                'due_date'    => $dueDateInstance->format('Y-m-d\TH:i:s'),
+            ];
+
+            $charge = $openpay->charges->create($chargeRequest);
+
+            $cashRef = $charge->payment_method->reference ?? null;
+            $barcodeUrl = $charge->payment_method->barcode_url ?? null;
+            $dueDateStr = $dueDateInstance->toDateTimeString();
+
+            $store = $request->input('store', 'Tienda');
+
+            $relatedSales = ArtistSale::where('customer_id', $sale->customer_id)
+                ->where('openpay_transaction_id', $sale->openpay_transaction_id)
+                ->get();
+
+            foreach ($relatedSales as $related) {
+                $related->openpay_transaction_id = $charge->id;
+                $related->save();
+            }
+
+            return response()->json([
+                'data' => [
+                    'id'        => $charge->id,
+                    'amount'    => $charge->amount,
+                    'status'    => $charge->status,
+                    'store'     => $store,
+                    'reference' => $cashRef,
+                    'barcode'   => $barcodeUrl,
+                    'due_date'  => $dueDateStr,
+                ],
+                'message' => 'Nueva referencia generada correctamente',
+            ]);
         } catch (OpenpayApiTransactionError $e) {
             return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
         } catch (OpenpayApiRequestError $e) {
