@@ -57,7 +57,7 @@ class ValidImageUpload implements Rule
 
     public function message()
     {
-        return 'La imagen debe ser horizontal (apaisada, ancho mayor que alto).';
+        return 'El archivo debe ser una imagen válida (jpg, jpeg, png, gif, webp o bmp) y pasar la verificación de contenido. La imagen debe ser horizontal (apaisada, ancho mayor que alto).';
     }
 
     private function detectMimeType(string $path): ?string
