@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MusicalGender;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -48,8 +49,25 @@ class MusicalsGendersController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
+
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:musical_genders,name',
+            'description' => 'required|string',
+            'color' => 'required|string',
+        ], [
+            'name.unique' => 'El género musical ya se encuentra registrado.',
+            'name.required' => 'El nombre del género es obligatorio.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first() 
+            ], 422);
+        }
+        
         try {
             $slug = Str::slug($request->input('name'));
             DB::beginTransaction();
@@ -105,8 +123,25 @@ class MusicalsGendersController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+
     public function update(Request $request, $id)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:musical_genders,name,' . $id,
+            'description' => 'required|string',
+            'color' => 'required|string',
+        ], [
+            'name.unique' => 'El género musical ya se encuentra registrado.',
+            'name.required' => 'El nombre del género es obligatorio.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
+        }
+
         try {
             $slug = Str::slug($request->input('name'));
             DB::beginTransaction();
