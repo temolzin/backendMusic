@@ -24,6 +24,8 @@ class ArtistSale extends Model
         'event_hours',
         'event_status',
         'openpay_transaction_id',
+        'payment_method',
+        'store',
     ];
 
     public function artist()
