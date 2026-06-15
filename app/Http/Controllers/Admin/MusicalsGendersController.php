@@ -61,7 +61,6 @@ class MusicalsGendersController extends Controller
             'name.required' => 'El nombre del género es obligatorio.',
         ]);
 
-        
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -124,7 +123,7 @@ class MusicalsGendersController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    
+
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
