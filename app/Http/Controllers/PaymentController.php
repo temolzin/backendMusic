@@ -42,6 +42,9 @@ class PaymentController extends Controller
             $phone = $request->input("phone") ?? $request->input("order_details.phone");
             $eventDate = $request->input('event_date') ?? $request->input('order_details.event_date');
             $eventHour = $request->input('event_hour') ?? $request->input('order_details.event_hour');
+            $latitude = $request->input('latitude') ?? $request->input('order_details.latitude');
+            $longitude = $request->input('longitude') ?? $request->input('order_details.longitude');
+            $googlePlaceId = $request->input('google_place_id') ?? $request->input('order_details.google_place_id');
 
             $userId = Auth::user()?->id ?? $request->input('customer_id');
             if (!$userId) {
@@ -165,6 +168,9 @@ class PaymentController extends Controller
                     $sale->event_hour = $normalizedEventHour;
                     $sale->event_hours = $item['hours'] ?? null;
                     $sale->event_status = 'pending';
+                    $sale->latitude = $latitude;
+                    $sale->longitude = $longitude;
+                    $sale->google_place_id = $googlePlaceId;
                     $sale->save();
                 }
 
@@ -569,6 +575,9 @@ class PaymentController extends Controller
             $eventDate   = $request->input('order_details.event_date') ?? $request->input('event_date');
             $eventHour   = $request->input('order_details.event_hour') ?? $request->input('event_hour');
             $store       = $request->input('store'); 
+            $latitude    = $request->input('latitude') ?? $request->input('order_details.latitude');
+            $longitude   = $request->input('longitude') ?? $request->input('order_details.longitude');
+            $googlePlaceId = $request->input('google_place_id') ?? $request->input('order_details.google_place_id');
 
             $userId = Auth::user()?->id ?? $request->input('customer_id');
             if (!$userId) {
@@ -664,6 +673,9 @@ class PaymentController extends Controller
                     $sale->event_hour             = $item['event_hour'];
                     $sale->payment_method = 'cash';
                     $sale->store = $store;
+                    $sale->latitude = $latitude;
+                    $sale->longitude = $longitude;
+                    $sale->google_place_id = $googlePlaceId;
                     $sale->save();
                 }
 

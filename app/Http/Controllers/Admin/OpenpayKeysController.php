@@ -37,6 +37,16 @@ class OpenpayKeysController extends Controller
         }
     }
 
+    public function getGoogleMapsKey()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'google_maps_api_key' => env('GOOGLE_MAPS_API_KEY', ''),
+            ],
+        ], 200);
+    }
+
     public function updateKeys(Request $request)
     {
         try {

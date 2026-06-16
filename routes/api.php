@@ -98,6 +98,7 @@ Route::group(["middleware" => "auth:api"], function () {
 });
 
 Route::get('/openpay-keys/public', [OpenpayKeysController::class, 'getPublicKeys']);
+Route::get('/google-maps-key', [OpenpayKeysController::class, 'getGoogleMapsKey']);
 //Route for General
 Route::get('/latest-artists', [ArtistsGeneralController::class, 'latestArtists']);
 // Test route
