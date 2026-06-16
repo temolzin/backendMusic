@@ -168,6 +168,8 @@ class PaymentController extends Controller
                     $sale->event_hour = $normalizedEventHour;
                     $sale->event_hours = $item['hours'] ?? null;
                     $sale->event_status = 'pending';
+                    $sale->status = 'completed';
+                    $sale->payment_method = 'card';
                     $sale->latitude = $latitude;
                     $sale->longitude = $longitude;
                     $sale->google_place_id = $googlePlaceId;
@@ -320,7 +322,7 @@ class PaymentController extends Controller
                 ], 404);
             }
             
-            $sales = ArtistSale::where('artist_id', $artist->id)->where('status', 'completed')->get();
+            $sales = ArtistSale::where('artist_id', $artist->id)->get();
             
             $sales = $sales->map(function ($sale) {
                 $this->computeStatus($sale);
@@ -658,6 +660,7 @@ class PaymentController extends Controller
                     $sale = new ArtistSale();
                     $sale->openpay_transaction_id = $charge->id;
                     $sale->status = 'pending';
+                    $sale->event_status = 'pending';
                     $sale->artist_id              = $item['artist_id'];
                     $sale->customer_id            = $userId;
                     $sale->amount                 = $item['amount'];
