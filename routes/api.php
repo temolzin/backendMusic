@@ -90,7 +90,6 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/artist/favourite_artists/count', [FavouriteArtistsController::class, 'countByArtist']);
     Route::get('/artist/ratings/average', [ArtistRatingController::class, 'averageRating']);
     Route::get('/artist/sales/stats', [PaymentController::class, 'statsByArtist']);
-    Route::get('/artist/sales/details', [PaymentController::class, 'getSalesByArtist']);
     Route::get('/artist/favourite_artists/count', [FavouriteArtistsController::class, 'countByArtist']);
     Route::post('/client/artists/{id}/rate', [ArtistRatingController::class, 'rateArtist']);
     Route::get('/client/artists/{id}/my-rating', [ArtistRatingController::class, 'getUserRating']);
