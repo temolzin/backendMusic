@@ -26,6 +26,7 @@ use App\Http\Controllers\ArtistRatingController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\DashboardStatsController;
 use App\Http\Controllers\Admin\OpenpayKeysController;
+use App\Http\Controllers\GoogleMapsController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -98,7 +99,7 @@ Route::group(["middleware" => "auth:api"], function () {
 });
 
 Route::get('/openpay-keys/public', [OpenpayKeysController::class, 'getPublicKeys']);
-Route::get('/google-maps-key', [OpenpayKeysController::class, 'getGoogleMapsKey']);
+Route::get('/google-maps-key', [GoogleMapsController::class, 'getKey']);
 //Route for General
 Route::get('/latest-artists', [ArtistsGeneralController::class, 'latestArtists']);
 // Test route
