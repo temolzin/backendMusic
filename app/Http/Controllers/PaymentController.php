@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Openpay\Data\Openpay;
 use OpenpayChargeRequest;
 use Exception;
@@ -17,6 +18,7 @@ use App\Models\Artist;
 use App\Models\ShoppingCard;
 use App\Models\ShoppingCardDetail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
@@ -28,6 +30,8 @@ class PaymentController extends Controller
 
     public function processPayment(Request $request)
     {
+        $acquiredLocks = [];
+
         try {
             $keys = OpenpayKey::first();
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
@@ -228,7 +232,7 @@ class PaymentController extends Controller
                     $sale->customer_city = $city;
                     $sale->customer_state = $state;
                     $sale->customer_zip_code = $zip_code;
-                    $sale->event_date = $normalizedEventDate;
+                    $sale->event_date = $item['event_date'];
                     $sale->event_hour = $normalizedEventHour;
                     $sale->event_hours = $item['hours'] ?? null;
                     $sale->event_status = 'pending';
@@ -336,6 +340,14 @@ class PaymentController extends Controller
                     'description' => $e->getMessage(),
                 ]
             ]);
+        } finally {
+            foreach ($acquiredLocks as $acquiredLock) {
+                try {
+                    $acquiredLock->release();
+                } catch (\Throwable $e) {
+                    Log::warning("Failed to release lock: " . $e->getMessage());
+                }
+            }
         }
     }
 
