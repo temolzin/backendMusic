@@ -38,5 +38,6 @@ class DatabaseSeeder extends Seeder
         $this->call(ArtistRatingSeeder::class);
         $this->call(ArtistSalesSeeder::class);
         $this->call(FavouriteArtistsSeeder::class);
+        $this->call(OfferSeeder::class);
     }
 }

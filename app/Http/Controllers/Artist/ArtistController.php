@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Rules\ValidSocialMedia;
 use App\Models\ArtistVideo;
+use Carbon\Carbon;
 
 class ArtistController extends Controller
 {
@@ -460,7 +461,14 @@ class ArtistController extends Controller
     public function getArtist()
     {
         try {
-            $artistWithMusicalGender = Artist::with('musicalGenders')
+            $artistWithMusicalGender = Artist::with([
+                'musicalGenders',
+                'offers' => function ($query) {
+                $query->where('is_active', true)
+                    ->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now());
+                }
+            ])
                 ->withAvg("ratings","rating")
                 ->orderBy('id', 'asc')
                 ->get();
