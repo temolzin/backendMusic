@@ -29,6 +29,8 @@ class ArtistSale extends Model
         'latitude',
         'longitude',
         'google_place_id',
+        'extra_km_distance',
+        'extra_km_cost',
     ];
 
     public function artist()
