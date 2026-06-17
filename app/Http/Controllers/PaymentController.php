@@ -80,7 +80,7 @@ class PaymentController extends Controller
                 }
 
                 $now = Carbon::now('America/Mexico_City')->format('Y-m-d H:i:s');
-                $activeOffer = \App\Models\Offer::where('artist_id', $artist->id)
+                $activeOffer = Offer::where('artist_id', $artist->id)
                     ->where('is_active', true)
                     ->where('start_date', '<=', $now)
                     ->where('end_date', '>=', $now)
