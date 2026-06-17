@@ -26,6 +26,11 @@ class ArtistSale extends Model
         'openpay_transaction_id',
         'payment_method',
         'store',
+        'latitude',
+        'longitude',
+        'google_place_id',
+        'extra_km_distance',
+        'extra_km_cost',
     ];
 
     public function artist()

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Openpay\Data\Openpay;
 use OpenpayChargeRequest;
 use Exception;
@@ -17,16 +18,21 @@ use App\Models\Artist;
 use App\Models\ShoppingCard;
 use App\Models\ShoppingCardDetail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use App\Models\OpenpayKey;
 use App\Models\Offer;
+use App\Services\DistanceMatrixService;
 
 class PaymentController extends Controller
 {
 
     public function processPayment(Request $request)
     {
+        $acquiredLocks = [];
+
         try {
             $keys = OpenpayKey::first();
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
@@ -43,6 +49,9 @@ class PaymentController extends Controller
             $phone = $request->input("phone") ?? $request->input("order_details.phone");
             $eventDate = $request->input('event_date') ?? $request->input('order_details.event_date');
             $eventHour = $request->input('event_hour') ?? $request->input('order_details.event_hour');
+            $latitude = $request->input('latitude') ?? $request->input('order_details.latitude');
+            $longitude = $request->input('longitude') ?? $request->input('order_details.longitude');
+            $googlePlaceId = $request->input('google_place_id') ?? $request->input('order_details.google_place_id');
 
             $userId = Auth::user()?->id ?? $request->input('customer_id');
             if (!$userId) {
@@ -56,6 +65,9 @@ class PaymentController extends Controller
 
             $calculatedTotalCents = 0;
             $itemsForSales = [];
+
+            $distanceService = new DistanceMatrixService();
+            $totalExtraKmCostPesos = 0;
 
             foreach ($artistList as $element) {
                 if (!is_array($element) || !array_key_exists('artist_id', $element)) {
@@ -93,10 +105,30 @@ class PaymentController extends Controller
 
                 $lineTotalPesos = (float) $priceHour * $hours;
                 $calculatedTotalCents += (int) round($lineTotalPesos * 100);
+                $baseAmount = (float) $artist->price_hour * $hours;
+                $extraKmDistance = null;
+                $extraKmCost = 0;
+                $calculatedTotalCents += (int) round($baseAmount * 100);
+
+                if ($latitude && $longitude && $artist->coverage_radius > 0 && $artist->extra_kilometre > 0) {
+                    $distance = $distanceService->getDrivingDistanceInKm($artist->zone, $latitude, $longitude);
+                    if ($distance !== null && $distance > $artist->coverage_radius) {
+                        $extraKmDistance = $distance;
+                        $extraKmCost = ($distance - $artist->coverage_radius) * (float) $artist->extra_kilometre;
+                    }
+                }
+
+                $totalExtraKmCostPesos += $extraKmCost;
+                $lineTotalPesos = $baseAmount + $extraKmCost;
+
                 $itemsForSales[] = [
                     'artist_id' => $artistId,
                     'amount' => $lineTotalPesos,
                     'hours' => $hours,
+                    'extra_km_distance' => $extraKmDistance,
+                    'extra_km_cost' => $extraKmCost,
+                    'event_date' => $normalizedEventDate,
+                    'event_hour' => $normalizedEventHour,
                 ];
             }
 
@@ -108,8 +140,49 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $amount = $calculatedTotalCents / 100;
-            
+            $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
+
+            $acquiredLocks = [];
+            $lockKeys = [];
+
+            foreach ($itemsForSales as $item) {
+                if (!$item['event_date']) continue;
+                $lockKeys[] = 'payment-lock:artist:' . $item['artist_id'] . ':date:' . $item['event_date'];
+            }
+
+            $lockKeys = array_values(array_unique($lockKeys));
+
+            foreach ($lockKeys as $lockKey) {
+                $lock = Cache::lock($lockKey, 300);
+                if (!$lock->get()) {
+                    foreach ($acquiredLocks as $acquiredLock) {
+                        $acquiredLock->release();
+                    }
+                    return response()->json([
+                        'error' => 'Lo sentimos, otro cliente está completando una transacción con este artista. Inténtalo en unos minutos'
+                    ], 409);
+                }
+                $acquiredLocks[] = $lock;
+            }
+
+            foreach ($itemsForSales as $item) {
+                if (!$item['event_date']) continue;
+                $alreadyBooked = DB::table('artist_sales')
+                    ->where('artist_id', $item['artist_id'])
+                    ->where('event_date', $item['event_date'])
+                    ->whereIn('event_status', ['pending', 'completed'])
+                    ->exists();
+
+                if ($alreadyBooked) {
+                    foreach ($acquiredLocks as $acquiredLock) {
+                        $acquiredLock->release();
+                    }
+                    return response()->json([
+                        'error' => 'Uno o más artistas de tu lista ya no están disponibles para la fecha seleccionada.'
+                    ], 422);
+                }
+            }
+
             if ($request->input("transaction_id")) {
                 $charge = new \stdClass();
                 $charge->id = $request->input("transaction_id");
@@ -174,10 +247,17 @@ class PaymentController extends Controller
                     $sale->customer_city = $city;
                     $sale->customer_state = $state;
                     $sale->customer_zip_code = $zip_code;
-                    $sale->event_date = $normalizedEventDate;
+                    $sale->event_date = $item['event_date'];
                     $sale->event_hour = $normalizedEventHour;
                     $sale->event_hours = $item['hours'] ?? null;
                     $sale->event_status = 'pending';
+                    $sale->status = 'completed';
+                    $sale->payment_method = 'card';
+                    $sale->latitude = $latitude;
+                    $sale->longitude = $longitude;
+                    $sale->google_place_id = $googlePlaceId;
+                    $sale->extra_km_distance = $item['extra_km_distance'];
+                    $sale->extra_km_cost = $item['extra_km_cost'];
                     $sale->save();
                 }
 
@@ -198,8 +278,16 @@ class PaymentController extends Controller
                 }
 
                 DB::commit();
+
+                foreach ($acquiredLocks as $acquiredLock) {
+                    $acquiredLock->release();
+                }
             } catch (\Exception $e) {
                 DB::rollBack();
+
+                foreach ($acquiredLocks as $acquiredLock) {
+                    $acquiredLock->release();
+                }
 
                 throw $e;
             }
@@ -267,6 +355,14 @@ class PaymentController extends Controller
                     'description' => $e->getMessage(),
                 ]
             ]);
+        } finally {
+            foreach ($acquiredLocks as $acquiredLock) {
+                try {
+                    $acquiredLock->release();
+                } catch (\Throwable $e) {
+                    Log::warning("Failed to release lock: " . $e->getMessage());
+                }
+            }
         }
     }
 
@@ -327,7 +423,7 @@ class PaymentController extends Controller
                 ], 404);
             }
             
-            $sales = ArtistSale::where('artist_id', $artist->id)->where('status', 'completed')->get();
+            $sales = ArtistSale::where('artist_id', $artist->id)->get();
             
             $sales = $sales->map(function ($sale) {
                 $this->computeStatus($sale);
@@ -582,6 +678,9 @@ class PaymentController extends Controller
             $eventDate   = $request->input('order_details.event_date') ?? $request->input('event_date');
             $eventHour   = $request->input('order_details.event_hour') ?? $request->input('event_hour');
             $store       = $request->input('store'); 
+            $latitude    = $request->input('latitude') ?? $request->input('order_details.latitude');
+            $longitude   = $request->input('longitude') ?? $request->input('order_details.longitude');
+            $googlePlaceId = $request->input('google_place_id') ?? $request->input('order_details.google_place_id');
 
             $userId = Auth::user()?->id ?? $request->input('customer_id');
             if (!$userId) {
@@ -593,7 +692,9 @@ class PaymentController extends Controller
             $clientAmountCents = (int) $request->input('amount');
             $artistList        = $request->input('artistList', []);
 
+            $distanceService = new DistanceMatrixService();
             $calculatedTotalCents = 0;
+            $totalExtraKmCostPesos = 0;
             $itemsForSales = [];
 
             foreach ($artistList as $element) {
@@ -623,13 +724,29 @@ class PaymentController extends Controller
                     ? $artist->price_hour * (1 - $activeOffer->discount_percentage / 100)
                     : $artist->price_hour;
 
-                $lineTotalPesos = (float) $priceHour * $hours;
-                $calculatedTotalCents += (int) round($lineTotalPesos * 100);
-                $itemsForSales[]       = [
-                    'artist_id'    => $artistId,
-                    'amount'       => $lineTotalPesos,
-                    'event_date'   => $normalizedEventDate,
-                    'event_hour'   => $normalizedEventHour,
+                $baseAmount = (float) $priceHour * $hours;
+                $extraKmDistance = null;
+                $extraKmCost = 0;
+
+                if ($latitude && $longitude && $artist->coverage_radius > 0 && $artist->extra_kilometre > 0) {
+                    $distance = $distanceService->getDrivingDistanceInKm($artist->zone, $latitude, $longitude);
+                    if ($distance !== null && $distance > $artist->coverage_radius) {
+                        $extraKmDistance = $distance;
+                        $extraKmCost = ($distance - $artist->coverage_radius) * (float) $artist->extra_kilometre;
+                    }
+                }
+
+                $totalExtraKmCostPesos += $extraKmCost;
+                $lineTotalPesos = $baseAmount + $extraKmCost;
+                $calculatedTotalCents += (int) round($lineTotalPesos * 100); 
+
+                $itemsForSales[] = [
+                    'artist_id' => $artistId,
+                    'amount' => $lineTotalPesos,
+                    'event_date' => $normalizedEventDate,
+                    'event_hour' => $normalizedEventHour,
+                    'extra_km_distance' => $extraKmDistance,
+                    'extra_km_cost' => $extraKmCost,
                 ];
             }
 
@@ -641,7 +758,48 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $amount = $calculatedTotalCents / 100;
+            $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
+
+            $acquiredLocks = [];
+            $lockKeys = [];
+
+            foreach ($itemsForSales as $item) {
+                if (!$item['event_date']) continue;
+                $lockKeys[] = 'payment-lock:artist:' . $item['artist_id'] . ':date:' . $item['event_date'];
+            }
+
+            $lockKeys = array_values(array_unique($lockKeys));
+
+            foreach ($lockKeys as $lockKey) {
+                $lock = Cache::lock($lockKey, 300);
+                if (!$lock->get()) {
+                    foreach ($acquiredLocks as $acquiredLock) {
+                        $acquiredLock->release();
+                    }
+                    return response()->json([
+                        'error' => 'Lo sentimos, otro cliente está completando una transacción con este artista. Inténtalo en unos minutos'
+                    ], 409);
+                }
+                $acquiredLocks[] = $lock;
+            }
+
+            foreach ($itemsForSales as $item) {
+                if (!$item['event_date']) continue;
+                $alreadyBooked = DB::table('artist_sales')
+                    ->where('artist_id', $item['artist_id'])
+                    ->where('event_date', $item['event_date'])
+                    ->whereIn('event_status', ['pending', 'completed'])
+                    ->exists();
+
+                if ($alreadyBooked) {
+                    foreach ($acquiredLocks as $acquiredLock) {
+                        $acquiredLock->release();
+                    }
+                    return response()->json([
+                        'error' => 'Uno o más artistas de tu lista ya no están disponibles para la fecha seleccionada.'
+                    ], 422);
+                }
+            }
 
             $customerData = [
                 'name'             => $name,
@@ -674,6 +832,7 @@ class PaymentController extends Controller
                     $sale = new ArtistSale();
                     $sale->openpay_transaction_id = $charge->id;
                     $sale->status = 'pending';
+                    $sale->event_status = 'pending';
                     $sale->artist_id              = $item['artist_id'];
                     $sale->customer_id            = $userId;
                     $sale->amount                 = $item['amount'];
@@ -689,6 +848,11 @@ class PaymentController extends Controller
                     $sale->event_hour             = $item['event_hour'];
                     $sale->payment_method = 'cash';
                     $sale->store = $store;
+                    $sale->latitude = $latitude;
+                    $sale->longitude = $longitude;
+                    $sale->google_place_id = $googlePlaceId;
+                    $sale->extra_km_distance = $item['extra_km_distance'];
+                    $sale->extra_km_cost = $item['extra_km_cost'];
                     $sale->save();
                 }
 
@@ -702,8 +866,17 @@ class PaymentController extends Controller
                 }
 
                 DB::commit();
+
+                foreach ($acquiredLocks as $acquiredLock) {
+                    $acquiredLock->release();
+                }
             } catch (\Exception $e) {
                 DB::rollBack();
+
+                foreach ($acquiredLocks as $acquiredLock) {
+                    $acquiredLock->release();
+                }
+
                 throw $e;
             }
 
@@ -823,6 +996,55 @@ class PaymentController extends Controller
             return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
         } catch (Exception $e) {
             return response()->json(['error' => ['category' => 'Generic Error', 'error_code' => 'GENERIC_ERROR', 'description' => $e->getMessage()]], 500);
+        }
+    }
+
+    public function previewExtraKm(Request $request)
+    {
+        try {
+            $artistId = (int) $request->input('artist_id');
+            $hours    = (int) ($request->input('hours', 1));
+            $latitude  = (float) $request->input('latitude');
+            $longitude = (float) $request->input('longitude');
+
+            if (!$artistId || !$latitude || !$longitude) {
+                return response()->json(['success' => false, 'message' => 'Faltan parámetros'], 400);
+            }
+
+            $artist = Artist::find($artistId);
+            if (!$artist) {
+                return response()->json(['success' => false, 'message' => 'Artista no encontrado'], 404);
+            }
+
+            $baseAmount  = (float) $artist->price_hour * $hours;
+            $extraKmDistance = null;
+            $extraKmCost = 0;
+
+            if ($artist->coverage_radius > 0 && $artist->extra_kilometre > 0) {
+                $service = new DistanceMatrixService();
+                $distance = $service->getDrivingDistanceInKm($artist->zone, $latitude, $longitude);
+
+                if ($distance !== null && $distance > $artist->coverage_radius) {
+                    $extraKmDistance = $distance;
+                    $extraKmCost = ($distance - $artist->coverage_radius) * (float) $artist->extra_kilometre;
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'artist_name' => $artist->name,
+                    'base_amount' => round($baseAmount, 2),
+                    'coverage_radius' => (int) $artist->coverage_radius,
+                    'extra_kilometre' => (float) $artist->extra_kilometre,
+                    'total_distance' => $extraKmDistance,
+                    'extra_km_distance' => $extraKmDistance !== null ? round($extraKmDistance - $artist->coverage_radius, 2) : null,
+                    'extra_km_cost' => round($extraKmCost, 2),
+                    'total' => round($baseAmount + $extraKmCost, 2),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 

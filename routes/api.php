@@ -27,6 +27,7 @@ use App\Http\Controllers\ArtistRatingController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\DashboardStatsController;
 use App\Http\Controllers\Admin\OpenpayKeysController;
+use App\Http\Controllers\GoogleMapsController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -89,7 +90,6 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/artist/favourite_artists/count', [FavouriteArtistsController::class, 'countByArtist']);
     Route::get('/artist/ratings/average', [ArtistRatingController::class, 'averageRating']);
     Route::get('/artist/sales/stats', [PaymentController::class, 'statsByArtist']);
-    Route::get('/artist/sales/details', [PaymentController::class, 'getSalesByArtist']);
     Route::get('/artist/favourite_artists/count', [FavouriteArtistsController::class, 'countByArtist']);
     Route::post('/client/artists/{id}/rate', [ArtistRatingController::class, 'rateArtist']);
     Route::get('/client/artists/{id}/my-rating', [ArtistRatingController::class, 'getUserRating']);
@@ -103,6 +103,7 @@ Route::group(["middleware" => "auth:api"], function () {
 });
 
 Route::get('/openpay-keys/public', [OpenpayKeysController::class, 'getPublicKeys']);
+Route::get('/google-maps-key', [GoogleMapsController::class, 'getKey']);
 //Route for General
 Route::get('/latest-artists', [ArtistsGeneralController::class, 'latestArtists']);
 // Test route
@@ -123,6 +124,7 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::post('/process-payment', [ClientPaymentController::class, 'processPayment']);
     Route::get('/artist-sales', [PaymentController::class, 'getSalesByArtist']);
     Route::post('/payment/cash', [PaymentController::class, 'processCashPayment']);
+    Route::get('/payment/preview-extra-km', [PaymentController::class, 'previewExtraKm']);
     Route::post('/payment/cash/regenerate', [PaymentController::class, 'regenerateCashReference']);
     Route::post('/payment/confirm/{transactionId}', [PaymentController::class, 'confirmPayment']);
     Route::get('/client/last-order', [PaymentController::class, 'getLastClientOrder']);

@@ -67,6 +67,7 @@ class ArtistController extends Controller
                 'price_hour'      => 'required',
                 'image_artist'    => ['required', 'file', 'max:1024', new ValidImageUpload()],
                 'extra_kilometre' => 'required',
+                'coverage_radius' => 'nullable|integer|min:0',
                 'name_manager'    => 'required',
                 'phone_manager'   => 'required',
                 'email_manager'   => 'required|email',
@@ -77,16 +78,17 @@ class ArtistController extends Controller
             $linkArtist = url(Storage::url($urlStoreArtist));
 
             DB::beginTransaction();
-            $artist =  Artist::create([
-                'user_id'        => Auth::user()->id,
-                'name'           => $request->input('name'),
-                'slug'           => Str::slug($request->input('name')),
-                'members'        => $request->input('members'),
-                'history'        => $request->input('history'),
-                'zone'           => $request->input('zone'),
-                'price_hour'     => $request->input('price_hour'),
-                'image'          => $linkArtist,
+            $artist = Artist::create([
+                'user_id' => Auth::user()->id,
+                'name' => $request->input('name'),
+                'slug' => Str::slug($request->input('name')),
+                'members' => $request->input('members'),
+                'history' => $request->input('history'),
+                'zone' => $request->input('zone'),
+                'price_hour' => $request->input('price_hour'),
+                'image' => $linkArtist,
                 'extra_kilometre' => $request->input('extra_kilometre'),
+                'coverage_radius' => $request->input('coverage_radius', 0),
                 'social_media' => $request->input('social_media') ? json_decode($request->input('social_media'), true) : null,
             ]);
 
@@ -167,6 +169,7 @@ class ArtistController extends Controller
             $artist->zone = $request->input('zone');
             $artist->price_hour = $request->input('price_hour');
             $artist->extra_kilometre = $request->input('extra_kilometre');
+            $artist->coverage_radius = $request->input('coverage_radius', 0);
             $artist->manager->name = $request->input('name_manager');
             $artist->manager->phone = $request->input('phone_manager');
             $artist->manager->email = $request->input('email_manager');
@@ -228,6 +231,7 @@ class ArtistController extends Controller
                 'price_hour'      => 'required',
                 'image_artist'    => ['nullable', 'file', 'max:1024', new ValidImageUpload()],
                 'extra_kilometre' => 'required',
+                'coverage_radius' => 'nullable|integer|min:0',
                 'name_manager'    => 'required',
                 'phone_manager'   => 'required',
                 'email_manager'   => 'required|email',
@@ -245,9 +249,10 @@ class ArtistController extends Controller
             $artist->zone = $request->input('zone');
             $artist->price_hour = $request->input('price_hour');
             $artist->extra_kilometre = $request->input('extra_kilometre');
+            $artist->coverage_radius = $request->input('coverage_radius', 0);
             $artist->social_media = $request->input('social_media') ? json_decode($request->input('social_media'), true) : null;
-            $linkArtist =  $artist->image;
-            $linkManager =  $artist->manager->image;
+            $linkArtist = $artist->image;
+            $linkManager = $artist->manager->image;
 
             if (request()->file('image_artist')) {
                 $urlStore = Storage::put('public/artist', request()->file('image_artist'));
@@ -465,6 +470,7 @@ class ArtistController extends Controller
                 }
             ])
                 ->withAvg("ratings","rating")
+                ->orderBy('id', 'asc')
                 ->get();
 
             return response()->json([
