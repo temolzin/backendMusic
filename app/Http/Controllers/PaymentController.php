@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use App\Models\OpenpayKey;
+use App\Services\DistanceMatrixService;
 
 class PaymentController extends Controller
 {
@@ -60,7 +61,7 @@ class PaymentController extends Controller
             $calculatedTotalCents = 0;
             $itemsForSales = [];
 
-            $distanceService = new \App\Services\DistanceMatrixService();
+            $distanceService = new DistanceMatrixService();
             $totalExtraKmCostPesos = 0;
 
             foreach ($artistList as $element) {
@@ -102,13 +103,13 @@ class PaymentController extends Controller
                 $lineTotalPesos = $baseAmount + $extraKmCost;
 
                 $itemsForSales[] = [
-                    'artist_id'        => $artistId,
-                    'amount'           => $lineTotalPesos,
-                    'hours'            => $hours,
+                    'artist_id' => $artistId,
+                    'amount' => $lineTotalPesos,
+                    'hours' => $hours,
                     'extra_km_distance' => $extraKmDistance,
-                    'extra_km_cost'    => $extraKmCost,
-                    'event_date'       => $normalizedEventDate,
-                    'event_hour'       => $normalizedEventHour,
+                    'extra_km_cost' => $extraKmCost,
+                    'event_date' => $normalizedEventDate,
+                    'event_hour' => $normalizedEventHour,
                 ];
             }
 
@@ -664,7 +665,7 @@ class PaymentController extends Controller
             $clientAmountCents = (int) $request->input('amount');
             $artistList        = $request->input('artistList', []);
 
-            $distanceService = new \App\Services\DistanceMatrixService();
+            $distanceService = new DistanceMatrixService();
             $calculatedTotalCents = 0;
             $totalExtraKmCostPesos = 0;
             $itemsForSales = [];
@@ -701,12 +702,12 @@ class PaymentController extends Controller
                 $lineTotalPesos = $baseAmount + $extraKmCost;
 
                 $itemsForSales[] = [
-                    'artist_id'        => $artistId,
-                    'amount'           => $lineTotalPesos,
-                    'event_date'       => $normalizedEventDate,
-                    'event_hour'       => $normalizedEventHour,
+                    'artist_id' => $artistId,
+                    'amount' => $lineTotalPesos,
+                    'event_date' => $normalizedEventDate,
+                    'event_hour' => $normalizedEventHour,
                     'extra_km_distance' => $extraKmDistance,
-                    'extra_km_cost'    => $extraKmCost,
+                    'extra_km_cost' => $extraKmCost,
                 ];
             }
 
@@ -981,7 +982,7 @@ class PaymentController extends Controller
             $extraKmCost = 0;
 
             if ($artist->coverage_radius > 0 && $artist->extra_kilometre > 0) {
-                $service = new \App\Services\DistanceMatrixService();
+                $service = new DistanceMatrixService();
                 $distance = $service->getDrivingDistanceInKm($artist->zone, $latitude, $longitude);
 
                 if ($distance !== null && $distance > $artist->coverage_radius) {
@@ -993,14 +994,14 @@ class PaymentController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'artist_name'      => $artist->name,
-                    'base_amount'      => round($baseAmount, 2),
-                    'coverage_radius'  => (int) $artist->coverage_radius,
-                    'extra_kilometre'  => (float) $artist->extra_kilometre,
-                    'total_distance'   => $extraKmDistance,
+                    'artist_name' => $artist->name,
+                    'base_amount' => round($baseAmount, 2),
+                    'coverage_radius' => (int) $artist->coverage_radius,
+                    'extra_kilometre' => (float) $artist->extra_kilometre,
+                    'total_distance' => $extraKmDistance,
                     'extra_km_distance' => $extraKmDistance !== null ? round($extraKmDistance - $artist->coverage_radius, 2) : null,
-                    'extra_km_cost'    => round($extraKmCost, 2),
-                    'total'            => round($baseAmount + $extraKmCost, 2),
+                    'extra_km_cost' => round($extraKmCost, 2),
+                    'total' => round($baseAmount + $extraKmCost, 2),
                 ],
             ]);
         } catch (\Exception $e) {

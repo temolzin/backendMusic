@@ -77,15 +77,15 @@ class ArtistController extends Controller
             $linkArtist = url(Storage::url($urlStoreArtist));
 
             DB::beginTransaction();
-            $artist =  Artist::create([
-                'user_id'         => Auth::user()->id,
-                'name'            => $request->input('name'),
-                'slug'            => Str::slug($request->input('name')),
-                'members'         => $request->input('members'),
-                'history'         => $request->input('history'),
-                'zone'            => $request->input('zone'),
-                'price_hour'      => $request->input('price_hour'),
-                'image'           => $linkArtist,
+            $artist = Artist::create([
+                'user_id' => Auth::user()->id,
+                'name' => $request->input('name'),
+                'slug' => Str::slug($request->input('name')),
+                'members' => $request->input('members'),
+                'history' => $request->input('history'),
+                'zone' => $request->input('zone'),
+                'price_hour' => $request->input('price_hour'),
+                'image' => $linkArtist,
                 'extra_kilometre' => $request->input('extra_kilometre'),
                 'coverage_radius' => $request->input('coverage_radius', 0),
                 'social_media' => $request->input('social_media') ? json_decode($request->input('social_media'), true) : null,
@@ -250,8 +250,8 @@ class ArtistController extends Controller
             $artist->extra_kilometre = $request->input('extra_kilometre');
             $artist->coverage_radius = $request->input('coverage_radius', 0);
             $artist->social_media = $request->input('social_media') ? json_decode($request->input('social_media'), true) : null;
-            $linkArtist =  $artist->image;
-            $linkManager =  $artist->manager->image;
+            $linkArtist = $artist->image;
+            $linkManager = $artist->manager->image;
 
             if (request()->file('image_artist')) {
                 $urlStore = Storage::put('public/artist', request()->file('image_artist'));
@@ -460,10 +460,10 @@ class ArtistController extends Controller
     public function getArtist()
     {
         try {
-        $artistWithMusicalGender = Artist::with('musicalGenders')
-            ->withAvg("ratings","rating")
-            ->orderBy('id', 'asc')
-            ->get();
+            $artistWithMusicalGender = Artist::with('musicalGenders')
+                ->withAvg("ratings","rating")
+                ->orderBy('id', 'asc')
+                ->get();
 
             return response()->json([
                 'success' => true,
