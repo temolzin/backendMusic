@@ -59,6 +59,9 @@ class PaymentController extends Controller
             $calculatedTotalCents = 0;
             $itemsForSales = [];
 
+            $distanceService = new \App\Services\DistanceMatrixService();
+            $totalExtraKmCostPesos = 0;
+
             foreach ($artistList as $element) {
                 if (!is_array($element) || !array_key_exists('artist_id', $element)) {
                     return response()->json([
@@ -81,12 +84,28 @@ class PaymentController extends Controller
                     ], 404);
                 }
 
-                $lineTotalPesos = (float) $artist->price_hour * $hours;
-                $calculatedTotalCents += (int) round($lineTotalPesos * 100);
+                $baseAmount = (float) $artist->price_hour * $hours;
+                $extraKmDistance = null;
+                $extraKmCost = 0;
+                $calculatedTotalCents += (int) round($baseAmount * 100);
+
+                if ($latitude && $longitude && $artist->coverage_radius > 0 && $artist->extra_kilometre > 0) {
+                    $distance = $distanceService->getDrivingDistanceInKm($artist->zone, $latitude, $longitude);
+                    if ($distance !== null && $distance > $artist->coverage_radius) {
+                        $extraKmDistance = $distance;
+                        $extraKmCost = ($distance - $artist->coverage_radius) * (float) $artist->extra_kilometre;
+                    }
+                }
+
+                $totalExtraKmCostPesos += $extraKmCost;
+                $lineTotalPesos = $baseAmount + $extraKmCost;
+
                 $itemsForSales[] = [
-                    'artist_id' => $artistId,
-                    'amount' => $lineTotalPesos,
-                    'hours' => $hours,
+                    'artist_id'        => $artistId,
+                    'amount'           => $lineTotalPesos,
+                    'hours'            => $hours,
+                    'extra_km_distance' => $extraKmDistance,
+                    'extra_km_cost'    => $extraKmCost,
                 ];
             }
 
@@ -98,7 +117,7 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $amount = $calculatedTotalCents / 100;
+            $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
             
             if ($request->input("transaction_id")) {
                 $charge = new \stdClass();
@@ -173,6 +192,8 @@ class PaymentController extends Controller
                     $sale->latitude = $latitude;
                     $sale->longitude = $longitude;
                     $sale->google_place_id = $googlePlaceId;
+                    $sale->extra_km_distance = $item['extra_km_distance'];
+                    $sale->extra_km_cost = $item['extra_km_cost'];
                     $sale->save();
                 }
 
@@ -591,7 +612,9 @@ class PaymentController extends Controller
             $clientAmountCents = (int) $request->input('amount');
             $artistList        = $request->input('artistList', []);
 
+            $distanceService = new \App\Services\DistanceMatrixService();
             $calculatedTotalCents = 0;
+            $totalExtraKmCostPesos = 0;
             $itemsForSales = [];
 
             foreach ($artistList as $element) {
@@ -609,13 +632,29 @@ class PaymentController extends Controller
                     return response()->json(['error' => 'Artista no encontrado', 'artist_id' => $artistId], 404);
                 }
 
-                $lineTotalPesos        = (float) $artist->price_hour * $hours;
-                $calculatedTotalCents += (int) round($lineTotalPesos * 100);
-                $itemsForSales[]       = [
-                    'artist_id'    => $artistId,
-                    'amount'       => $lineTotalPesos,
-                    'event_date'   => $normalizedEventDate,
-                    'event_hour'   => $normalizedEventHour,
+                $baseAmount = (float) $artist->price_hour * $hours;
+                $calculatedTotalCents += (int) round($baseAmount * 100);
+                $extraKmDistance = null;
+                $extraKmCost = 0;
+
+                if ($latitude && $longitude && $artist->coverage_radius > 0 && $artist->extra_kilometre > 0) {
+                    $distance = $distanceService->getDrivingDistanceInKm($artist->zone, $latitude, $longitude);
+                    if ($distance !== null && $distance > $artist->coverage_radius) {
+                        $extraKmDistance = $distance;
+                        $extraKmCost = ($distance - $artist->coverage_radius) * (float) $artist->extra_kilometre;
+                    }
+                }
+
+                $totalExtraKmCostPesos += $extraKmCost;
+                $lineTotalPesos = $baseAmount + $extraKmCost;
+
+                $itemsForSales[] = [
+                    'artist_id'        => $artistId,
+                    'amount'           => $lineTotalPesos,
+                    'event_date'       => $normalizedEventDate,
+                    'event_hour'       => $normalizedEventHour,
+                    'extra_km_distance' => $extraKmDistance,
+                    'extra_km_cost'    => $extraKmCost,
                 ];
             }
 
@@ -627,7 +666,7 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $amount = $calculatedTotalCents / 100;
+            $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
 
             $customerData = [
                 'name'             => $name,
@@ -679,6 +718,8 @@ class PaymentController extends Controller
                     $sale->latitude = $latitude;
                     $sale->longitude = $longitude;
                     $sale->google_place_id = $googlePlaceId;
+                    $sale->extra_km_distance = $item['extra_km_distance'];
+                    $sale->extra_km_cost = $item['extra_km_cost'];
                     $sale->save();
                 }
 
@@ -813,6 +854,55 @@ class PaymentController extends Controller
             return response()->json(['error' => ['category' => $e->getCategory(), 'error_code' => $e->getErrorCode(), 'description' => $e->getMessage()]], 500);
         } catch (Exception $e) {
             return response()->json(['error' => ['category' => 'Generic Error', 'error_code' => 'GENERIC_ERROR', 'description' => $e->getMessage()]], 500);
+        }
+    }
+
+    public function previewExtraKm(Request $request)
+    {
+        try {
+            $artistId = (int) $request->input('artist_id');
+            $hours    = (int) ($request->input('hours', 1));
+            $latitude  = (float) $request->input('latitude');
+            $longitude = (float) $request->input('longitude');
+
+            if (!$artistId || !$latitude || !$longitude) {
+                return response()->json(['success' => false, 'message' => 'Faltan parámetros'], 400);
+            }
+
+            $artist = Artist::find($artistId);
+            if (!$artist) {
+                return response()->json(['success' => false, 'message' => 'Artista no encontrado'], 404);
+            }
+
+            $baseAmount  = (float) $artist->price_hour * $hours;
+            $extraKmDistance = null;
+            $extraKmCost = 0;
+
+            if ($artist->coverage_radius > 0 && $artist->extra_kilometre > 0) {
+                $service = new \App\Services\DistanceMatrixService();
+                $distance = $service->getDrivingDistanceInKm($artist->zone, $latitude, $longitude);
+
+                if ($distance !== null && $distance > $artist->coverage_radius) {
+                    $extraKmDistance = $distance;
+                    $extraKmCost = ($distance - $artist->coverage_radius) * (float) $artist->extra_kilometre;
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'artist_name'      => $artist->name,
+                    'base_amount'      => round($baseAmount, 2),
+                    'coverage_radius'  => (int) $artist->coverage_radius,
+                    'extra_kilometre'  => (float) $artist->extra_kilometre,
+                    'total_distance'   => $extraKmDistance,
+                    'extra_km_distance' => $extraKmDistance !== null ? round($extraKmDistance - $artist->coverage_radius, 2) : null,
+                    'extra_km_cost'    => round($extraKmCost, 2),
+                    'total'            => round($baseAmount + $extraKmCost, 2),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 

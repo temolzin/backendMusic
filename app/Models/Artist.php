@@ -18,6 +18,7 @@ class Artist extends Model
         'price_hour',
         'image',
         'extra_kilometre',
+        'coverage_radius',
         'points',
         'social_media'
     ];

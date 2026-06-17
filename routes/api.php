@@ -124,6 +124,7 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::post('/process-payment', [ClientPaymentController::class, 'processPayment']);
     Route::get('/artist-sales', [PaymentController::class, 'getSalesByArtist']);
     Route::post('/payment/cash', [PaymentController::class, 'processCashPayment']);
+    Route::get('/payment/preview-extra-km', [PaymentController::class, 'previewExtraKm']);
     Route::post('/payment/cash/regenerate', [PaymentController::class, 'regenerateCashReference']);
     Route::post('/payment/confirm/{transactionId}', [PaymentController::class, 'confirmPayment']);
     Route::get('/client/last-order', [PaymentController::class, 'getLastClientOrder']);
