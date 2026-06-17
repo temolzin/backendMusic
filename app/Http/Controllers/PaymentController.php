@@ -18,6 +18,7 @@ use App\Models\ShoppingCard;
 use App\Models\ShoppingCardDetail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use App\Models\OpenpayKey;
 
@@ -106,6 +107,8 @@ class PaymentController extends Controller
                     'hours'            => $hours,
                     'extra_km_distance' => $extraKmDistance,
                     'extra_km_cost'    => $extraKmCost,
+                    'event_date'       => $normalizedEventDate,
+                    'event_hour'       => $normalizedEventHour,
                 ];
             }
 
@@ -118,7 +121,48 @@ class PaymentController extends Controller
             }
 
             $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
-            
+
+            $acquiredLocks = [];
+            $lockKeys = [];
+
+            foreach ($itemsForSales as $item) {
+                if (!$item['event_date']) continue;
+                $lockKeys[] = 'payment-lock:artist:' . $item['artist_id'] . ':date:' . $item['event_date'];
+            }
+
+            $lockKeys = array_values(array_unique($lockKeys));
+
+            foreach ($lockKeys as $lockKey) {
+                $lock = Cache::lock($lockKey, 300);
+                if (!$lock->get()) {
+                    foreach ($acquiredLocks as $acquiredLock) {
+                        $acquiredLock->release();
+                    }
+                    return response()->json([
+                        'error' => 'Lo sentimos, otro cliente está completando una transacción con este artista. Inténtalo en unos minutos'
+                    ], 409);
+                }
+                $acquiredLocks[] = $lock;
+            }
+
+            foreach ($itemsForSales as $item) {
+                if (!$item['event_date']) continue;
+                $alreadyBooked = DB::table('artist_sales')
+                    ->where('artist_id', $item['artist_id'])
+                    ->where('event_date', $item['event_date'])
+                    ->whereIn('event_status', ['pending', 'completed'])
+                    ->exists();
+
+                if ($alreadyBooked) {
+                    foreach ($acquiredLocks as $acquiredLock) {
+                        $acquiredLock->release();
+                    }
+                    return response()->json([
+                        'error' => 'Uno o más artistas de tu lista ya no están disponibles para la fecha seleccionada.'
+                    ], 422);
+                }
+            }
+
             if ($request->input("transaction_id")) {
                 $charge = new \stdClass();
                 $charge->id = $request->input("transaction_id");
@@ -214,8 +258,16 @@ class PaymentController extends Controller
                 }
 
                 DB::commit();
+
+                foreach ($acquiredLocks as $acquiredLock) {
+                    $acquiredLock->release();
+                }
             } catch (\Exception $e) {
                 DB::rollBack();
+
+                foreach ($acquiredLocks as $acquiredLock) {
+                    $acquiredLock->release();
+                }
 
                 throw $e;
             }
@@ -668,6 +720,47 @@ class PaymentController extends Controller
 
             $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
 
+            $acquiredLocks = [];
+            $lockKeys = [];
+
+            foreach ($itemsForSales as $item) {
+                if (!$item['event_date']) continue;
+                $lockKeys[] = 'payment-lock:artist:' . $item['artist_id'] . ':date:' . $item['event_date'];
+            }
+
+            $lockKeys = array_values(array_unique($lockKeys));
+
+            foreach ($lockKeys as $lockKey) {
+                $lock = Cache::lock($lockKey, 300);
+                if (!$lock->get()) {
+                    foreach ($acquiredLocks as $acquiredLock) {
+                        $acquiredLock->release();
+                    }
+                    return response()->json([
+                        'error' => 'Lo sentimos, otro cliente está completando una transacción con este artista. Inténtalo en unos minutos'
+                    ], 409);
+                }
+                $acquiredLocks[] = $lock;
+            }
+
+            foreach ($itemsForSales as $item) {
+                if (!$item['event_date']) continue;
+                $alreadyBooked = DB::table('artist_sales')
+                    ->where('artist_id', $item['artist_id'])
+                    ->where('event_date', $item['event_date'])
+                    ->whereIn('event_status', ['pending', 'completed'])
+                    ->exists();
+
+                if ($alreadyBooked) {
+                    foreach ($acquiredLocks as $acquiredLock) {
+                        $acquiredLock->release();
+                    }
+                    return response()->json([
+                        'error' => 'Uno o más artistas de tu lista ya no están disponibles para la fecha seleccionada.'
+                    ], 422);
+                }
+            }
+
             $customerData = [
                 'name'             => $name,
                 'last_name'        => $last_name,
@@ -733,8 +826,17 @@ class PaymentController extends Controller
                 }
 
                 DB::commit();
+
+                foreach ($acquiredLocks as $acquiredLock) {
+                    $acquiredLock->release();
+                }
             } catch (\Exception $e) {
                 DB::rollBack();
+
+                foreach ($acquiredLocks as $acquiredLock) {
+                    $acquiredLock->release();
+                }
+
                 throw $e;
             }
 

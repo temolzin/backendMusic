@@ -460,9 +460,10 @@ class ArtistController extends Controller
     public function getArtist()
     {
         try {
-            $artistWithMusicalGender = Artist::with('musicalGenders')
-                ->withAvg("ratings","rating")
-                ->get();
+        $artistWithMusicalGender = Artist::with('musicalGenders')
+            ->withAvg("ratings","rating")
+            ->orderBy('id', 'asc')
+            ->get();
 
             return response()->json([
                 'success' => true,
