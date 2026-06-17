@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Openpay\Data\Openpay;
 use OpenpayChargeRequest;
 use Exception;
@@ -28,7 +29,6 @@ class PaymentController extends Controller
     public function processPayment(Request $request)
     {
         $acquiredLocks = [];
-        sleep(20);
 
         try {
             $keys = OpenpayKey::first();
@@ -92,6 +92,7 @@ class PaymentController extends Controller
                     'amount' => $lineTotalPesos,
                     'hours' => $hours,
                     'event_date' => $normalizedEventDate,
+                    'event_hour' => $normalizedEventHour,
                 ];
             }
 
@@ -318,8 +319,46 @@ class PaymentController extends Controller
                 try {
                     $acquiredLock->release();
                 } catch (\Throwable $e) {
+                    Log::warning("Failed to release lock: " . $e->getMessage());
                 }
             }
+        }
+    }
+
+    public function getSalesByArtist(Request $request)
+    {
+        try {
+            $artistId = $request->query('artist_id');
+
+            if (!$artistId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'artist_id query parameter is required'
+                ], 400);
+            }
+            
+            $artist = Artist::find($artistId);
+            if (!$artist) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Artist not found'
+                ], 404);
+            }
+            
+            $sales = ArtistSale::where('artist_id', $artistId)
+                ->select('id', 'artist_id', 'event_date', 'event_hour', 'event_hours', 'event_status', 'created_at')
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'sales' => $sales,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error'
+            ], 500);
         }
     }
 
