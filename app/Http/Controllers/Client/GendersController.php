@@ -53,12 +53,23 @@ class GendersController extends Controller
     public function artistGender(Request $request)
     {
         try {
-            $artistGender = Artist::with(['musicalGenders', 'manager', 'galeryArtists'])
-                ->withAvg('ratings', 'rating')
-                ->where('slug', $request->slug)
-                ->first();
+            $artistGender = Artist::with([
+                'musicalGenders',
+                'manager',
+                'galeryArtists',
+                'offers' => function ($query) {
+                    $query->where('is_active', true)
+                        ->where('start_date', '<=', now())
+                        ->where('end_date', '>=', now())
+                        ->orderBy('discount_percentage', 'desc')
+                        ->limit(1);
+                }
+            ])
+            ->withAvg('ratings', 'rating')
+            ->where('slug', $request->slug)
+            ->first();
                 
-                return response()->json([
+            return response()->json([
                 'success' => true,
                 'artistGender' => $artistGender,
             ], 200);

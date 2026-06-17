@@ -78,7 +78,19 @@ class PaymentController extends Controller
                     ], 404);
                 }
 
-                $lineTotalPesos = (float) $artist->price_hour * $hours;
+                $now = Carbon::now('America/Mexico_City')->format('Y-m-d H:i:s');
+                $activeOffer = \App\Models\Offer::where('artist_id', $artist->id)
+                    ->where('is_active', true)
+                    ->where('start_date', '<=', $now)
+                    ->where('end_date', '>=', $now)
+                    ->orderBy('discount_percentage', 'desc')
+                    ->first();
+
+                $priceHour = $activeOffer 
+                    ? $artist->price_hour * (1 - $activeOffer->discount_percentage / 100)
+                    : $artist->price_hour;
+
+                $lineTotalPesos = (float) $priceHour * $hours;
                 $calculatedTotalCents += (int) round($lineTotalPesos * 100);
                 $itemsForSales[] = [
                     'artist_id' => $artistId,
@@ -598,7 +610,19 @@ class PaymentController extends Controller
                     return response()->json(['error' => 'Artista no encontrado', 'artist_id' => $artistId], 404);
                 }
 
-                $lineTotalPesos        = (float) $artist->price_hour * $hours;
+                $now = Carbon::now('America/Mexico_City')->format('Y-m-d H:i:s');
+                $activeOffer = \App\Models\Offer::where('artist_id', $artist->id)
+                    ->where('is_active', true)
+                    ->where('start_date', '<=', $now)
+                    ->where('end_date', '>=', $now)
+                    ->orderBy('discount_percentage', 'desc')
+                    ->first();
+
+                $priceHour = $activeOffer
+                    ? $artist->price_hour * (1 - $activeOffer->discount_percentage / 100)
+                    : $artist->price_hour;
+
+                $lineTotalPesos        = (float) $priceHour * $hours;
                 $calculatedTotalCents += (int) round($lineTotalPesos * 100);
                 $itemsForSales[]       = [
                     'artist_id'    => $artistId,

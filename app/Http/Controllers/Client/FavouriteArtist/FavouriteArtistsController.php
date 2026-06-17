@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Artist;
+use Carbon\Carbon;
 
 class FavouriteArtistsController extends Controller
 {
@@ -20,7 +21,12 @@ class FavouriteArtistsController extends Controller
     public function index()
     {
         try {
-            $favouriteArtists = FavouriteArtists::with('artist')->where('user_id', Auth::user()->id)->get();
+            $now = Carbon::now('America/Mexico_City')->format('Y-m-d H:i:s');
+            $favouriteArtists = FavouriteArtists::with(['artist', 'artist.offers' => function ($query) use ($now) {
+                $query->where('is_active', true)
+                    ->where('start_date', '<=', $now)
+                    ->where('end_date', '>=', $now);
+            }])->where('user_id', Auth::user()->id)->get();
             return response()->json([
                 'success' => true,
                 'client' => $favouriteArtists,
