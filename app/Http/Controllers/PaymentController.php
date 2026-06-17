@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Openpay\Data\Openpay;
 use OpenpayChargeRequest;
 use Exception;
@@ -17,6 +18,7 @@ use App\Models\Artist;
 use App\Models\ShoppingCard;
 use App\Models\ShoppingCardDetail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\OpenpayKey;
@@ -26,6 +28,8 @@ class PaymentController extends Controller
 
     public function processPayment(Request $request)
     {
+        $acquiredLocks = [];
+
         try {
             $keys = OpenpayKey::first();
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
@@ -87,6 +91,8 @@ class PaymentController extends Controller
                     'artist_id' => $artistId,
                     'amount' => $lineTotalPesos,
                     'hours' => $hours,
+                    'event_date' => $normalizedEventDate,
+                    'event_hour' => $normalizedEventHour,
                 ];
             }
 
@@ -99,6 +105,55 @@ class PaymentController extends Controller
             }
 
             $amount = $calculatedTotalCents / 100;
+
+            $lockKeys = [];
+            foreach ($itemsForSales as $item) {
+                if (!$item['event_date']) {
+                    continue;
+                }
+
+                $lockKeys[] = 'payment-lock:artist:' . $item['artist_id'] . ':date:' . $item['event_date'];
+            }
+
+            $lockKeys = array_values(array_unique($lockKeys));
+
+            foreach ($lockKeys as $lockKey) {
+                $lock = Cache::lock($lockKey, 300);
+
+                if (!$lock->get()) {
+                    foreach ($acquiredLocks as $acquiredLock) {
+                        $acquiredLock->release();
+                    }
+
+                    return response()->json([
+                        'error' => 'Lo sentimos, otro cliente está completando una transacción con este artista. Inténtalo en unos minutos'
+                    ], 409);
+                }
+
+                $acquiredLocks[] = $lock;
+            }
+
+            foreach ($itemsForSales as $item) {
+                if (!$item['event_date']) {
+                    continue;
+                }
+
+                $alreadyBooked = DB::table('artist_sales')
+                    ->where('artist_id', $item['artist_id'])
+                    ->where('event_date', $item['event_date'])
+                    ->whereIn('event_status', ['pending', 'completed'])
+                    ->exists();
+
+                if ($alreadyBooked) {
+                    foreach ($acquiredLocks as $acquiredLock) {
+                        $acquiredLock->release();
+                    }
+
+                    return response()->json([
+                        'error' => 'Uno o más artistas de tu lista ya no están disponibles para la fecha seleccionada.'
+                    ], 422);
+                }
+            }
             
             if ($request->input("transaction_id")) {
                 $charge = new \stdClass();
@@ -164,7 +219,7 @@ class PaymentController extends Controller
                     $sale->customer_city = $city;
                     $sale->customer_state = $state;
                     $sale->customer_zip_code = $zip_code;
-                    $sale->event_date = $normalizedEventDate;
+                    $sale->event_date = $item['event_date'];
                     $sale->event_hour = $normalizedEventHour;
                     $sale->event_hours = $item['hours'] ?? null;
                     $sale->event_status = 'pending';
@@ -195,7 +250,6 @@ class PaymentController extends Controller
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
-
                 throw $e;
             }
 
@@ -262,6 +316,14 @@ class PaymentController extends Controller
                     'description' => $e->getMessage(),
                 ]
             ]);
+        } finally {
+            foreach ($acquiredLocks as $acquiredLock) {
+                try {
+                    $acquiredLock->release();
+                } catch (\Throwable $e) {
+                    Log::warning("Failed to release lock: " . $e->getMessage());
+                }
+            }
         }
     }
 
