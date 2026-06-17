@@ -41,8 +41,6 @@ class OfferSeeder extends Seeder
             'Oferta exclusiva clientes frecuentes',
         ];
 
-        $discounts2 = [15, 25, 5, 18, 8, 20, 12];
-
         $now = Carbon::now();
 
         foreach ($artistIds as $index => $artistId) {
@@ -58,7 +56,7 @@ class OfferSeeder extends Seeder
             Offer::create([
                 'artist_id'           => $artistId,
                 'description'         => $descriptions2[$index],
-                'discount_percentage' => $discounts2[$index],
+                'discount_percentage' => $discounts[$index] + 5,
                 'start_date'          => $now->copy()->addDays($index + 3),
                 'end_date'            => $now->copy()->addDays($index + 18),
                 'is_active'           => false,
