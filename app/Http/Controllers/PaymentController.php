@@ -623,7 +623,7 @@ class PaymentController extends Controller
                     ? $artist->price_hour * (1 - $activeOffer->discount_percentage / 100)
                     : $artist->price_hour;
 
-                $lineTotalPesos        = (float) $priceHour * $hours;
+                $lineTotalPesos = (float) $priceHour * $hours;
                 $calculatedTotalCents += (int) round($lineTotalPesos * 100);
                 $itemsForSales[]       = [
                     'artist_id'    => $artistId,

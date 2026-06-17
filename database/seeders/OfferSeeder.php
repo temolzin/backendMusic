@@ -31,35 +31,25 @@ class OfferSeeder extends Seeder
 
         $discounts = [10, 20, 10, 12, 10.33, 15, 8];
 
-        $descriptions2 = [
-            'Oferta especial fin de semana',
-            'Promoción aniversario',
-            'Oferta relámpago',
-            'Descuento para eventos corporativos',
-            'Descuento para quincenas',
-            'Oferta para bodas',
-            'Oferta exclusiva clientes frecuentes',
-        ];
-
         $now = Carbon::now();
 
         foreach ($artistIds as $index => $artistId) {
             Offer::create([
-                'artist_id'           => $artistId,
-                'description'         => $descriptions[$index],
+                'artist_id' => $artistId,
+                'description' => $descriptions[$index],
                 'discount_percentage' => $discounts[$index],
-                'start_date'          => $now->copy()->startOfMonth(),
-                'end_date'            => $now->copy()->endOfMonth(),
-                'is_active'           => true,
+                'start_date' => $now->copy()->startOfMonth(),
+                'end_date' => $now->copy()->endOfMonth(),
+                'is_active' => true,
             ]);
 
             Offer::create([
-                'artist_id'           => $artistId,
-                'description'         => $descriptions2[$index],
+                'artist_id' => $artistId,
+                'description' => $descriptions[$index] . ' (Especial)',
                 'discount_percentage' => $discounts[$index] + 5,
-                'start_date'          => $now->copy()->addDays($index + 3),
-                'end_date'            => $now->copy()->addDays($index + 18),
-                'is_active'           => false,
+                'start_date' => $now->copy()->addDays($index + 3),
+                'end_date' => $now->copy()->addDays($index + 18),
+                'is_active' => false,
             ]);
         }
     }
