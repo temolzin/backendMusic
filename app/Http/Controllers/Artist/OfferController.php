@@ -27,7 +27,7 @@ class OfferController extends Controller
         try {
             $request->validate([
                 'description'         => 'required|string',
-                'discount_percentage' => 'required|numeric|min:1|max:100',
+                'discount_percentage' => 'required|numeric|min:1|max:90',
                 'start_date'          => 'required|date',
                 'end_date'            => 'required|date|after:start_date',
             ]);
@@ -54,7 +54,7 @@ class OfferController extends Controller
         try {
             $request->validate([
                 'description'         => 'required|string',
-                'discount_percentage' => 'required|numeric|min:1|max:100',
+                'discount_percentage' => 'required|numeric|min:1|max:90', 
                 'start_date'          => 'required|date',
                 'end_date'            => 'required|date|after:start_date',
             ]);
