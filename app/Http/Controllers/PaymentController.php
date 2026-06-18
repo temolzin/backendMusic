@@ -116,7 +116,7 @@ class PaymentController extends Controller
 
                 $totalExtraKmCostPesos += $extraKmCost;
                 $lineTotalPesos = $baseAmount + $extraKmCost;
-                $calculatedTotalCents += (int) round($lineTotalPesos * 100);
+                $calculatedTotalCents += (int) round($baseAmount * 100);
 
                 $itemsForSales[] = [
                     'artist_id' => $artistId,
@@ -137,7 +137,7 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $amount = $calculatedTotalCents / 100;
+            $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
 
             $acquiredLocks = [];
             $lockKeys = [];
@@ -224,7 +224,6 @@ class PaymentController extends Controller
                 if ($deviceSessionId) {
                     $chargeRequest['device_session_id'] = $deviceSessionId;
                 }
-
                 $charge = $openpay->charges->create($chargeRequest);
             }
             
@@ -245,7 +244,7 @@ class PaymentController extends Controller
                     $sale->customer_state = $state;
                     $sale->customer_zip_code = $zip_code;
                     $sale->event_date = $item['event_date'];
-                    $sale->event_hour = $normalizedEventHour;
+                    $sale->event_hour = $item['event_hour'];
                     $sale->event_hours = $item['hours'] ?? null;
                     $sale->event_status = 'pending';
                     $sale->status = 'completed';
@@ -735,7 +734,7 @@ class PaymentController extends Controller
 
                 $totalExtraKmCostPesos += $extraKmCost;
                 $lineTotalPesos = $baseAmount + $extraKmCost;
-                $calculatedTotalCents += (int) round($lineTotalPesos * 100); 
+                $calculatedTotalCents += (int) round($baseAmount * 100);
 
                 $itemsForSales[] = [
                     'artist_id' => $artistId,
@@ -755,7 +754,7 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $amount = $calculatedTotalCents / 100;
+            $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
 
             $acquiredLocks = [];
             $lockKeys = [];
