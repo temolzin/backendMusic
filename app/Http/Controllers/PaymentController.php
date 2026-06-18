@@ -20,7 +20,6 @@ use App\Models\ShoppingCardDetail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 use App\Models\OpenpayKey;
 use App\Models\Offer;
@@ -103,12 +102,9 @@ class PaymentController extends Controller
                     ? $artist->price_hour * (1 - $activeOffer->discount_percentage / 100)
                     : $artist->price_hour;
 
-                $lineTotalPesos = (float) $priceHour * $hours;
-                $calculatedTotalCents += (int) round($lineTotalPesos * 100);
-                $baseAmount = (float) $artist->price_hour * $hours;
+                $baseAmount = (float) $priceHour * $hours;
                 $extraKmDistance = null;
                 $extraKmCost = 0;
-                $calculatedTotalCents += (int) round($baseAmount * 100);
 
                 if ($latitude && $longitude && $artist->coverage_radius > 0 && $artist->extra_kilometre > 0) {
                     $distance = $distanceService->getDrivingDistanceInKm($artist->zone, $latitude, $longitude);
@@ -120,6 +116,7 @@ class PaymentController extends Controller
 
                 $totalExtraKmCostPesos += $extraKmCost;
                 $lineTotalPesos = $baseAmount + $extraKmCost;
+                $calculatedTotalCents += (int) round($lineTotalPesos * 100);
 
                 $itemsForSales[] = [
                     'artist_id' => $artistId,
@@ -140,7 +137,7 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
+            $amount = $calculatedTotalCents / 100;
 
             $acquiredLocks = [];
             $lockKeys = [];
@@ -758,7 +755,7 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
+            $amount = $calculatedTotalCents / 100;
 
             $acquiredLocks = [];
             $lockKeys = [];
