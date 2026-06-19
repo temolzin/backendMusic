@@ -64,16 +64,16 @@
                     $showExtraKm = $quotation->extra_km_distance && $quotation->extra_km_cost && $quotation->extra_km_cost > 0;
                 @endphp
                 @if($showDiscount)
-                <tr>
-                    <td colspan="4" class="text-right" style="padding: 8px 10px;">Descuento ({{ number_format($quotation->discount_percentage, 0) }}%)</td>
-                    <td class="text-center" style="color: #28a745;">- $ {{ number_format($quotation->discount_amount, 2, '.', ',') }}</td>
-                </tr>
+                    <tr>
+                        <td colspan="4" class="text-right" style="padding: 8px 10px;">Descuento ({{ number_format($quotation->discount_percentage, 0) }}%)</td>
+                        <td class="text-center" style="color: #28a745;">- $ {{ number_format($quotation->discount_amount, 2, '.', ',') }}</td>
+                    </tr>
                 @endif
                 @if($showExtraKm)
-                <tr>
-                    <td colspan="4" class="text-right" style="padding: 8px 10px;">Km extra ({{ number_format($quotation->extra_km_distance, 2) }} km)</td>
-                    <td class="text-center">+ $ {{ number_format($quotation->extra_km_cost, 2, '.', ',') }}</td>
-                </tr>
+                    <tr>
+                        <td colspan="4" class="text-right" style="padding: 8px 10px;">Km extra ({{ number_format($quotation->extra_km_distance, 2) }} km)</td>
+                        <td class="text-center">+ $ {{ number_format($quotation->extra_km_cost, 2, '.', ',') }}</td>
+                    </tr>
                 @endif
                 <tfoot>
                     <tr>
