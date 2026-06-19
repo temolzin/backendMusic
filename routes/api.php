@@ -28,6 +28,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\DashboardStatsController;
 use App\Http\Controllers\Admin\OpenpayKeysController;
 use App\Http\Controllers\GoogleMapsController;
+use App\Http\Controllers\SupportTicketController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -129,4 +130,10 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::post('/payment/confirm/{transactionId}', [PaymentController::class, 'confirmPayment']);
     Route::get('/client/last-order', [PaymentController::class, 'getLastClientOrder']);
     Route::get('/artist/sales/details', [PaymentController::class, 'getArtistSalesDetails']);
+    Route::post('/support-tickets', [SupportTicketController::class, 'store']);
+    Route::post('/support-tickets/{ticket}/evidences', [SupportTicketController::class, 'uploadEvidence']);
+    Route::get('/support-tickets/my', [SupportTicketController::class, 'myTickets']);
+    Route::get('/admin/support-tickets', [SupportTicketController::class, 'index']);
+    Route::get('/admin/support-tickets/{ticket}', [SupportTicketController::class, 'show']);
+    Route::patch('/admin/support-tickets/{ticket}/status', [SupportTicketController::class, 'updateStatus']);
 });

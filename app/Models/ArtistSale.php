@@ -47,4 +47,9 @@ class ArtistSale extends Model
     {
         return $this->hasMany(Message::class);
     }
+
+    public function supportTickets()
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
 }
