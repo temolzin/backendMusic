@@ -27,7 +27,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Agrupación mexicana reconocida por su energía en el escenario y por revolucionar el regional mexicano con un estilo moderno, festivo y cercano a su público.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 10000,
-            'extra_kilometre' => '1000',
+            'extra_kilometre' => '85',
             'image' => 'https://i.pinimg.com/1200x/cc/df/36/ccdf3618be3546b80b281f1c5a4804a9.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -51,7 +51,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Ícono de la música mexicana y compositor legendario, conocido como “El Poeta del Pueblo” por sus canciones llenas de romanticismo y sentimiento.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 15000,
-            'extra_kilometre' => '1500',
+            'extra_kilometre' => '45',
             'image' => 'https://i.pinimg.com/736x/0a/d7/00/0ad700ef77db65b7724f029d8327ab70.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -75,7 +75,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Banda española de pop rock que marcó generaciones con temas juveniles, divertidos y románticos que siguen siendo clásicos en habla hispana.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 12000,
-            'extra_kilometre' => '1200',
+            'extra_kilometre' => '60',
             'image' => 'https://i.pinimg.com/736x/23/ea/2f/23ea2f44d0c87703f57c2b3bea5d78ac.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -98,7 +98,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Grupo de música norteña reconocido por sus corridos y canciones que reflejan la cultura y las historias del regional mexicano.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 8000,
-            'extra_kilometre' => '200',
+            'extra_kilometre' => '50',
             'image' => 'https://i.pinimg.com/736x/e9/50/13/e95013b2e8b7d7f53838c2f781da9dcb.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -122,7 +122,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Cantante de música norteña y regional mexicana destacado por su potente voz y trayectoria dentro de agrupaciones reconocidas del género.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 6000,
-            'extra_kilometre' => '200',
+            'extra_kilometre' => '30',
             'image' => 'https://i.pinimg.com/736x/96/6c/b4/966cb48cb7837789152ddb0e2e3f2ade.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -145,7 +145,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Artista que mezcla corridos y regional mexicano con sonidos contemporáneos, destacando por su estilo auténtico y letras emotivas.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 9000,
-            'extra_kilometre' => '250',
+            'extra_kilometre' => '35',
             'image' => 'https://i.pinimg.com/736x/03/e1/67/03e167ed063f427feba2b426dd4e174b.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -168,7 +168,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Uno de los exponentes más populares de los corridos actuales, reconocido por su estilo moderno y gran impacto en la música regional mexicana.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 10000,
-            'extra_kilometre' => '1000',
+            'extra_kilometre' => '55',
             'image' => 'https://i.pinimg.com/736x/d1/c6/48/d1c648c1e63daca81628d58dff214249.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -191,7 +191,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Dúo sinaloense que ha ganado popularidad gracias a sus corridos y canciones con un estilo fresco y representativo del regional mexicano.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 13000,
-            'extra_kilometre' => '1300',
+            'extra_kilometre' => '50',
             'image' => 'https://i.pinimg.com/1200x/91/06/60/910660eee38a08159a5b35aa79c0c163.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -211,10 +211,10 @@ class ArtistSeeder extends Seeder
             'name' => 'Remmy Valenzuela',
             'slug' => 'remmy-valenzuela',
             'members' => 1,
-            'history' => 'Cantautor y acordeonista mexicano admirado por su talento musical y por fusionar el norteño con toques románticos y modernos.',
+            'history' => 'Cantautor y accordionista mexicano admirado por su talento musical y por fusionar el norteño con toques románticos y modernos.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 15000,
-            'extra_kilometre' => '1500',
+            'extra_kilometre' => '40',
             'image' => 'https://i.pinimg.com/1200x/50/1b/14/501b144d5376547e6686e36ad4bde81b.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -237,7 +237,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Referente de los corridos tumbados y la música urbana regional, conocido por sus letras melancólicas y sonido innovador.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 25000,
-            'extra_kilometre' => '2500',
+            'extra_kilometre' => '65',
             'image' => 'https://i.pinimg.com/1200x/71/1b/e2/711be2b654a23146aa9ae0ad31e7cb31.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -260,7 +260,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Banda mexicana de ska reconocida por su energía, ritmos contagiosos y canciones que combinan fiesta, amor y crítica social.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 35000,
-            'extra_kilometre' => '3500',
+            'extra_kilometre' => '80',
             'image' => 'https://i.pinimg.com/1200x/23/b9/82/23b98262e658f93a72822a667918e2fa.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -283,7 +283,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Grupo argentino famoso por sus shows llenos de alegría, mezclando rock, ska y música circense en espectáculos únicos y divertidos.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 30000,
-            'extra_kilometre' => '3000',
+            'extra_kilometre' => '90',
             'image' => 'https://i.pinimg.com/1200x/1d/76/a6/1d76a6acedc7acee80295d2f8ddc36a4.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -307,7 +307,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Rapero mexicano destacado por sus letras introspectivas, estilo relajado y una propuesta auténtica dentro del hip hop nacional.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 45000,
-            'extra_kilometre' => '4500',
+            'extra_kilometre' => '35',
             'image' => 'https://i.pinimg.com/736x/04/1d/3d/041d3da152a762abb95262f430ff3ab6.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -331,7 +331,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Agrupación de regional mexicano reconocida por interpretar música con raíces tradicionales y un estilo cercano al público.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 25000,
-            'extra_kilometre' => '2500',
+            'extra_kilometre' => '50',
             'image' => 'https://i.pinimg.com/1200x/a4/65/92/a46592f025e0e84faec139809716fda6.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
@@ -355,7 +355,7 @@ class ArtistSeeder extends Seeder
             'history' => 'Grupo popular dentro del movimiento sierreño, conocido por mantener vivo el legado musical romántico y sentimental del regional mexicano.',
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 35000,
-            'extra_kilometre' => '3500',
+            'extra_kilometre' => '60',
             'image' => 'https://i.pinimg.com/736x/38/15/e7/3815e71510f30c0cf528c997d6b6af76.jpg',
         ])->musicalGenders()->sync([
             rand(1, 3),
