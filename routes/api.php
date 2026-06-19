@@ -116,6 +116,7 @@ Route::post('/users-subscribe/send', [UsersSubscribeController::class, 'sendEmai
 Route::post('/users-subscribe/new', [UsersSubscribeController::class, 'store']);
 
 Route::post('/quotations', [QuotationsController::class, 'addQuotation']);
+Route::get('/artist-sales/public', [PaymentController::class, 'getSalesByArtist']);
 Route::group(["middleware" => "auth:api"], function () {
     Route::get('/artist/quotations/count', [QuotationsController::class, 'countByArtist']);
 });

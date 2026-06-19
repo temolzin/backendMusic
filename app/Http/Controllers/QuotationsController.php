@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Quotations;
 use App\Models\Artist;
+use App\Models\Offer;
+use App\Services\DistanceMatrixService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -37,7 +39,40 @@ class QuotationsController extends Controller
             ], 404);
         }
 
-        $price = $artist->price_hour * $request->input('event_hours');
+        $originalPriceHour = $artist->price_hour;
+        $originalBase = $originalPriceHour * $request->input('event_hours');
+
+        $now = Carbon::now('America/Mexico_City')->format('Y-m-d H:i:s');
+        $activeOffer = Offer::where('artist_id', $artist->id)
+            ->where('is_active', true)
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->orderBy('discount_percentage', 'desc')
+            ->first();
+
+        $discountPercent = $activeOffer ? (float) $activeOffer->discount_percentage : 0;
+        $priceHour = $activeOffer
+            ? $artist->price_hour * (1 - $activeOffer->discount_percentage / 100)
+            : $artist->price_hour;
+
+        $baseAfterDiscount = $priceHour * $request->input('event_hours');
+        $discountAmount = $originalBase - $baseAfterDiscount;
+
+        $extraKmDistance = null;
+        $extraKmCost = 0;
+        $latitude = $request->input('latitude');
+        $longitude = $request->input('longitude');
+
+        if ($latitude && $longitude && $artist->coverage_radius > 0 && $artist->extra_kilometre > 0) {
+            $distanceService = new DistanceMatrixService();
+            $distance = $distanceService->getDrivingDistanceInKm($artist->zone, (float) $latitude, (float) $longitude);
+            if ($distance !== null && $distance > $artist->coverage_radius) {
+                $extraKmDistance = $distance;
+                $extraKmCost = ($distance - $artist->coverage_radius) * (float) $artist->extra_kilometre;
+            }
+        }
+
+        $price = $baseAfterDiscount + $extraKmCost;
 
         try {
             DB::beginTransaction();
@@ -52,6 +87,14 @@ class QuotationsController extends Controller
             $quotation->email = $request->input('email');
             $quotation->full_name = $request->input('full_name');
             $quotation->price = $price;
+            $quotation->base_price = $originalBase;
+            $quotation->discount_percentage = $discountPercent > 0 ? $discountPercent : null;
+            $quotation->discount_amount = $discountAmount > 0 ? $discountAmount : null;
+            $quotation->latitude = $latitude;
+            $quotation->longitude = $longitude;
+            $quotation->google_place_id = $request->input('google_place_id');
+            $quotation->extra_km_distance = $extraKmDistance;
+            $quotation->extra_km_cost = $extraKmCost > 0 ? $extraKmCost : null;
             $quotation->created_at = $quotationCreatedAt;
             $quotation->save();
 
