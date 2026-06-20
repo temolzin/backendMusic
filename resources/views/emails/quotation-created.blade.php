@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+@php use Carbon\Carbon; @endphp
 
 <head>
     <meta charset="utf-8">
@@ -34,8 +35,8 @@
             </div>
             <div id="invoice">
                 <h1>Cotizacion</h1>
-                <div class="date">{{ $quotation->event_date }}</div>
-                <div class="date">{{ $quotation->quotationCreatedAt }}</div>
+                <div class="date">{{ Carbon::parse($quotation->event_date)->format('d/m/Y') }}</div>
+                <div class="date">{{ $quotation->created_at ? $quotation->created_at->format('d/m/Y H:i') : now()->format('d/m/Y H:i') }}</div>
             </div>
         </div>
         <div class="table">
@@ -44,29 +45,40 @@
                     <tr>
                         <th class="text-center">Artista</th>
                         <th class="text-center">Fecha del Evento</th>
-                        <th class="text-center">Duración del Evento</th>
-                        <th class="text-center">Total</th>
+                        <th class="text-center">Duración</th>
+                        <th class="text-center">Precio por Hora</th>
+                        <th class="text-center">Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td class="text-center">{{ $quotation->artist->name }}</td>
-                        <td class="text-center">{{ $quotation->event_date }}</td>
+                        <td class="text-center">{{ Carbon::parse($quotation->event_date)->format('d/m/Y') }}</td>
                         <td class="text-center">{{ $quotation->event_hours }} hora(s)</td>
-                        <td class="text-center">$ {{ number_format($quotation->price, 2, '.', ',') }}</td>
+                        <td class="text-center">$ {{ number_format($quotation->artist->price_hour, 2, '.', ',') }}</td>
+                        <td class="text-center">$ {{ number_format($quotation->base_price ?? $quotation->price, 2, '.', ',') }}</td>
                     </tr>
                 </tbody>
+                @php
+                    $showDiscount = $quotation->discount_percentage && $quotation->discount_percentage > 0 && $quotation->discount_amount && $quotation->discount_amount > 0;
+                    $showExtraKm = $quotation->extra_km_distance && $quotation->extra_km_cost && $quotation->extra_km_cost > 0;
+                @endphp
+                @if($showDiscount)
+                    <tr>
+                        <td colspan="4" class="text-right" style="padding: 8px 10px;">Descuento ({{ number_format($quotation->discount_percentage, 0) }}%)</td>
+                        <td class="text-center" style="color: #28a745;">- $ {{ number_format($quotation->discount_amount, 2, '.', ',') }}</td>
+                    </tr>
+                @endif
+                @if($showExtraKm)
+                    <tr>
+                        <td colspan="4" class="text-right" style="padding: 8px 10px;">Km extra ({{ number_format($quotation->extra_km_distance, 2) }} km)</td>
+                        <td class="text-center">+ $ {{ number_format($quotation->extra_km_cost, 2, '.', ',') }}</td>
+                    </tr>
+                @endif
                 <tfoot>
                     <tr>
-                        <td colspan=""></td>
-                        <td colspan="2">SUBTOTAL</td>
-                        <td class="">$ {{ number_format($quotation->price, 2, '.', ',') }}</td>
-                    </tr>
-
-                    <tr>
-                        <td colspan=""></td>
-                        <td colspan="2">TOTAL</td>
-                        <td class="">$ {{ number_format($quotation->price, 2, '.', ',') }}</td>
+                        <td colspan="4"></td>
+                        <td class="text-center"><strong>$ {{ number_format($quotation->price, 2, '.', ',') }}</strong></td>
                     </tr>
                 </tfoot>
             </table>
