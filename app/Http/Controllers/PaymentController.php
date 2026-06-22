@@ -90,7 +90,7 @@ class PaymentController extends Controller
                     ], 404);
                 }
 
-                $now = Carbon::now('America/Mexico_City')->format('Y-m-d H:i:s');
+                $now = Carbon::now()->format('Y-m-d H:i:s');
                 $activeOffer = Offer::where('artist_id', $artist->id)
                     ->where('is_active', true)
                     ->where('start_date', '<=', $now)
@@ -498,6 +498,10 @@ class PaymentController extends Controller
                 return response()->json(['success' => false, 'message' => 'Evento expirado, no se puede marcar como completado'], 400);
             }
 
+            if (!$this->canComplete($sale)) {
+                return response()->json(['success' => false, 'message' => 'El evento aún no ha terminado. Debes esperar a la hora de finalización.'], 400);
+            }
+
             $sale->event_status = 'completed';
             $sale->save();
 
@@ -708,7 +712,7 @@ class PaymentController extends Controller
                     return response()->json(['error' => 'Artista no encontrado', 'artist_id' => $artistId], 404);
                 }
 
-                $now = Carbon::now('America/Mexico_City')->format('Y-m-d H:i:s');
+                $now = Carbon::now()->format('Y-m-d H:i:s');
                 $activeOffer = Offer::where('artist_id', $artist->id)
                     ->where('is_active', true)
                     ->where('start_date', '<=', $now)
