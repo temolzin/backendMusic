@@ -15,27 +15,28 @@ class ArtistSalesSeeder extends Seeder
 
         $artistIds   = DB::table('artists')->orderBy('id')->pluck('id')->all();
         $customerIds = [17, 18];
+        $customers   = User::whereIn('id', $customerIds)->get()->keyBy('id');
+        $eventHours  = ['08:00', '10:00', '14:00', '16:00', '18:00', '20:00'];
         $amounts     = [6000, 9000, 12000];
-        
-        $customers = User::whereIn('id', $customerIds)->get()->keyBy('id');
 
-        if (empty($artistIds)) {
-            throw new \RuntimeException('No hay artistas sembrados para generar artist_sales.');
-        }
+        $patterns = [
+            ['event_date' => '2026-04-20', 'payment_method' => 'cash',  'status' => 'pending'],
+            ['event_date' => '2026-05-10', 'payment_method' => 'card',  'status' => 'completed'],
+            ['event_date' => '2026-08-20', 'payment_method' => 'cash',  'status' => 'pending'],
+            ['event_date' => '2026-09-15', 'payment_method' => 'card',  'status' => 'completed'],
+        ];
 
-        $eventHours = ['08:00', '10:00', '14:00', '16:00', '18:00', '20:00'];
+        foreach ($customerIds as $customerIndex => $customerId) {
+            $customer = $customers[$customerId];
 
-        foreach ($artistIds as $index => $artistId) {
-            for ($i = 0; $i < 1; $i++) {
-                $amount     = $amounts[($index + $i) % count($amounts)];
-                $customerId = $customerIds[($index + $i) % count($customerIds)];
-                $customer   = $customers[$customerId];
-            
+            foreach ($artistIds as $index => $artistId) {
+                $pattern = $patterns[$index % count($patterns)];
+
                 ArtistSale::create([
                     'artist_id'              => $artistId,
                     'customer_id'            => $customerId,
-                    'amount'                 => $amount,
-                    'openpay_transaction_id' => 'trx_test_' . $artistId . '_1',
+                    'amount'                 => $amounts[$index % count($amounts)],
+                    'openpay_transaction_id' => 'trx_test_' . $artistId . '_' . $customerId,
                     'customer_first_name'    => explode(' ', $customer->name)[0],
                     'customer_last_name'     => explode(' ', $customer->name)[1] ?? 'Usuario',
                     'customer_email'         => $customer->email,
@@ -44,11 +45,12 @@ class ArtistSalesSeeder extends Seeder
                     'customer_city'          => 'Ciudad de México',
                     'customer_state'         => 'CDMX',
                     'customer_zip_code'      => '28001',
-                    'event_date'             => now()->addDays($index + 1)->format('Y-m-d'),
+                    'event_date'             => $pattern['event_date'],
                     'event_hour'             => $eventHours[$index % count($eventHours)],
                     'event_hours'            => rand(2, 5),
+                    'payment_method'         => $pattern['payment_method'],
                     'event_status'           => 'pending',
-                    'status'     => 'completed',
+                    'status'                 => $pattern['status'],
                 ]);
             }
         }

@@ -137,4 +137,5 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/admin/support-tickets', [SupportTicketController::class, 'index']);
     Route::get('/admin/support-tickets/{ticket}', [SupportTicketController::class, 'show']);
     Route::patch('/admin/support-tickets/{ticket}/status', [SupportTicketController::class, 'updateStatus']);
+    Route::get('/admin/support-tickets/{ticket}/logs', [SupportTicketController::class, 'logs']);
 });

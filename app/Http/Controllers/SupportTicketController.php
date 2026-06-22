@@ -7,6 +7,7 @@ use App\Models\ArtistSale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\TicketLog;
 
 class SupportTicketController extends Controller
 {
@@ -40,6 +41,13 @@ class SupportTicketController extends Controller
             'category'         => $request->category,
             'description'      => $request->description,
             'status'           => 'open',
+        ]);
+
+        TicketLog::create([
+            'support_ticket_id'  => $ticket->id,
+            'changed_by_user_id' => $userId,
+            'status' => 'open',
+            'notes' => 'Ticket creado.',
         ]);
 
         return response()->json(['data' => $ticket->load('evidences')], 201);
@@ -106,6 +114,7 @@ class SupportTicketController extends Controller
         $request->validate([
             'status' => 'required|in:open,under_review,resolved,rejected',
             'resolution_type' => 'nullable|in:full_refund,partial_refund,no_action',
+            'notes'           => 'nullable|string|max:500',
         ]);
 
         $ticket->update([
@@ -113,8 +122,23 @@ class SupportTicketController extends Controller
             'resolution_type' => $request->resolution_type,
         ]);
 
+        TicketLog::create([
+            'support_ticket_id'  => $ticket->id,
+            'changed_by_user_id' => Auth::id(),
+            'status'             => $request->status,
+            'resolution_type'    => $request->resolution_type,
+            'notes'              => $request->notes,
+        ]);
+
         return response()->json([
             'data' => $ticket->load(['artistSale.artist', 'artistSale.customer', 'reporter', 'evidences'])
+        ]);
+    }
+
+    public function logs(SupportTicket $ticket)
+    {
+        return response()->json([
+            'data' => $ticket->logs()->get()
         ]);
     }
 }
