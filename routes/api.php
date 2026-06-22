@@ -74,7 +74,8 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::delete('/artist/offers/{id}', [OfferController::class, 'destroy']);
     Route::resource('/artist-new', ArtistController::class);
     Route::get('/artist/payout-method', [ArtistPayoutMethodController::class, 'show']);
-    Route::post('/artist/payout-method', [ArtistPayoutMethodController::class, 'storeOrUpdate']);
+    Route::post('/artist/payout-method', [ArtistPayoutMethodController::class, 'store']);
+    Route::put('/artist/payout-method', [ArtistPayoutMethodController::class, 'update']);
     //Route for client
     Route::resource('/client-card', ClientController::class);
     Route::get('/client/profile', [ClientController::class, 'getProfile']);
