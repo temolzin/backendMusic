@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\DashboardStatsController;
 use App\Http\Controllers\Admin\OpenpayKeysController;
 use App\Http\Controllers\GoogleMapsController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\ArtistPayoutMethodController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -72,6 +73,8 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::put('/artist/offers/{id}', [OfferController::class, 'update']);
     Route::delete('/artist/offers/{id}', [OfferController::class, 'destroy']);
     Route::resource('/artist-new', ArtistController::class);
+    Route::get('/artist/payout-method', [ArtistPayoutMethodController::class, 'show']);
+    Route::post('/artist/payout-method', [ArtistPayoutMethodController::class, 'storeOrUpdate']);
     //Route for client
     Route::resource('/client-card', ClientController::class);
     Route::get('/client/profile', [ClientController::class, 'getProfile']);
