@@ -72,4 +72,9 @@ class Artist extends Model
     {
         return $this->hasMany(Offer::class);
     }
+
+    public function payoutMethod()
+    {
+        return $this->hasOne(ArtistPayoutMethod::class);
+    }
 }
