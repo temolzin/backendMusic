@@ -82,7 +82,8 @@ class QuotationsController extends Controller
             $quotation->event_hours = $request->input('event_hours');
             $quotation->event_date = $request->input('event_date');
             $quotation->city = $request->input('city');
-            $quotation->address = $request->input('address');
+            $address = $request->input('address');
+            $quotation->address = preg_replace('/^[A-Za-z0-9]{4,8}\+[A-Za-z0-9]{2,3}\s+/', '', $address);
             $quotation->phone = $request->input('phone');
             $quotation->email = $request->input('email');
             $quotation->full_name = $request->input('full_name');
