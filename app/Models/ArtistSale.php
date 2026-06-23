@@ -52,4 +52,9 @@ class ArtistSale extends Model
     {
         return $this->hasMany(SupportTicket::class);
     }
+
+    public function rating()
+    {
+        return $this->hasOne(ArtistRating::class);
+    }
 }
