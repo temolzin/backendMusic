@@ -23,12 +23,12 @@ class CardSeeder extends Seeder
         })->orderBy('id')->get();
 
         $cards = [
-            ['type' => 'Visa', 'number' => '4111-1111-1111-1111'],
-            ['type' => 'Mastercard', 'number' => '5555-5555-5555-4444'],
-            ['type' => 'American Express', 'number' => '3782-822463-10005'],
-            ['type' => 'Discover', 'number' => '6011-1111-1111-1117'],
-            ['type' => 'Visa', 'number' => '4012-8888-8888-1881'],
-            ['type' => 'Mastercard', 'number' => '5105-1051-0510-5100'],
+            ['type' => 'Visa', 'number' => '4111 - 1111 - 1111 - 1111'],
+            ['type' => 'Mastercard', 'number' => '5555 - 5555 - 5555 - 4444'],
+            ['type' => 'American Express', 'number' => '3782 - 822463 - 10005'],
+            ['type' => 'Discover', 'number' => '6011 - 1111 - 1111 - 1117'],
+            ['type' => 'Visa', 'number' => '4012 - 8888 - 8888 - 1881'],
+            ['type' => 'Mastercard', 'number' => '5105 - 1051 - 0510 - 5100'],
         ];
 
         foreach ($users as $index => $user) {
