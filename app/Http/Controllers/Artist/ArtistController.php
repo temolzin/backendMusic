@@ -65,13 +65,13 @@ class ArtistController extends Controller
                 'history'         => 'required',
                 'zone'            => 'required',
                 'price_hour'      => 'required',
-                'image_artist'    => ['required', 'file', 'max:1024', new ValidImageUpload()],
+                'image_artist'    => ['required', 'file', 'max:20480', new ValidImageUpload()],
                 'extra_kilometre' => 'required',
                 'coverage_radius' => 'nullable|integer|min:0',
                 'name_manager'    => 'required',
                 'phone_manager'   => 'required',
                 'email_manager'   => 'required|email',
-                'image_manager'   => ['required', 'file', 'max:1024', new ValidImageUpload()],
+                'image_manager'   => ['required', 'file', 'max:20480', new ValidImageUpload()],
             ]);
 
             $urlStoreArtist = Storage::put('public/artist', request()->file('image_artist'));
