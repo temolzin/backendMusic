@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class ArtistRating extends Model
 {
-    protected $fillable = ['user_id', 'artist_id', 'rating'];
+    protected $fillable = ['artist_sale_id', 'artist_id', 'rating'];
 
-    public function user()
+    public function artistSale()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(ArtistSale::class);
     }
 
     public function artist()
