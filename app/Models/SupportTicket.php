@@ -28,4 +28,9 @@ class SupportTicket extends Model
     {
         return $this->hasMany(TicketEvidence::class);
     }
+
+    public function logs()
+    {
+        return $this->hasMany(TicketLog::class)->with('changedBy')->latest();
+    }
 }
