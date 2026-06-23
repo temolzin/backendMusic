@@ -60,6 +60,14 @@ class RolesApiController extends Controller
                 ], 422);
             }
 
+            $description = $request->input('description');
+            if (strlen($description) < 10) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La descripción debe tener al menos 10 caracteres'
+                ], 422);
+            }
+
             DB::beginTransaction();
 
             $slug = Str::slug($name);
@@ -138,6 +146,14 @@ class RolesApiController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Ya existe un rol con ese nombre'
+                ], 422);
+            }
+
+            $description = $request->input('description');
+            if (strlen($description) < 10) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La descripción debe tener al menos 10 caracteres'
                 ], 422);
             }
 

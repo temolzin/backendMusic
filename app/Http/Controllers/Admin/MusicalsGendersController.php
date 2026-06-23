@@ -54,7 +54,7 @@ class MusicalsGendersController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:musical_genders,name',
-            'description' => 'required|string',
+            'description' => 'required|string|min:10',
             'color' => 'required|string',
         ], [
             'name.unique' => 'El género musical ya se encuentra registrado.',
@@ -128,7 +128,7 @@ class MusicalsGendersController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:musical_genders,name,' . $id,
-            'description' => 'required|string',
+            'description' => 'required|string|min:10',
             'color' => 'required|string',
         ], [
             'name.unique' => 'El género musical ya se encuentra registrado.',
