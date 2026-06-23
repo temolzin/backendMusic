@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ArtistRating extends Model
 {
-    protected $fillable = ['artist_sale_id', 'artist_id', 'rating'
-    ];
+    protected $fillable = ['artist_sale_id', 'artist_id', 'rating'];
 
     public function artistSale()
     {
