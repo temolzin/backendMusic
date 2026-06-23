@@ -51,18 +51,25 @@ class RolesApiController extends Controller
     public function store(Request $request)
     {
         try {
+            $name = $request->input('name');
+            $existing = Role::where('name', $name)->first();
+            if ($existing) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ya existe un rol con ese nombre'
+                ], 422);
+            }
+
             DB::beginTransaction();
 
-            $slug = Str::slug($request->input('name'));
+            $slug = Str::slug($name);
 
             $role = new Role();
-            $role->name = $request->input('name');
+            $role->name = $name;
             $role->slug = $slug;
             $role->description = $request->input('description');
             $role->save();
             $role->permissions()->sync($request->selection);
-
-
 
             DB::commit();
 
@@ -123,6 +130,16 @@ class RolesApiController extends Controller
     public function update(Request $request)
     {
         try {
+            $name = $request->input('name');
+            $existing = Role::where('name', $name)
+                ->where('id', '!=', $request->input('id'))
+                ->first();
+            if ($existing) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ya existe un rol con ese nombre'
+                ], 422);
+            }
 
             DB::beginTransaction();
             $role = Role::find($request->input('id'));
