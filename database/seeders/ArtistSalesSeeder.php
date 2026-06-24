@@ -19,17 +19,31 @@ class ArtistSalesSeeder extends Seeder
         $eventHours  = ['08:00', '10:00', '14:00', '16:00', '18:00', '20:00'];
         $amounts     = [6000, 9000, 12000];
 
-        $patterns = [
-            ['event_date' => '2026-04-20', 'payment_method' => 'cash',  'status' => 'pending'],
-            ['event_date' => '2026-05-10', 'payment_method' => 'card',  'status' => 'completed'],
-            ['event_date' => '2026-08-20', 'payment_method' => 'cash',  'status' => 'pending'],
-            ['event_date' => '2026-09-15', 'payment_method' => 'card',  'status' => 'completed'],
+        $half = (int) ceil(count($artistIds) / 2);
+        $artistsPerCustomer = [
+            17 => array_slice($artistIds, 0, $half),
+            18 => array_slice($artistIds, $half),
         ];
 
-        foreach ($customerIds as $customerIndex => $customerId) {
-            $customer = $customers[$customerId];
+        $patternsPerCustomer = [
+            17 => [
+                ['event_date' => '2026-03-10', 'created_at' => '2026-01-15 10:00:00', 'payment_method' => 'card',  'status' => 'completed', 'event_status' => 'completed'],
+                ['event_date' => '2026-08-20', 'created_at' => '2026-06-01 10:00:00', 'payment_method' => 'cash',  'status' => 'pending',   'event_status' => 'pending'],
+                ['event_date' => '2026-10-05', 'created_at' => '2026-06-10 10:00:00', 'payment_method' => 'card',  'status' => 'completed', 'event_status' => 'pending'],
+            ],
+            18 => [
+                ['event_date' => '2026-04-15', 'created_at' => '2026-02-20 10:00:00', 'payment_method' => 'cash',  'status' => 'pending',   'event_status' => 'completed'],
+                ['event_date' => '2026-09-10', 'created_at' => '2026-05-05 10:00:00', 'payment_method' => 'card',  'status' => 'completed', 'event_status' => 'pending'],
+                ['event_date' => '2026-11-20', 'created_at' => '2026-06-20 10:00:00', 'payment_method' => 'cash',  'status' => 'pending',   'event_status' => 'pending'],
+            ],
+        ];
 
-            foreach ($artistIds as $index => $artistId) {
+        foreach ($customerIds as $customerId) {
+            $customer = $customers[$customerId];
+            $artists  = $artistsPerCustomer[$customerId];
+            $patterns = $patternsPerCustomer[$customerId];
+
+            foreach ($artists as $index => $artistId) {
                 $pattern = $patterns[$index % count($patterns)];
 
                 ArtistSale::create([
@@ -49,8 +63,10 @@ class ArtistSalesSeeder extends Seeder
                     'event_hour'             => $eventHours[$index % count($eventHours)],
                     'event_hours'            => rand(2, 5),
                     'payment_method'         => $pattern['payment_method'],
-                    'event_status'           => 'pending',
+                    'event_status'           => $pattern['event_status'],
                     'status'                 => $pattern['status'],
+                    'created_at'             => $pattern['created_at'],
+                    'updated_at'             => $pattern['created_at'],
                 ]);
             }
         }
