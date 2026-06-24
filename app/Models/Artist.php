@@ -75,6 +75,6 @@ class Artist extends Model
 
     public function payoutMethod()
     {
-        return $this->hasOne(ArtistPayoutMethod::class);
+        return $this->hasOne(ArtistPayoutMethod::class, 'artist_id');
     }
 }
