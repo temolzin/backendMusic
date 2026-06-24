@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\OpenpayKeysController;
 use App\Http\Controllers\GoogleMapsController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\ArtistPayoutMethodController;
+use App\Http\Controllers\Admin\AdminPayoutController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -58,6 +59,8 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::resource('/admin/permissions', PermissionsApiController::class);
     Route::resource('/admin/musical-genders', MusicalsGendersController::class);
     Route::get('/admin/dashboard-overview', [DashboardStatsController::class, 'index']);
+    Route::get('/admin/payouts/pending', [AdminPayoutController::class, 'pendingPayouts']);
+    Route::post('/admin/payouts/{saleId}/release', [AdminPayoutController::class, 'releasePayout']);
 
     //Route for artist
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
