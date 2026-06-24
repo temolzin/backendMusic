@@ -16,7 +16,7 @@ return new class extends Migration
     public function down()
     {
         Schema::disableForeignKeyConstraints();
-        DB::statement('TRUNCATE TABLE artist_ratings');
+        DB::statement('TRUNCATE TABLE artist_ratings CASCADE');
         Schema::enableForeignKeyConstraints();
     }
 };
