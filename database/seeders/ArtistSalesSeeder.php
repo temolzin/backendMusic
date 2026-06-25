@@ -31,11 +31,18 @@ class ArtistSalesSeeder extends Seeder
 
             foreach ($artistIds as $index => $artistId) {
                 $pattern = $patterns[$index % count($patterns)];
+                
+                $amount = $amounts[$index % count($amounts)];
+                
+                $openpayFee = ($pattern['payment_method'] === 'card') 
+                    ? round(($amount * 0.029) * 1.16, 2) 
+                    : 0.00;
 
                 ArtistSale::create([
                     'artist_id'              => $artistId,
                     'customer_id'            => $customerId,
-                    'amount'                 => $amounts[$index % count($amounts)],
+                    'amount'                 => $amount,
+                    'openpay_fee'            => $openpayFee,
                     'openpay_transaction_id' => 'trx_test_' . $artistId . '_' . $customerId,
                     'customer_first_name'    => explode(' ', $customer->name)[0],
                     'customer_last_name'     => explode(' ', $customer->name)[1] ?? 'Usuario',
