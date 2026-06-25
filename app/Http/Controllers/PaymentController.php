@@ -28,7 +28,7 @@ use App\Services\DistanceMatrixService;
 class PaymentController extends Controller
 {
 
-    public function processPayment(Request $request)
+   public function processPayment(Request $request)
     {
         $acquiredLocks = [];
 
@@ -235,6 +235,7 @@ class PaymentController extends Controller
                     $sale->artist_id = $item['artist_id'];
                     $sale->customer_id = $userId;
                     $sale->amount = $item['amount'];
+                    $sale->openpay_fee = $this->resolveOpenpayFee($charge, (float) $item['amount']);
                     $sale->customer_first_name = $name;
                     $sale->customer_last_name = $last_name;
                     $sale->customer_email = $email;
@@ -1070,5 +1071,18 @@ class PaymentController extends Controller
             'message' => 'Pago confirmado correctamente',
             'updated' => 1,
         ]);
+    }
+
+    private function resolveOpenpayFee($charge, float $amount): float
+    {
+        if (isset($charge->fee) && is_object($charge->fee) && isset($charge->fee->amount)) {
+            return (float) $charge->fee->amount;
+        }
+
+        $baseCommissionRate = 0.029;
+        $fixedCharge = 2.50;
+        $taxRate = 1.16;
+
+        return round((($amount * $baseCommissionRate) + $fixedCharge) * $taxRate, 2);
     }
 }
