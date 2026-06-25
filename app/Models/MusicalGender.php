@@ -13,6 +13,8 @@ class MusicalGender extends Model
         'name',
         'slug',
         'description',
+        'color',
+        'image',
     ];
 
     public function artists()

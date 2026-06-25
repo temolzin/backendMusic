@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class MusicalsGendersController extends Controller
 {
@@ -56,6 +57,7 @@ class MusicalsGendersController extends Controller
             'name' => 'required|string|max:255|unique:musical_genders,name',
             'description' => 'required|string|min:10',
             'color' => 'required|string',
+            'image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,bmp|max:20480',
         ], [
             'name.unique' => 'El género musical ya se encuentra registrado.',
             'name.required' => 'El nombre del género es obligatorio.',
@@ -77,6 +79,12 @@ class MusicalsGendersController extends Controller
             $musicalGenders->slug = $slug;
             $musicalGenders->description = $request->input('description');
             $musicalGenders->color = $request->input('color');
+
+            if ($request->hasFile('image')) {
+                $urlStore = Storage::put('public/musical-genders', $request->file('image'));
+                $musicalGenders->image = url(Storage::url($urlStore));
+            }
+
             $musicalGenders->save();
 
             DB::commit();
@@ -130,6 +138,7 @@ class MusicalsGendersController extends Controller
             'name' => 'required|string|max:255|unique:musical_genders,name,' . $id,
             'description' => 'required|string|min:10',
             'color' => 'required|string',
+            'image' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,bmp|max:20480',
         ], [
             'name.unique' => 'El género musical ya se encuentra registrado.',
             'name.required' => 'El nombre del género es obligatorio.',
@@ -150,6 +159,18 @@ class MusicalsGendersController extends Controller
             $musicalGenders->slug = $slug;
             $musicalGenders->description = $request->input('description');
             $musicalGenders->color = $request->input('color');
+
+            if ($request->hasFile('image')) {
+                if ($musicalGenders->image) {
+                    $oldPath = str_replace(url('storage'), 'public', $musicalGenders->image);
+                    $less = env('APP_URL') . '/public/';
+                    $oldPath = str_replace($less, '', $oldPath);
+                    Storage::delete($oldPath);
+                }
+                $urlStore = Storage::put('public/musical-genders', $request->file('image'));
+                $musicalGenders->image = url(Storage::url($urlStore));
+            }
+
             $musicalGenders->save();
             DB::commit();
 
