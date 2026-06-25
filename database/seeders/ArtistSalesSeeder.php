@@ -19,12 +19,11 @@ class ArtistSalesSeeder extends Seeder
             $q->where('slug', User::ROLE_CLIENT);
         })->get()->values();
 
-        $eventHours = ['08:00', '10:00', '14:00', '16:00', '18:00', '20:00'];
-        $amounts    = [6000, 9000, 12000];
-
+        $eventHours     = ['08:00', '10:00', '14:00', '16:00', '18:00', '20:00'];
+        $amounts        = [6000, 9000, 12000];
         $eventDateOffsets = [-90, -60, -30, -15, 15, 30, 60, 90, 120, 150];
         $createdAtOffsets = [-150, -120, -90, -75, -60, -30, -20, -10];
-        $paymentMethods    = ['card', 'cash'];
+        $paymentMethods   = ['card', 'cash'];
 
         $salesPattern = [
             ['status' => 'completed', 'event_status' => 'completed'],
@@ -38,6 +37,13 @@ class ArtistSalesSeeder extends Seeder
             for ($j = 0; $j < count($salesPattern); $j++) {
                 $customer      = $customers[array_rand($customers->all())];
                 $statusPattern = $salesPattern[$j];
+                
+                $paymentMethod = $paymentMethods[array_rand($paymentMethods)];
+                
+                $amount = $amounts[array_rand($amounts)];
+                $openpayFee = ($paymentMethod === 'card') 
+                    ? round(($amount * 0.029) * 1.16, 2) 
+                    : 0.00;
 
                 $eventDate = Carbon::now()->addDays($eventDateOffsets[array_rand($eventDateOffsets)])->format('Y-m-d');
                 $createdAt = Carbon::now()->addDays($createdAtOffsets[array_rand($createdAtOffsets)])->format('Y-m-d H:i:s');
@@ -45,7 +51,8 @@ class ArtistSalesSeeder extends Seeder
                 ArtistSale::create([
                     'artist_id'              => $artistId,
                     'customer_id'            => $customer->id,
-                    'amount'                 => $amounts[array_rand($amounts)],
+                    'amount'                 => $amount,
+                    'openpay_fee'            => $openpayFee,
                     'openpay_transaction_id' => 'trx_test_' . $artistId . '_' . $customer->id . '_' . $j,
                     'customer_first_name'    => explode(' ', $customer->name)[0],
                     'customer_last_name'     => explode(' ', $customer->name)[1] ?? 'Usuario',
@@ -58,7 +65,7 @@ class ArtistSalesSeeder extends Seeder
                     'event_date'             => $eventDate,
                     'event_hour'             => $eventHours[array_rand($eventHours)],
                     'event_hours'            => rand(2, 5),
-                    'payment_method'         => $paymentMethods[array_rand($paymentMethods)],
+                    'payment_method'         => $paymentMethod,
                     'event_status'           => $statusPattern['event_status'],
                     'status'                 => $statusPattern['status'],
                     'created_at'             => $createdAt,
