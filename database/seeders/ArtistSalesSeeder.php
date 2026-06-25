@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\ArtistSale;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -13,30 +14,39 @@ class ArtistSalesSeeder extends Seeder
     {
         DB::statement('TRUNCATE TABLE artist_sales RESTART IDENTITY CASCADE;');
 
-        $artistIds   = DB::table('artists')->orderBy('id')->pluck('id')->all();
-        $customerIds = [17, 18];
-        $customers   = User::whereIn('id', $customerIds)->get()->keyBy('id');
-        $eventHours  = ['08:00', '10:00', '14:00', '16:00', '18:00', '20:00'];
-        $amounts     = [6000, 9000, 12000];
+        $artistIds = DB::table('artists')->orderBy('id')->pluck('id')->all();
+        $customers = User::whereHas('roles', function ($q) {
+            $q->where('slug', User::ROLE_CLIENT);
+        })->get()->values();
 
-        $patterns = [
-            ['event_date' => '2026-04-20', 'payment_method' => 'cash',  'status' => 'pending'],
-            ['event_date' => '2026-05-10', 'payment_method' => 'card',  'status' => 'completed'],
-            ['event_date' => '2026-08-20', 'payment_method' => 'cash',  'status' => 'pending'],
-            ['event_date' => '2026-09-15', 'payment_method' => 'card',  'status' => 'completed'],
+        $eventHours = ['08:00', '10:00', '14:00', '16:00', '18:00', '20:00'];
+        $amounts    = [6000, 9000, 12000];
+
+        $eventDateOffsets = [-90, -60, -30, -15, 15, 30, 60, 90, 120, 150];
+        $createdAtOffsets = [-150, -120, -90, -75, -60, -30, -20, -10];
+        $paymentMethods    = ['card', 'cash'];
+
+        $salesPattern = [
+            ['status' => 'completed', 'event_status' => 'completed'],
+            ['status' => 'pending',   'event_status' => 'pending'],
+            ['status' => 'pending',   'event_status' => 'pending'],
         ];
 
-        foreach ($customerIds as $customerIndex => $customerId) {
-            $customer = $customers[$customerId];
+        for ($i = 0; $i < count($artistIds); $i++) {
+            $artistId = $artistIds[$i];
 
-            foreach ($artistIds as $index => $artistId) {
-                $pattern = $patterns[$index % count($patterns)];
+            for ($j = 0; $j < count($salesPattern); $j++) {
+                $customer      = $customers[array_rand($customers->all())];
+                $statusPattern = $salesPattern[$j];
+
+                $eventDate = Carbon::now()->addDays($eventDateOffsets[array_rand($eventDateOffsets)])->format('Y-m-d');
+                $createdAt = Carbon::now()->addDays($createdAtOffsets[array_rand($createdAtOffsets)])->format('Y-m-d H:i:s');
 
                 ArtistSale::create([
                     'artist_id'              => $artistId,
-                    'customer_id'            => $customerId,
-                    'amount'                 => $amounts[$index % count($amounts)],
-                    'openpay_transaction_id' => 'trx_test_' . $artistId . '_' . $customerId,
+                    'customer_id'            => $customer->id,
+                    'amount'                 => $amounts[array_rand($amounts)],
+                    'openpay_transaction_id' => 'trx_test_' . $artistId . '_' . $customer->id . '_' . $j,
                     'customer_first_name'    => explode(' ', $customer->name)[0],
                     'customer_last_name'     => explode(' ', $customer->name)[1] ?? 'Usuario',
                     'customer_email'         => $customer->email,
@@ -45,12 +55,14 @@ class ArtistSalesSeeder extends Seeder
                     'customer_city'          => 'Ciudad de México',
                     'customer_state'         => 'CDMX',
                     'customer_zip_code'      => '28001',
-                    'event_date'             => $pattern['event_date'],
-                    'event_hour'             => $eventHours[$index % count($eventHours)],
+                    'event_date'             => $eventDate,
+                    'event_hour'             => $eventHours[array_rand($eventHours)],
                     'event_hours'            => rand(2, 5),
-                    'payment_method'         => $pattern['payment_method'],
-                    'event_status'           => 'pending',
-                    'status'                 => $pattern['status'],
+                    'payment_method'         => $paymentMethods[array_rand($paymentMethods)],
+                    'event_status'           => $statusPattern['event_status'],
+                    'status'                 => $statusPattern['status'],
+                    'created_at'             => $createdAt,
+                    'updated_at'             => $createdAt,
                 ]);
             }
         }
