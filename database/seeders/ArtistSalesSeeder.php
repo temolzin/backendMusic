@@ -16,7 +16,7 @@ class ArtistSalesSeeder extends Seeder
 
         $artistIds = DB::table('artists')->orderBy('id')->pluck('id')->all();
         $customers = User::whereHas('roles', function ($q) {
-            $q->where('roles.id', 3);
+            $q->where('slug', User::ROLE_CLIENT);
         })->get()->values();
 
         $eventHours = ['08:00', '10:00', '14:00', '16:00', '18:00', '20:00'];
