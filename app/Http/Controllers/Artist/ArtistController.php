@@ -289,12 +289,15 @@ class ArtistController extends Controller
                 'success' => true,
                 'artist'  => $artist,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollback();
+            throw $e;
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
     /**
