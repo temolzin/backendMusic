@@ -1153,13 +1153,13 @@ class PaymentController extends Controller
             $sale->save();
 
             EventCancellation::create([
-                'artist_sale_id'     => $sale->id,
-                'user_id'            => $user->id,
+                'artist_sale_id' => $sale->id,
+                'user_id' => $user->id,
                 'cancellation_reason' => $request->reason,
-                'penalty_percentage'  => $penaltyPercentage,
-                'penalty_amount'      => $penaltyAmount,
-                'refunded_at'         => $now,
-                'penalty_paid'        => false,
+                'penalty_percentage' => $penaltyPercentage,
+                'penalty_amount' => $penaltyAmount,
+                'refunded_at' => $now,
+                'penalty_paid' => false,
             ]);
 
             return response()->json([
