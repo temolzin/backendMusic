@@ -141,4 +141,15 @@ class SupportTicketController extends Controller
             'data' => $ticket->logs()->get()
         ]);
     }
+
+    public function myTicketLogs(SupportTicket $ticket)
+    {
+        if ($ticket->reporter_user_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        return response()->json([
+            'data' => $ticket->logs()->get()
+        ]);
+    }
 }

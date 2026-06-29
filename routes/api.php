@@ -141,6 +141,7 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::post('/support-tickets', [SupportTicketController::class, 'store']);
     Route::post('/support-tickets/{ticket}/evidences', [SupportTicketController::class, 'uploadEvidence']);
     Route::get('/support-tickets/my', [SupportTicketController::class, 'myTickets']);
+    Route::get('/support-tickets/{ticket}/logs', [SupportTicketController::class, 'myTicketLogs']);
     Route::get('/admin/support-tickets', [SupportTicketController::class, 'index']);
     Route::get('/admin/support-tickets/{ticket}', [SupportTicketController::class, 'show']);
     Route::patch('/admin/support-tickets/{ticket}/status', [SupportTicketController::class, 'updateStatus']);
