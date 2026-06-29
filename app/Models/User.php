@@ -9,13 +9,15 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Notifications\ResetPasswordQueuedNotification;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JWTSubject, MustVerifyEmail
+class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMedia
 {
 
-    use HasApiTokens, HasFactory, Notifiable, HasPermissions;
+    use HasApiTokens, HasFactory, Notifiable, HasPermissions, InteractsWithMedia;
 
     public const ROLE_ADMIN = 'administrador';
     public const ROLE_ARTIST = 'artista';
@@ -30,7 +32,6 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'name',
         'email',
         'password',
-        'image_profile',
         'dark_mode',
         'address',
         'city',
@@ -57,6 +58,12 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('profile_images')
+            ->singleFile();
+    }
 
     // JWT
     public function getJWTIdentifier()
