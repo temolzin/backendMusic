@@ -58,4 +58,9 @@ class ArtistSale extends Model
     {
         return $this->hasOne(ArtistRating::class);
     }
+
+    public function eventCancellation()
+    {
+        return $this->hasOne(EventCancellation::class);
+    }
 }

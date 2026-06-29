@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\OpenpayKey;
 use App\Models\Offer;
+use App\Models\EventCancellation;
 use App\Services\DistanceMatrixService;
 
 class PaymentController extends Controller
@@ -583,6 +584,10 @@ class PaymentController extends Controller
             return 'expired';
         }
 
+        if ($sale->event_status === 'cancelled') {
+            return 'cancelled';
+        }
+
         if (!$sale->event_date || !$sale->event_hour) {
             return 'pending';
         }
@@ -1071,6 +1076,104 @@ class PaymentController extends Controller
             'message' => 'Pago confirmado correctamente',
             'updated' => 1,
         ]);
+    }
+
+    public function cancelEvent(Request $request, $id)
+    {
+        try {
+            $request->validate(['reason' => 'required|string|max:500']);
+
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'No autenticado'], 401);
+            }
+
+            $artist = Artist::where('user_id', $user->id)->first();
+            if (!$artist) {
+                return response()->json(['success' => false, 'message' => 'Perfil de artista no encontrado'], 404);
+            }
+
+            $sale = ArtistSale::where('id', $id)->where('artist_id', $artist->id)->first();
+            if (!$sale) {
+                return response()->json(['success' => false, 'message' => 'Venta no encontrada'], 404);
+            }
+
+            if ($sale->event_status === 'completed') {
+                return response()->json(['success' => false, 'message' => 'El evento ya fue completado'], 400);
+            }
+
+            if ($sale->event_status === 'cancelled') {
+                return response()->json(['success' => false, 'message' => 'El evento ya fue cancelado'], 400);
+            }
+
+            if (!$sale->event_date) {
+                return response()->json(['success' => false, 'message' => 'El evento no tiene fecha asignada'], 400);
+            }
+
+            $now = Carbon::now();
+            $eventDate = Carbon::parse($sale->event_date);
+            $daysUntilEvent = $now->diffInDays($eventDate, false);
+
+            if ($daysUntilEvent < 0) {
+                return response()->json(['success' => false, 'message' => 'La fecha del evento ya pasó'], 400);
+            }
+
+            if ($daysUntilEvent == 0) {
+                return response()->json(['success' => false, 'message' => 'No puedes cancelar el evento el mismo día'], 400);
+            }
+
+            $amount = floatval($sale->amount);
+            $penaltyPercentage = 0;
+
+            if ($daysUntilEvent >= 3 && $daysUntilEvent < 7) {
+                $penaltyPercentage = 25;
+            }
+
+            if ($daysUntilEvent >= 1 && $daysUntilEvent < 3) {
+                $penaltyPercentage = 50;
+            }
+
+            $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
+
+            if ($sale->payment_method === 'card' && $sale->openpay_transaction_id && $sale->status === 'completed') {
+                try {
+                    $keys = OpenpayKey::first();
+                    $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
+                    Openpay::setProductionMode(false);
+
+                    $charge = $openpay->charges->get($sale->openpay_transaction_id);
+                    $charge->refund(['description' => 'Cancelación de evento por el artista']);
+                } catch (\Exception $e) {
+                    Log::error('OpenPay refund failed: ' . $e->getMessage());
+                    return response()->json(['success' => false, 'message' => 'Error al procesar el reembolso: ' . $e->getMessage()], 500);
+                }
+            }
+
+            $sale->event_status = 'cancelled';
+            $sale->save();
+
+            EventCancellation::create([
+                'artist_sale_id' => $sale->id,
+                'user_id' => $user->id,
+                'cancellation_reason' => $request->reason,
+                'penalty_percentage' => $penaltyPercentage,
+                'penalty_amount' => $penaltyAmount,
+                'refunded_at' => $now,
+                'penalty_paid' => false,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Evento cancelado exitosamente',
+                'data' => [
+                    'refund_amount' => $amount,
+                    'penalty_percentage' => $penaltyPercentage,
+                    'penalty_amount' => $penaltyAmount,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     private function resolveOpenpayFee($charge, float $amount): float

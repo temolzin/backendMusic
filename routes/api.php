@@ -105,6 +105,7 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/chat/messages/{artistSaleId}', [ChatController::class, 'getMessages']);
     Route::post('/chat/messages', [ChatController::class, 'sendMessage']);
     Route::put('/artist/sales/{id}/complete', [PaymentController::class, 'markAsCompleted']);
+    Route::post('/artist/sales/{id}/cancel', [PaymentController::class, 'cancelEvent']);
     Route::put('/artist/sales/check-expired', [PaymentController::class, 'checkExpiredStatuses']);
     Route::get('/admin/openpay-keys', [OpenpayKeysController::class, 'getKeys']);
     Route::put('/admin/openpay-keys', [OpenpayKeysController::class, 'updateKeys']);
