@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Openpay\Data\Openpay;
+use Illuminate\Support\Facades\Log;
 
 class ApprovalController extends Controller
 {
@@ -146,7 +147,7 @@ class ApprovalController extends Controller
                     $charge = $openpay->charges->get($sale->openpay_transaction_id);
                     $charge->refund(['description' => 'Artista rechazó la solicitud']);
                 } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::warning('No se pudo cancelar la autorización OpenPay: ' . $e->getMessage());
+                    Log::warning('No se pudo cancelar la autorización OpenPay: ' . $e->getMessage());
                 }
             }
             
