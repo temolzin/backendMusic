@@ -17,7 +17,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update
 RUN apt-get install -y libpq-dev
-RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql
+RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql exif
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
