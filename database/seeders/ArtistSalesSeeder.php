@@ -13,6 +13,7 @@ class ArtistSalesSeeder extends Seeder
     public function run()
     {
         DB::statement('TRUNCATE TABLE artist_sales RESTART IDENTITY CASCADE;');
+        $this->call(ArtistPayoutMethodSeeder::class);
 
         $artistIds = DB::table('artists')->orderBy('id')->pluck('id')->all();
         $customers = User::whereHas('roles', function ($q) {
@@ -24,11 +25,10 @@ class ArtistSalesSeeder extends Seeder
         $eventDateOffsets = [-90, -60, -30, -15, 15, 30, 60, 90, 120, 150];
         $createdAtOffsets = [-150, -120, -90, -75, -60, -30, -20, -10];
         $paymentMethods   = ['card', 'cash'];
-
         $salesPattern = [
-            ['status' => 'completed', 'event_status' => 'completed'],
-            ['status' => 'pending',   'event_status' => 'pending'],
-            ['status' => 'pending',   'event_status' => 'pending'],
+            ['status' => 'completed', 'event_status' => 'completed'], 
+            ['status' => 'completed', 'event_status' => 'pending'],   
+            ['status' => 'pending',   'event_status' => 'pending'], 
         ];
 
         for ($i = 0; $i < count($artistIds); $i++) {
@@ -37,12 +37,12 @@ class ArtistSalesSeeder extends Seeder
             for ($j = 0; $j < count($salesPattern); $j++) {
                 $customer      = $customers[array_rand($customers->all())];
                 $statusPattern = $salesPattern[$j];
-                
+
                 $paymentMethod = $paymentMethods[array_rand($paymentMethods)];
-                
+
                 $amount = $amounts[array_rand($amounts)];
-                $openpayFee = ($paymentMethod === 'card') 
-                    ? round(($amount * 0.029) * 1.16, 2) 
+                $openpayFee = ($paymentMethod === 'card')
+                    ? round(($amount * 0.029) * 1.16, 2)
                     : 0.00;
 
                 $eventDate = Carbon::now()->addDays($eventDateOffsets[array_rand($eventDateOffsets)])->format('Y-m-d');
