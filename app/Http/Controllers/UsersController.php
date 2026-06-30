@@ -49,12 +49,11 @@ class UsersController extends Controller
             $user->name = $name;
             $user->email = $email;
             $user->password = bcrypt($password);
-            $user->image_profile = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
             $user->save();
             $user->roles()->attach($developerRole->id);
             DB::commit();
 
-            $absoluteImageUrl = url($user->image_profile);
+            $absoluteImageUrl = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
 
             return response()->json([
                 'success' => true,
@@ -199,32 +198,19 @@ class UsersController extends Controller
                 'image_profile' => ['required', 'file', 'max:1024', new ValidImageUpload()],
             ]);
 
-            $imageProfile = $request->file('image_profile');
-            $urlStore = Storage::put('public/user_profile', $imageProfile);
-            $link = Storage::url($urlStore);
-
             /** @var User $user */
             $user = User::query()->findOrFail(Auth::id());
 
-            if ($user->image_profile) {
-                $img = $user->image_profile;
-                $img = str_replace('storage', 'public', $img);
-                $less = env('APP_URL') . '/public/';
-                $img = str_replace($less, '', $img);
+            $media = $user->addMediaFromRequest('image_profile')
+                        ->toMediaCollection('profile_images');
 
-                Storage::delete($img);
-            }
-
-            $user->update([
-                'image_profile' => $link,
-            ]);
-
-            $absoluteImageUrl = url($link);
+            $absoluteImageUrl = $media->getUrl();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Imagen actualizada',
                 'image_profile' => $absoluteImageUrl,
+                'image' => $absoluteImageUrl,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
