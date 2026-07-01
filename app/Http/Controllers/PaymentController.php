@@ -217,6 +217,7 @@ class PaymentController extends Controller
                     'amount' => $amount,
                     'currency' => 'MXN',
                     'description' => 'Cargo de reserva de artista',
+                    'capture' => false,
                     'customer' => $customerData,
                     'redirect_url' => 'http://www.openpay.mx/index.html'
                 );
@@ -249,13 +250,16 @@ class PaymentController extends Controller
                     $sale->event_hour = $item['event_hour'];
                     $sale->event_hours = $item['hours'] ?? null;
                     $sale->event_status = 'pending';
-                    $sale->status = 'completed';
+                    $sale->status = 'authorized';
                     $sale->payment_method = 'card';
                     $sale->latitude = $latitude;
                     $sale->longitude = $longitude;
                     $sale->google_place_id = $googlePlaceId;
                     $sale->extra_km_distance = $item['extra_km_distance'];
                     $sale->extra_km_cost = $item['extra_km_cost'];
+                    $sale->approval_status = 'pending_approval';
+                    $sale->approval_deadline = Carbon::now()->addHours(24);
+                    $sale->openpay_customer_id = $charge->customer->id ?? null;
                     $sale->save();
                 }
 
@@ -667,11 +671,6 @@ class PaymentController extends Controller
     public function processCashPayment(Request $request)
     {
         try {
-            $keys = OpenpayKey::first();
-            $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
-            Openpay::setProductionMode(false);
-
-            $dueDateInstance = Carbon::now()->addHours(24);
 
             $name        = $request->input('order_details.first_name') ?? $request->input('customer_name');
             $last_name   = $request->input('order_details.last_name', '');
@@ -807,36 +806,11 @@ class PaymentController extends Controller
                 }
             }
 
-            $customerData = [
-                'name'             => $name,
-                'last_name'        => $last_name,
-                'email'            => $email,
-                'requires_account' => false,
-                'address'          => [
-                    'line1'        => $address,
-                    'state'        => $state,
-                    'city'         => $city,
-                    'postal_code'  => $zip_code,
-                    'country_code' => 'MX',
-                ],
-            ];
-
-            $chargeRequest = [
-                'method'      => 'store',
-                'amount'      => $amount,
-                'currency'    => 'MXN',
-                'description' => 'Reserva artista - Pago en efectivo (' . $store . ')',
-                'customer'    => $customerData,
-                'due_date'    => Carbon::now()->addHours(24)->format('Y-m-d\TH:i:s'),
-            ];
-
-            $charge = $openpay->charges->create($chargeRequest);
 
             DB::beginTransaction();
             try {
                 foreach ($itemsForSales as $item) {
                     $sale = new ArtistSale();
-                    $sale->openpay_transaction_id = $charge->id;
                     $sale->status = 'pending';
                     $sale->event_status = 'pending';
                     $sale->artist_id              = $item['artist_id'];
@@ -859,6 +833,8 @@ class PaymentController extends Controller
                     $sale->google_place_id = $googlePlaceId;
                     $sale->extra_km_distance = $item['extra_km_distance'];
                     $sale->extra_km_cost = $item['extra_km_cost'];
+                    $sale->approval_status = 'pending_approval';
+                    $sale->approval_deadline = Carbon::now()->addHours(24);
                     $sale->save();
                 }
 
@@ -887,16 +863,7 @@ class PaymentController extends Controller
             }
 
             return response()->json([
-                'data'      => [
-                    'id'        => $charge->id,
-                    'amount'    => $charge->amount,
-                    'status'    => $charge->status,
-                    'store'     => $store,
-                    'reference' => $charge->payment_method->reference ?? null,
-                    'barcode'   => $charge->payment_method->barcode_url ?? null,
-                    'due_date'  => $dueDateInstance->toDateTimeString(),
-                ],
-                'message'   => 'Referencia de pago generada correctamente',
+                'message' => 'Reserva registrada correctamente. Pendiente de aprobación.',
             ]);
 
         } catch (OpenpayApiTransactionError $e) {

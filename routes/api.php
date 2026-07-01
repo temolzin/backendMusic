@@ -31,6 +31,7 @@ use App\Http\Controllers\GoogleMapsController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\ArtistPayoutMethodController;
 use App\Http\Controllers\Admin\AdminPayoutController;
+use App\Http\Controllers\Artist\ApprovalController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -79,6 +80,9 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/artist/payout-method', [ArtistPayoutMethodController::class, 'show']);
     Route::post('/artist/payout-method', [ArtistPayoutMethodController::class, 'store']);
     Route::put('/artist/payout-method', [ArtistPayoutMethodController::class, 'update']);
+    Route::get('/artist/approval/pending', [ApprovalController::class, 'pendingRequests']);
+    Route::put('/artist/approval/{id}/accept', [ApprovalController::class, 'accept']);
+    Route::put('/artist/approval/{id}/reject', [ApprovalController::class, 'reject']);
     //Route for client
     Route::resource('/client-card', ClientController::class);
     Route::get('/client/profile', [ClientController::class, 'getProfile']);
