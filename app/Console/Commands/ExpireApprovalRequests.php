@@ -22,7 +22,7 @@ class ExpireApprovalRequests extends Command
             ->get();
 
         $keys = OpenpayKey::first();
-        $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, 'MX');
+        $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, 'MX', null);
         Openpay::setProductionMode(false);
 
         $count = 0;
