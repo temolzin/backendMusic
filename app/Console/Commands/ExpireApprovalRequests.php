@@ -22,7 +22,8 @@ class ExpireApprovalRequests extends Command
             ->get();
 
         $keys = OpenpayKey::first();
-        $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, 'MX');
+        $clientIp = $this->getClientIp();
+        $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, 'MX', $clientIp);
         Openpay::setProductionMode(false);
 
         $count = 0;
@@ -44,5 +45,30 @@ class ExpireApprovalRequests extends Command
 
         $this->info("Solicitudes expiradas: {$count}");
         return 0;
+    }
+
+    protected function getClientIp()
+    {
+        $headers = [
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_REAL_IP',
+            'HTTP_CLIENT_IP',
+            'HTTP_CF_CONNECTING_IP',
+            'REMOTE_ADDR'
+        ];
+
+        foreach ($headers as $header) {
+            if (!empty($_SERVER[$header])) {
+                $ips = explode(',', $_SERVER[$header]);
+                foreach ($ips as $ip) {
+                    $ip = trim($ip);
+                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+                        return $ip;
+                    }
+                }
+            }
+        }
+
+        return '187.188.12.50';
     }
 }

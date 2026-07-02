@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Openpay\Data\Openpay;
 use OpenpayChargeRequest;
 use Exception;
@@ -35,7 +36,7 @@ class PaymentController extends Controller
 
         try {
             $keys = OpenpayKey::first();
-            $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
+            $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
             Openpay::setProductionMode(false);
             
             $token = $request->input("token");
@@ -222,10 +223,9 @@ class PaymentController extends Controller
                     'redirect_url' => 'http://www.openpay.mx/index.html'
                 );
                 
-                $deviceSessionId = $request->input("deviceSessionId");
-                if ($deviceSessionId) {
-                    $chargeRequest['device_session_id'] = $deviceSessionId;
-                }
+                $deviceSessionId = $request->input("deviceSessionId") ?? Str::uuid()->toString();
+                $chargeRequest['device_session_id'] = $deviceSessionId;
+                Log::info('Openpay charge request: ' . json_encode($chargeRequest));
                 $charge = $openpay->charges->create($chargeRequest);
             }
             
@@ -300,55 +300,60 @@ class PaymentController extends Controller
             ]);
 
         } catch (OpenpayApiTransactionError $e) {
+            $httpCode = $e->getHttpCode() ?: 500;
             return response()->json([
                 'error' => [
                     'category' => $e->getCategory(),
                     'error_code' => $e->getErrorCode(),
                     'description' => $e->getMessage(),
-                    'http_code' => $e->getHttpCode(),
+                    'http_code' => $httpCode,
                     'request_id' => $e->getRequestId()
                 ]
-            ]);
+            ], $httpCode);
         } catch (OpenpayApiRequestError $e) {
+            $httpCode = $e->getHttpCode() ?: 500;
             return response()->json([
                 'error' => [
                     'category' => $e->getCategory(),
                     'error_code' => $e->getErrorCode(),
                     'description' => $e->getMessage(),
-                    'http_code' => $e->getHttpCode(),
+                    'http_code' => $httpCode,
                     'request_id' => $e->getRequestId()
                 ]
-            ]);
+            ], $httpCode);
         } catch (OpenpayApiConnectionError $e) {
+            $httpCode = $e->getHttpCode() ?: 500;
             return response()->json([
                 'error' => [
                     'category' => $e->getCategory(),
                     'error_code' => $e->getErrorCode(),
                     'description' => $e->getMessage(),
-                    'http_code' => $e->getHttpCode(),
+                    'http_code' => $httpCode,
                     'request_id' => $e->getRequestId()
                 ]
-            ]);
+            ], $httpCode);
         } catch (OpenpayApiAuthError $e) {
+            $httpCode = $e->getHttpCode() ?: 500;
             return response()->json([
                 'error' => [
                     'category' => $e->getCategory(),
                     'error_code' => $e->getErrorCode(),
                     'description' => $e->getMessage(),
-                    'http_code' => $e->getHttpCode(),
+                    'http_code' => $httpCode,
                     'request_id' => $e->getRequestId()
                 ]
-            ]);
+            ], $httpCode);
         } catch (OpenpayApiError $e) {
+            $httpCode = $e->getHttpCode() ?: 500;
             return response()->json([
                 'error' => [
                     'category' => $e->getCategory(),
                     'error_code' => $e->getErrorCode(),
                     'description' => $e->getMessage(),
-                    'http_code' => $e->getHttpCode(),
+                    'http_code' => $httpCode,
                     'request_id' => $e->getRequestId()
                 ]
-            ]);
+            ], $httpCode);
         } catch (Exception $e) {
             return response()->json([
                 'error' => [
@@ -356,7 +361,7 @@ class PaymentController extends Controller
                     'error_code' => 'GENERIC_ERROR',
                     'description' => $e->getMessage(),
                 ]
-            ]);
+            ], 500);
         } finally {
             foreach ($acquiredLocks as $acquiredLock) {
                 try {
@@ -902,7 +907,7 @@ class PaymentController extends Controller
             }
 
             $keys = OpenpayKey::first();
-            $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
+            $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", request()->ip());
             Openpay::setProductionMode(false);
 
             $dueDateInstance = Carbon::now()->addHours(24);
@@ -1105,7 +1110,7 @@ class PaymentController extends Controller
             if ($sale->payment_method === 'card' && $sale->openpay_transaction_id && $sale->status === 'completed') {
                 try {
                     $keys = OpenpayKey::first();
-                    $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX");
+                    $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
                     Openpay::setProductionMode(false);
 
                     $charge = $openpay->charges->get($sale->openpay_transaction_id);
