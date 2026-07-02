@@ -300,66 +300,67 @@ class PaymentController extends Controller
             ]);
 
         } catch (OpenpayApiTransactionError $e) {
-            $httpCode = $e->getHttpCode() ?: 500;
+            Log::warning('OpenPay transaction error: ' . $e->getMessage(), ['error_code' => $e->getErrorCode()]);
             return response()->json([
                 'error' => [
                     'category' => $e->getCategory(),
                     'error_code' => $e->getErrorCode(),
-                    'description' => $e->getMessage(),
-                    'http_code' => $httpCode,
+                    'description' => self::translateOpenpayError($e->getErrorCode(), $e->getMessage()),
+                    'http_code' => $e->getHttpCode(),
                     'request_id' => $e->getRequestId()
                 ]
-            ], $httpCode);
+            ], $e->getHttpCode() ?: 402);
         } catch (OpenpayApiRequestError $e) {
-            $httpCode = $e->getHttpCode() ?: 500;
+            Log::warning('OpenPay request error: ' . $e->getMessage(), ['error_code' => $e->getErrorCode()]);
             return response()->json([
                 'error' => [
                     'category' => $e->getCategory(),
                     'error_code' => $e->getErrorCode(),
-                    'description' => $e->getMessage(),
-                    'http_code' => $httpCode,
+                    'description' => self::translateOpenpayError($e->getErrorCode(), $e->getMessage()),
+                    'http_code' => $e->getHttpCode(),
                     'request_id' => $e->getRequestId()
                 ]
-            ], $httpCode);
+            ], $e->getHttpCode() ?: 400);
         } catch (OpenpayApiConnectionError $e) {
-            $httpCode = $e->getHttpCode() ?: 500;
+            Log::error('OpenPay connection error: ' . $e->getMessage());
             return response()->json([
                 'error' => [
                     'category' => $e->getCategory(),
                     'error_code' => $e->getErrorCode(),
-                    'description' => $e->getMessage(),
-                    'http_code' => $httpCode,
+                    'description' => self::translateOpenpayError($e->getErrorCode(), 'No pudimos conectar con el procesador de pagos. Intenta de nuevo en unos minutos.'),
+                    'http_code' => $e->getHttpCode(),
                     'request_id' => $e->getRequestId()
                 ]
-            ], $httpCode);
+            ], $e->getHttpCode() ?: 503);
         } catch (OpenpayApiAuthError $e) {
-            $httpCode = $e->getHttpCode() ?: 500;
+            Log::error('OpenPay auth error: ' . $e->getMessage());
             return response()->json([
                 'error' => [
                     'category' => $e->getCategory(),
                     'error_code' => $e->getErrorCode(),
-                    'description' => $e->getMessage(),
-                    'http_code' => $httpCode,
+                    'description' => self::translateOpenpayError($e->getErrorCode(), $e->getMessage()),
+                    'http_code' => $e->getHttpCode(),
                     'request_id' => $e->getRequestId()
                 ]
-            ], $httpCode);
+            ], $e->getHttpCode() ?: 401);
         } catch (OpenpayApiError $e) {
-            $httpCode = $e->getHttpCode() ?: 500;
+            Log::error('OpenPay error: ' . $e->getMessage());
             return response()->json([
                 'error' => [
                     'category' => $e->getCategory(),
                     'error_code' => $e->getErrorCode(),
-                    'description' => $e->getMessage(),
-                    'http_code' => $httpCode,
+                    'description' => self::translateOpenpayError($e->getErrorCode(), 'Ocurrió un error al procesar el pago. Intenta de nuevo.'),
+                    'http_code' => $e->getHttpCode(),
                     'request_id' => $e->getRequestId()
                 ]
-            ], $httpCode);
+            ], $e->getHttpCode() ?: 500);
         } catch (Exception $e) {
+            Log::error('Payment processing error: ' . $e->getMessage());
             return response()->json([
                 'error' => [
-                    'category' => 'Generic Error',
+                    'category' => 'Error genérico',
                     'error_code' => 'GENERIC_ERROR',
-                    'description' => $e->getMessage(),
+                    'description' => 'Ocurrió un error inesperado al procesar el pago. Intenta de nuevo.',
                 ]
             ], 500);
         } finally {
@@ -1159,5 +1160,28 @@ class PaymentController extends Controller
         $taxRate = 1.16;
 
         return round((($amount * $baseCommissionRate) + $fixedCharge) * $taxRate, 2);
+    }
+
+    private const OPENPAY_ERROR_MESSAGES = [
+        3001 => 'La tarjeta fue rechazada por el banco.',
+        3002 => 'La tarjeta ha expirado.',
+        3003 => 'La tarjeta no tiene fondos suficientes.',
+        3004 => 'La tarjeta ha sido identificada como una tarjeta robada.',
+        3005 => 'La tarjeta fue rechazada por el sistema antifraude.',
+        3006 => 'La tarjeta fue rechazada por coincidir con registros en lista negra.',
+        3008 => 'La tarjeta fue reportada como perdida.',
+        3009 => 'El banco ha restringido esta tarjeta.',
+        3010 => 'El banco ha solicitado retener la tarjeta. Contacta a tu banco.',
+        3011 => 'Se requiere autorización del banco para realizar este pago.',
+        1002 => 'Los datos enviados para procesar el pago están incompletos o son incorrectos.',
+        1004 => 'El código de seguridad (CVV2) de la tarjeta es inválido.',
+        1005 => 'La fecha de vencimiento de la tarjeta es inválida.',
+        1006 => 'El código de seguridad (CVV2) de la tarjeta no fue proporcionado.',
+        1013 => 'El número de tarjeta no es válido.',
+    ];
+
+    private static function translateOpenpayError(?int $errorCode, string $fallbackMessage): string
+    {
+        return self::OPENPAY_ERROR_MESSAGES[$errorCode] ?? $fallbackMessage;
     }
 }
