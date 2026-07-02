@@ -7,48 +7,54 @@ use Illuminate\Http\UploadedFile;
 
 class ValidImageUpload implements Rule
 {
-    private const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'jpe', 'jfif', 'png', 'gif', 'webp', 'bmp'];
+    private const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png'];
 
     private const ALLOWED_MIMES = [
         'image/jpeg',
         'image/png',
-        'image/gif',
-        'image/webp',
-        'image/bmp',
     ];
+
+    private $reason = '';
 
     public function passes($attribute, $value)
     {
         if (!$value instanceof UploadedFile || !$value->isValid()) {
+            $this->reason = 'invalid';
             return false;
         }
 
         $extension = strtolower((string) $value->getClientOriginalExtension());
         if ($extension !== '' && !in_array($extension, self::ALLOWED_EXTENSIONS, true)) {
+            $this->reason = 'format';
             return false;
         }
 
         $path = $value->getRealPath();
         if (!$path || !is_file($path)) {
+            $this->reason = 'invalid';
             return false;
         }
 
         $detectedMime = $this->detectMimeType($path);
         if ($detectedMime === null || !in_array($detectedMime, self::ALLOWED_MIMES, true)) {
+            $this->reason = 'format';
             return false;
         }
 
         $binary = @file_get_contents($path, false, null, 0, 32);
         if ($binary === false || !$this->matchesMagicNumber($binary, $detectedMime)) {
+            $this->reason = 'format';
             return false;
         }
 
         $imageInfo = @getimagesize($path);
         if ($imageInfo !== false && !empty($imageInfo['mime']) && strtolower($imageInfo['mime']) !== $detectedMime) {
+            $this->reason = 'format';
             return false;
         }
 
         if ($imageInfo !== false && $imageInfo[0] <= $imageInfo[1]) {
+            $this->reason = 'orientation';
             return false;
         }
 
@@ -57,7 +63,11 @@ class ValidImageUpload implements Rule
 
     public function message()
     {
-        return 'El archivo debe ser una imagen válida (jpg, jpeg, png, gif, webp o bmp) y pasar la verificación de contenido. La imagen debe ser horizontal (apaisada, ancho mayor que alto).';
+        if ($this->reason === 'orientation') {
+            return 'La foto debe ser horizontal (apaisada). Solo se aceptan JPG, JPEG y PNG.';
+        }
+
+        return 'Formato de imagen no válido. Solo se aceptan JPG, JPEG y PNG.';
     }
 
     private function detectMimeType(string $path): ?string
