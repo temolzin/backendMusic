@@ -38,8 +38,8 @@ class OfferController extends Controller
                 'artist_id'           => $artist->id,
                 'description'         => $request->description,
                 'discount_percentage' => $request->discount_percentage,
-                'start_date' => Carbon::parse($request->start_date)->utc(),
-                'end_date'   => Carbon::parse($request->end_date)->utc(),
+                'start_date'          => $request->start_date,
+                'end_date'            => $request->end_date,
                 'is_active'           => now()->between($request->start_date, $request->end_date),
             ]);
 
@@ -65,8 +65,8 @@ class OfferController extends Controller
             $offer->update([
                 'description'         => $request->description,
                 'discount_percentage' => $request->discount_percentage,
-                'start_date' => Carbon::parse($request->start_date)->utc(),
-                'end_date'   => Carbon::parse($request->end_date)->utc(),
+                'start_date'          => $request->start_date,
+                'end_date'            => $request->end_date,
                 'is_active'           => now()->between($request->start_date, $request->end_date),
             ]);
 
