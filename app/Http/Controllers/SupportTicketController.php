@@ -2,7 +2,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\SupportTicket;
-use App\Models\TicketEvidence;
 use App\Models\ArtistSale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,7 +49,7 @@ class SupportTicketController extends Controller
             'notes' => 'Ticket creado.',
         ]);
 
-        return response()->json(['data' => $ticket->load('evidences')], 201);
+        return response()->json(['data' => $ticket->load('media')], 201);
     }
 
     public function uploadEvidence(Request $request, SupportTicket $ticket)
@@ -65,22 +64,17 @@ class SupportTicketController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        $saved = [];
         foreach ($request->file('files') as $file) {
-            $path = $file->store('ticket_evidences', 'public');
-            $saved[] = TicketEvidence::create([
-                'support_ticket_id' => $ticket->id,
-                'file_path'         => $path,
-            ]);
+            $ticket->addMedia($file)->toMediaCollection('ticket_evidences');
         }
 
-        return response()->json(['data' => $saved], 201);
+        return response()->json(['message' => 'Evidencias guardadas'], 201);
     }
 
     public function myTickets()
     {
         $tickets = SupportTicket::where('reporter_user_id', Auth::id())
-            ->with(['artistSale.artist', 'evidences'])
+            ->with(['artistSale.artist', 'media'])
             ->latest()
             ->get();
 
@@ -89,7 +83,7 @@ class SupportTicketController extends Controller
 
     public function index(Request $request)
     {
-        $query = SupportTicket::with(['artistSale.artist', 'artistSale.customer', 'reporter', 'evidences'])
+        $query = SupportTicket::with(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
             ->latest();
 
         if ($request->status) {
@@ -105,7 +99,7 @@ class SupportTicketController extends Controller
     public function show(SupportTicket $ticket)
     {
         return response()->json([
-            'data' => $ticket->load(['artistSale.artist', 'artistSale.customer', 'reporter', 'evidences'])
+            'data' => $ticket->load(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
         ]);
     }
 
@@ -131,7 +125,7 @@ class SupportTicketController extends Controller
         ]);
 
         return response()->json([
-            'data' => $ticket->load(['artistSale.artist', 'artistSale.customer', 'reporter', 'evidences'])
+            'data' => $ticket->load(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
         ]);
     }
 

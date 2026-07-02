@@ -2,9 +2,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class SupportTicket extends Model
+class SupportTicket extends Model implements HasMedia
 {
+    use InteractsWithMedia;
+
     protected $fillable = [
         'artist_sale_id',
         'reporter_user_id',
@@ -14,6 +18,11 @@ class SupportTicket extends Model
         'resolution_type',
     ];
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('ticket_evidences');
+    }
+
     public function artistSale()
     {
         return $this->belongsTo(ArtistSale::class);
@@ -22,11 +31,6 @@ class SupportTicket extends Model
     public function reporter()
     {
         return $this->belongsTo(User::class, 'reporter_user_id');
-    }
-
-    public function evidences()
-    {
-        return $this->hasMany(TicketEvidence::class);
     }
 
     public function logs()
