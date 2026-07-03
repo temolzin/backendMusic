@@ -35,7 +35,7 @@ return new class extends Migration
         });
 
         Schema::table('galery_artists', function (Blueprint $table) {
-            $table->foreign('artist_id')->references('id')->on('artists')->onDelete('set null');
+            $table->foreign('artist_id')->references('id')->on('artists')->onDelete('cascade');
         });
     }
 };
