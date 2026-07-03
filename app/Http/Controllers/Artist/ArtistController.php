@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Artist;
 
 use App\Http\Controllers\Controller;
 use App\Models\Artist;
-use App\Models\GaleryArtist;
 use App\Models\Manager;
 use App\Rules\ValidImageUpload;
 use Illuminate\Http\Request;
@@ -260,7 +259,10 @@ class ArtistController extends Controller
                 $img = str_replace('storage', 'public', $linkArtist);
                 $less = env('APP_URL') . '/public/';
                 $img = str_replace($less, '', $img);
-                Storage::delete($img);
+                $img = trim($img);
+                if (Storage::exists($img)) {
+                    Storage::delete($img);
+                }
                 $linkArtist = $linkArtistNew;
             }
 
@@ -270,7 +272,10 @@ class ArtistController extends Controller
                 $img = str_replace('storage', 'public', $linkManager);
                 $less = env('APP_URL') . '/public/';
                 $img = str_replace($less, '', $img);
-                Storage::delete($img);
+                $img = trim($img);
+                if (Storage::exists($img)) {
+                    Storage::delete($img);
+                }
                 $linkManager = $linkManagerNew;
             }
 
@@ -308,8 +313,15 @@ class ArtistController extends Controller
     public function artistGalleryIndex()
     {
         try {
-            $artist_id = Artist::where('user_id', Auth::user()->id)->firstOrFail();
-            $artistGallery = GaleryArtist::where('artist_id', $artist_id->id)->get();
+            $artist = Artist::where('user_id', Auth::user()->id)->firstOrFail();
+
+            $artistGallery = $artist->getMedia('artist_gallery')->map(function ($media) {
+                return [
+                    'id' => $media->id,
+                    'file_name' => $media->file_name,
+                    'original_url' => $media->getUrl(),
+                ];
+            })->values();
             return response()->json([
                 'success' => true,
                 'artistGallery' => $artistGallery,
@@ -336,26 +348,24 @@ class ArtistController extends Controller
     
         try {
             $artist = Artist::where('user_id', Auth::user()->id)->firstOrFail();
-            $artistGalleryCount = GaleryArtist::where('artist_id', $artist->id)->count();
+            $artistGalleryCount = $artist->getMedia('artist_gallery')->count();
     
             if ($artistGalleryCount < 5) {
                 if ($request->hasFile('sub_files_paths')) {
                     $uploadedFile = $request->file('sub_files_paths');
-                    $urlStore = Storage::put('public/galery-artist', $uploadedFile);
-                    $linkGalleryNew = Storage::url($urlStore);
-                    $absolutePath = url($linkGalleryNew);
     
                     DB::beginTransaction();
-                    $gallery = GaleryArtist::create([
-                        'artist_id' => $artist->id,
-                        'image' => $absolutePath,
-                    ]);
+                    $media = $artist->addMedia($uploadedFile)->toMediaCollection('artist_gallery');
                     DB::commit();
 
                     return response()->json([
                         'success' => true,
                         'message' => 'Imagen almacenada',
-                        'artistGallery' => $gallery,
+                        'artistGallery' => [
+                            'id' => $media->id,
+                            'file_name' => $media->file_name,
+                            'original_url' => $media->getUrl(),
+                        ],
                     ], 201);
                 }
             } else {
@@ -386,26 +396,24 @@ class ArtistController extends Controller
     
         try {
             $artist = Artist::where('user_id', Auth::user()->id)->firstOrFail();
-            $artistGalleryCount = GaleryArtist::where('artist_id', $artist->id)->count();
+            $artistGalleryCount = $artist->getMedia('artist_gallery')->count();
     
             if ($artistGalleryCount < 5) {
                 if ($request->hasFile('sub_files_paths')) {
                     $uploadedFile = $request->file('sub_files_paths');
-                    $urlStore = Storage::put('public/galery-artist', $uploadedFile);
-                    $linkGalleryNew = Storage::url($urlStore);
-                    $absolutePath = url($linkGalleryNew);
     
                     DB::beginTransaction();
-                    $gallery = GaleryArtist::create([
-                        'artist_id' => $artist->id,
-                        'image' => $absolutePath,
-                    ]);
+                    $media = $artist->addMedia($uploadedFile)->toMediaCollection('artist_gallery');
                     DB::commit();
 
                     return response()->json([
                         'success' => true,
                         'message' => 'Imagen actualizada',
-                        'artistGallery' => $gallery,
+                        'artistGallery' => [
+                            'id' => $media->id,
+                            'file_name' => $media->file_name,
+                            'original_url' => $media->getUrl(),
+                        ],
                     ], 201);
                 }
             } else {
@@ -430,19 +438,12 @@ class ArtistController extends Controller
     public function deleteGaleryArtist(Request  $request)
     {
         try {
-            $artist_id = Artist::where('user_id', Auth::user()->id)->firstOrFail();
-            $artistGallery = GaleryArtist::where('artist_id', $artist_id->id)->get();
-            foreach ($artistGallery as $artist) {
-                $img = $artist->image;
-                $img = str_replace('storage', 'public', $img);
-                $less = env('APP_URL') . '/public/';
-                $img = str_replace($less, '', $img);
-                Storage::delete($img);
-                DB::beginTransaction();
-                $artist = GaleryArtist::where('id', $artist->id)->first();
-                $artist->delete();
-                DB::commit();
-            }
+            $artist = Artist::where('user_id', Auth::user()->id)->firstOrFail();
+
+            DB::beginTransaction();
+            $artist->clearMediaCollection('artist_gallery');
+            DB::commit();
+
             return response()->json([
                 'success' => true,
                 'message' => 'Imagenes eiminadas'
