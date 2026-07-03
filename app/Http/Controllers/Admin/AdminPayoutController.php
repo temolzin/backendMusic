@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Artist;
 use App\Models\ArtistSale;
 use App\Models\EventCancellation;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +20,9 @@ class AdminPayoutController extends Controller
 
         $artistPenalties = EventCancellation::select(
                 'event_cancellations.*',
-                'artist_sales.artist_id'
+                'artist_sales.artist_id',
+                'artist_sales.event_date',
+                'artist_sales.event_hour'
             )
             ->join('artist_sales', 'event_cancellations.artist_sale_id', '=', 'artist_sales.id')
             ->where('event_cancellations.penalty_paid', false)
@@ -62,6 +65,7 @@ class AdminPayoutController extends Controller
                 'event_date' => $sale->event_date,
                 'event_hour' => $sale->event_hour,
                 'event_status' => $sale->event_status,
+                'is_penalty_only' => false,
                 'penalties' => $penalties->map(function ($p) {
                     return [
                         'sale_id' => $p->artist_sale_id,
@@ -84,6 +88,59 @@ class AdminPayoutController extends Controller
             ];
         });
 
+        foreach ($artistPenalties as $artistId => $penalties) {
+            if (in_array($artistId, $artistsWithShownPenalties)) {
+                continue;
+            }
+
+            $totalPenalties = $penalties->sum('penalty_amount');
+            if ($totalPenalties <= 0) {
+                continue;
+            }
+
+            $artist = Artist::with('payoutMethod')->find($artistId);
+            if (!$artist) {
+                continue;
+            }
+
+            $firstPenalty = $penalties->first();
+
+            $formattedPayouts->push([
+                'sale_id' => $firstPenalty->artist_sale_id,
+                'amount' => 0,
+                'openpay_fee' => 0,
+                'platform_fee' => 0,
+                'net_artist_payout' => 0,
+                'total_penalties' => $totalPenalties,
+                'adjusted_net_payout' => -$totalPenalties,
+                'event_date' => $firstPenalty->event_date,
+                'event_hour' => $firstPenalty->event_hour,
+                'event_status' => 'cancelled',
+                'is_penalty_only' => true,
+                'penalties' => $penalties->map(function ($p) {
+                    return [
+                        'sale_id' => $p->artist_sale_id,
+                        'penalty_percentage' => $p->penalty_percentage,
+                        'penalty_amount' => $p->penalty_amount,
+                        'cancelled_at' => $p->created_at,
+                        'cancellation_reason' => $p->cancellation_reason,
+                    ];
+                })->values(),
+                'artist' => [
+                    'id' => $artist->id,
+                    'name' => $artist->name,
+                    'payout_method' => $artist->payoutMethod ? [
+                        'bank_name' => $artist->payoutMethod->bank_name,
+                        'account_holder' => $artist->payoutMethod->account_holder,
+                        'clabe' => $artist->payoutMethod->clabe,
+                        'rfc' => $artist->payoutMethod->rfc,
+                    ] : null,
+                ],
+            ]);
+        }
+        
+        $formattedPayouts = $formattedPayouts->sortByDesc('sale_id')->values();
+        
         return response()->json([
             'success' => true,
             'data' => $formattedPayouts
