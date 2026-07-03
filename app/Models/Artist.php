@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Offer;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Artist extends Model
+class Artist extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
+
     protected $fillable = [
         'user_id',
         'name',
@@ -28,6 +31,11 @@ class Artist extends Model
         'social_media' => 'array',
     ];
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('artist_gallery');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -46,11 +54,6 @@ class Artist extends Model
     public function shoppingCardDetail()
     {
         return $this->hasMany(ShoppingCardDetail::class);
-    }
-
-    public function galeryArtists()
-    {
-        return $this->hasMany(GaleryArtist::class);
     }
 
     public function favouriteArtists()
