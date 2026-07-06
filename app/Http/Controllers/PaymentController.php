@@ -395,6 +395,7 @@ class PaymentController extends Controller
             }
             
             $sales = ArtistSale::where('artist_id', $artistId)
+                ->whereIn('event_status', ['pending', 'completed'])
                 ->select('id', 'artist_id', 'event_date', 'event_hour', 'event_hours', 'event_status', 'created_at')
                 ->get();
             

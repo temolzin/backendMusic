@@ -37,8 +37,10 @@ class ExpireApprovalRequests extends Command
                 }
             }
 
+            $sale->status = 'cancelled';
             $sale->approval_status = 'expired';
             $sale->event_status = 'expired';
+            $sale->approval_responded_at = Carbon::now();
             $sale->save();
             $count++;
         }
