@@ -56,7 +56,7 @@ class GendersController extends Controller
             $artistGender = Artist::with([
                 'musicalGenders',
                 'manager',
-                'galeryArtists',
+                'media',
                 'offers' => function ($query) {
                     $query->where('is_active', true)
                         ->where('start_date', '<=', now())
