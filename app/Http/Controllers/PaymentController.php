@@ -1149,6 +1149,123 @@ class PaymentController extends Controller
         }
     }
 
+    public function cancelClientEvent(Request $request, $id)
+    {
+        try {
+            $request->validate(['reason' => 'required|string|max:500']);
+
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'No autenticado'], 401);
+            }
+
+            $sale = ArtistSale::where('id', $id)->where('customer_id', $user->id)->first();
+            if (!$sale) {
+                return response()->json(['success' => false, 'message' => 'Compra no encontrada'], 404);
+            }
+
+            if ($sale->event_status === 'completed') {
+                return response()->json(['success' => false, 'message' => 'El evento ya fue completado'], 400);
+            }
+
+            if ($sale->event_status === 'cancelled') {
+                return response()->json(['success' => false, 'message' => 'El evento ya fue cancelado'], 400);
+            }
+
+            if (!$sale->event_date) {
+                return response()->json(['success' => false, 'message' => 'El evento no tiene fecha asignada'], 400);
+            }
+
+            $now = Carbon::now();
+            $eventDate = Carbon::parse($sale->event_date);
+            $daysUntilEvent = $now->diffInDays($eventDate, false);
+
+            if ($daysUntilEvent < 0) {
+                return response()->json(['success' => false, 'message' => 'La fecha del evento ya pasó'], 400);
+            }
+
+            if ($daysUntilEvent == 0) {
+                return response()->json(['success' => false, 'message' => 'No puedes cancelar el evento el mismo día'], 400);
+            }
+
+            $amount = floatval($sale->amount);
+            $penaltyPercentage = 0;
+
+            if ($sale->approval_status === 'accepted') {
+                if ($daysUntilEvent >= 3 && $daysUntilEvent < 7) {
+                    $penaltyPercentage = 25;
+                }
+
+                if ($daysUntilEvent >= 1 && $daysUntilEvent < 3) {
+                    $penaltyPercentage = 50;
+                }
+            }
+
+            $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
+            $refundAmount = $amount - $penaltyAmount;
+
+            if ($sale->payment_method === 'card' && $sale->openpay_transaction_id && $sale->status === 'completed') {
+                try {
+                    $keys = OpenpayKey::first();
+                    $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
+                    Openpay::setProductionMode(false);
+
+                    $charge = $openpay->charges->get($sale->openpay_transaction_id);
+
+                    $refunded = false;
+                    if ($penaltyAmount > 0) {
+                        try {
+                            $charge->refund(['description' => 'Cancelación de evento por el cliente', 'amount' => $refundAmount]);
+                            $refunded = true;
+                        } catch (\Exception $e) {
+                            if (str_contains($e->getMessage(), 'can not be partially refunded')) {
+                                $charge->refund(['description' => 'Cancelación de evento por el cliente']);
+                                $penaltyAmount = 0;
+                                $penaltyPercentage = 0;
+                                $refundAmount = $amount;
+                                $refunded = true;
+                            }
+                            if (!str_contains($e->getMessage(), 'can not be partially refunded')) {
+                                throw $e;
+                            }
+                        }
+                    }
+                    if (!$refunded) {
+                        $charge->refund(['description' => 'Cancelación de evento por el cliente']);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('OpenPay refund failed: ' . $e->getMessage());
+                    return response()->json(['success' => false, 'message' => 'Error al procesar el reembolso: ' . $e->getMessage()], 500);
+                }
+            }
+
+            $sale->event_status = 'cancelled';
+            $sale->save();
+
+            EventCancellation::create([
+                'artist_sale_id' => $sale->id,
+                'user_id' => $user->id,
+                'cancellation_reason' => $request->reason,
+                'penalty_percentage' => $penaltyPercentage,
+                'penalty_amount' => $penaltyAmount,
+                'refunded_at' => $now,
+                'penalty_paid' => true,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Evento cancelado exitosamente',
+                'data' => [
+                    'refund_amount' => $refundAmount,
+                    'penalty_percentage' => $penaltyPercentage,
+                    'penalty_amount' => $penaltyAmount,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     private function resolveOpenpayFee($charge, float $amount): float
     {
         if (isset($charge->fee) && is_object($charge->fee) && isset($charge->fee->amount)) {
