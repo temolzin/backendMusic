@@ -1212,20 +1212,25 @@ class PaymentController extends Controller
 
                     $charge = $openpay->charges->get($sale->openpay_transaction_id);
 
+                    $refunded = false;
                     if ($penaltyAmount > 0) {
                         try {
                             $charge->refund(['description' => 'Cancelación de evento por el cliente', 'amount' => $refundAmount]);
+                            $refunded = true;
                         } catch (\Exception $e) {
                             if (str_contains($e->getMessage(), 'can not be partially refunded')) {
                                 $charge->refund(['description' => 'Cancelación de evento por el cliente']);
                                 $penaltyAmount = 0;
                                 $penaltyPercentage = 0;
                                 $refundAmount = $amount;
-                            } else {
+                                $refunded = true;
+                            }
+                            if (!str_contains($e->getMessage(), 'can not be partially refunded')) {
                                 throw $e;
                             }
                         }
-                    } else {
+                    }
+                    if (!$refunded) {
                         $charge->refund(['description' => 'Cancelación de evento por el cliente']);
                     }
                 } catch (\Exception $e) {
