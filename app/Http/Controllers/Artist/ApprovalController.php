@@ -45,6 +45,28 @@ class ApprovalController extends Controller
         }
     }
 
+    public function history()
+    {
+        try {
+            $user = Auth::user();
+            $artist = Artist::where('user_id', $user->id)->first();
+
+            if (!$artist) {
+                return response()->json(['success' => false, 'message' => 'Perfil de artista no encontrado'], 404);
+            }
+
+            $history = ArtistSale::where('artist_id', $artist->id)
+                ->whereIn('approval_status', ['accepted', 'rejected', 'expired'])
+                ->with('customer')
+                ->orderByDesc('approval_responded_at')
+                ->get();
+
+            return response()->json(['success' => true, 'sales' => $history]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function accept($id)
     {
         try {
@@ -154,7 +176,7 @@ class ApprovalController extends Controller
             $sale->status = 'cancelled';
             $sale->approval_status = 'rejected';
             $sale->approval_responded_at = Carbon::now();
-            $sale->event_status = 'expired';
+            $sale->event_status = 'rejected';
             $sale->save();
 
             return response()->json(['success' => true, 'message' => 'Solicitud rechazada']);
