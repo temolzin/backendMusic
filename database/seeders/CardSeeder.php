@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Client;
+use App\Models\Card;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +16,7 @@ class CardSeeder extends Seeder
      */
     public function run()
     {
-        DB::statement('TRUNCATE TABLE clients RESTART IDENTITY CASCADE;');
+        DB::statement('TRUNCATE TABLE cards RESTART IDENTITY CASCADE;');
 
         $users = User::whereHas('roles', function ($query) {
             $query->where('slug', User::ROLE_CLIENT);
@@ -34,7 +34,7 @@ class CardSeeder extends Seeder
         foreach ($users as $index => $user) {
             $card = $cards[$index % count($cards)];
 
-            Client::create([
+            Card::create([
                 'user_id' => $user->id,
                 'number_card' => $card['number'],
                 'name' => $user->name,
