@@ -26,6 +26,8 @@ use App\Models\OpenpayKey;
 use App\Models\Offer;
 use App\Models\EventCancellation;
 use App\Services\DistanceMatrixService;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ArtistSaleRequest;
 
 class PaymentController extends Controller
 {
@@ -261,6 +263,8 @@ class PaymentController extends Controller
                     $sale->approval_deadline = Carbon::now()->addHours(24);
                     $sale->openpay_customer_id = $charge->customer->id ?? null;
                     $sale->save();
+
+                    $this->sendSaleRequestEmail($sale);
                 }
 
                 $userId = Auth::user()?->id ?? $request->input("customer_id");
@@ -843,6 +847,8 @@ class PaymentController extends Controller
                     $sale->approval_status = 'pending_approval';
                     $sale->approval_deadline = Carbon::now()->addHours(24);
                     $sale->save();
+
+                    $this->sendSaleRequestEmail($sale);
                 }
 
                 $shoppingCard = ShoppingCard::where('user_id', $userId)->where('status', 1)->first();
@@ -1278,6 +1284,18 @@ class PaymentController extends Controller
         $taxRate = 1.16;
 
         return round((($amount * $baseCommissionRate) + $fixedCharge) * $taxRate, 2);
+    }
+
+    private function sendSaleRequestEmail(ArtistSale $sale)
+    {
+        try {
+            $artistEmail = $sale->artist->user->email ?? null;
+            if ($artistEmail) {
+                Mail::to($artistEmail)->send(new ArtistSaleRequest($sale));
+            }
+        } catch (\Exception $e) {
+            Log::warning('Error enviando correo de solicitud al artista: ' . $e->getMessage());
+        }
     }
 
     private const OPENPAY_ERROR_MESSAGES = [
