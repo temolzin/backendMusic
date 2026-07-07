@@ -55,7 +55,8 @@
                                         <span class="info-label">Monto</span>
                                         <span class="info-value" style="font-weight: 700; font-size: 17px; color: #2e7d32;">$ {{ number_format($sale->amount, 2, '.', ',') }} MXN</span>
                                     </div>
-                                @else
+                                @endif
+                                @if ($status !== 'accepted')
                                     <div class="info-row" style="border-bottom: none; text-align: center; justify-content: center;">
                                         <span class="info-value" style="font-style: italic; color: #666; text-align: center;">
                                             Este artista no pudo, pero hay m&aacute;s opciones para ti. Explora nuestro extenso cat&aacute;logo de artistas y encuentra el ideal.
