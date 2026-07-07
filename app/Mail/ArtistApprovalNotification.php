@@ -19,7 +19,7 @@ class ArtistApprovalNotification extends Mailable
     {
         $this->sale = $sale;
         $this->status = $status;
-        $this->frontendUrl = config('app.frontend_url', 'http://localhost:8080');
+        $this->frontendUrl = config('app.frontend_url');
     }
 
     public function build()

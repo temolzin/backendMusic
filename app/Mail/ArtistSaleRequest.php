@@ -17,7 +17,7 @@ class ArtistSaleRequest extends Mailable
     public function __construct(ArtistSale $sale)
     {
         $this->sale = $sale;
-        $this->frontendUrl = config('app.frontend_url', 'http://localhost:8080');
+        $this->frontendUrl = config('app.frontend_url');
     }
 
     public function build()
