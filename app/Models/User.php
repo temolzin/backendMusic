@@ -103,9 +103,9 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
        return $this->hasOne(Artist::class);
     }
 
-    public function clients()
+    public function cards()
     {
-       return $this->hasMany(Client::class);
+       return $this->hasMany(Card::class);
     }
 
     public function historyShoppings()

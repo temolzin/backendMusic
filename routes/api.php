@@ -5,7 +5,7 @@ use App\Http\Controllers\Admin\MusicalsGendersController;
 use App\Http\Controllers\Artist\ArtistController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\QuotationsController;
-use App\Http\Controllers\Client\ClientController;
+use App\Http\Controllers\Client\CardController;
 use App\Http\Controllers\Client\FavouriteArtist\FavouriteArtistsController;
 use App\Http\Controllers\Client\PaymentController as ClientPaymentController;
 use App\Http\Controllers\Client\GendersController;
@@ -84,8 +84,8 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::put('/artist/approval/{id}/accept', [ApprovalController::class, 'accept']);
     Route::put('/artist/approval/{id}/reject', [ApprovalController::class, 'reject']);
     //Route for client
-    Route::resource('/client-card', ClientController::class);
-    Route::get('/client/profile', [ClientController::class, 'getProfile']);
+    Route::resource('/cards', CardController::class);
+    Route::get('/client/profile', [CardController::class, 'getProfile']);
     Route::get('/client/musical-genders', [GendersController::class, 'index']);
     Route::get('/client/musical-genders/{slug}', [GendersController::class, 'artistsGenders']);
     Route::get('/client/musical-genders/artist/{slug}', [GendersController::class, 'artistGender']);

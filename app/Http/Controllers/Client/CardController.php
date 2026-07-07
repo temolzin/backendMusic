@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
-use App\Models\Client;
+use App\Models\Card;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class ClientController extends Controller
+class CardController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,11 +18,11 @@ class ClientController extends Controller
     public function index()
     {
         try {
-            $client = Client::orderBy('id', 'Asc')->where('user_id', Auth::user()->id)->get();
+            $cards = Card::orderBy('id', 'Asc')->where('user_id', Auth::user()->id)->get();
 
             return response()->json([
                 'success' => true,
-                'client' => $client,
+                'cards' => $cards,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -67,19 +67,19 @@ class ClientController extends Controller
             };
 
             DB::beginTransaction();
-            $client = new Client();
-            $client->user_id = Auth::user()->id;
-            $client->number_card = $number;
-            $client->card_type = $cardType;
-            $client->name = $request->input('name');
-            $client->expiration_date = $request->input('expiration_date');
-            $client->save();
+            $card = new Card();
+            $card->user_id = Auth::user()->id;
+            $card->number_card = $number;
+            $card->card_type = $cardType;
+            $card->name = $request->input('name');
+            $card->expiration_date = $request->input('expiration_date');
+            $card->save();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'client' => $client,
+                'card' => $card,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -99,11 +99,11 @@ class ClientController extends Controller
     public function show($id)
     {
         try {
-            $client = Client::find($id);
+            $card = Card::find($id);
 
             return response()->json([
                 'success' => true,
-                'client' => $client,
+                'card' => $card,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -135,15 +135,15 @@ class ClientController extends Controller
     {
         try {
             DB::beginTransaction();
-            $client = Client::find($id);
-            $client->fill($request->all());
-            $client->save();
+            $card = Card::find($id);
+            $card->fill($request->all());
+            $card->save();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'client' => $client,
+                'card' => $card,
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -164,8 +164,8 @@ class ClientController extends Controller
     {
         try {
             DB::beginTransaction();
-            $client = Client::where('id', $id)->first();
-            $client->delete();
+            $card = Card::where('id', $id)->first();
+            $card->delete();
 
             DB::commit();
             return response()->json([
