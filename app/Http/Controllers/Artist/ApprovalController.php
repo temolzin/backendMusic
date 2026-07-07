@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Openpay\Data\Openpay;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ArtistApprovalNotification;
 
 class ApprovalController extends Controller
 {
@@ -136,9 +138,20 @@ class ApprovalController extends Controller
             $sale->approval_responded_at = Carbon::now();
             $sale->save();
 
+            $this->sendClientNotification($sale, 'accepted');
+
             return response()->json(['success' => true, 'message' => 'Solicitud aceptada correctamente', 'sale' => $sale]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    private function sendClientNotification(ArtistSale $sale, string $status)
+    {
+        try {
+            Mail::to($sale->customer_email)->send(new ArtistApprovalNotification($sale, $status));
+        } catch (\Exception $e) {
+            Log::warning('Error enviando notificación al cliente: ' . $e->getMessage());
         }
     }
 
@@ -178,6 +191,8 @@ class ApprovalController extends Controller
             $sale->approval_responded_at = Carbon::now();
             $sale->event_status = 'rejected';
             $sale->save();
+
+            $this->sendClientNotification($sale, 'rejected');
 
             return response()->json(['success' => true, 'message' => 'Solicitud rechazada']);
         } catch (\Exception $e) {
