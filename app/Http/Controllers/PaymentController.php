@@ -467,6 +467,8 @@ class PaymentController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->first();
             
+            $user = Auth::user();
+
             (is_null($lastOrder)) ? $orderData = null : $orderData = [
                 'first_name' => $lastOrder->customer_first_name,
                 'last_name' => $lastOrder->customer_last_name,
@@ -476,6 +478,8 @@ class PaymentController extends Controller
                 'city' => $lastOrder->customer_city,
                 'state' => $lastOrder->customer_state,
                 'zip_code' => $lastOrder->customer_zip_code,
+                'latitude' => $user->latitude,
+                'longitude' => $user->longitude,
             ];
 
             return response()->json([
