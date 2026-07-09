@@ -125,6 +125,7 @@ class PaymentController extends Controller
 
                 $itemsForSales[] = [
                     'artist_id' => $artistId,
+                    'offer_id' => $activeOffer?->id,
                     'amount' => $lineTotalPesos,
                     'hours' => $hours,
                     'extra_km_distance' => $extraKmDistance,
@@ -238,6 +239,7 @@ class PaymentController extends Controller
                     $sale = new ArtistSale();
                     $sale->openpay_transaction_id = $charge->id;
                     $sale->artist_id = $item['artist_id'];
+                    $sale->offer_id = $item['offer_id'] ?? null;
                     $sale->customer_id = $userId;
                     $sale->amount = $item['amount'];
                     $sale->openpay_fee = $this->resolveOpenpayFee($charge, (float) $item['amount']);
@@ -759,6 +761,7 @@ class PaymentController extends Controller
 
                 $itemsForSales[] = [
                     'artist_id' => $artistId,
+                    'offer_id' => $activeOffer?->id,
                     'amount' => $lineTotalPesos,
                     'event_date' => $normalizedEventDate,
                     'event_hour' => $normalizedEventHour,
@@ -826,6 +829,7 @@ class PaymentController extends Controller
                     $sale->status = 'pending';
                     $sale->event_status = 'pending';
                     $sale->artist_id              = $item['artist_id'];
+                    $sale->offer_id               = $item['offer_id'] ?? null;
                     $sale->customer_id            = $userId;
                     $sale->amount                 = $item['amount'];
                     $sale->customer_first_name    = $name;

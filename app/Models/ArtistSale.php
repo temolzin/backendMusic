@@ -9,6 +9,7 @@ class ArtistSale extends Model
 {
     protected $fillable = [
         'artist_id',
+        'offer_id',
         'customer_id',
         'amount',
         'openpay_fee',
@@ -41,6 +42,11 @@ class ArtistSale extends Model
     public function artist()
     {
         return $this->belongsTo(Artist::class, 'artist_id');
+    }
+
+    public function offer()
+    {
+        return $this->belongsTo(Offer::class, 'offer_id');
     }
 
     public function customer()
