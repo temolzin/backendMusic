@@ -461,13 +461,12 @@ class PaymentController extends Controller
     public function getLastClientOrder()
     {
         try {
-            $userId = Auth::user()->id;
-            
+            $user = Auth::user();
+            $userId = $user->id;
+
             $lastOrder = ArtistSale::where('customer_id', $userId)
                 ->orderBy('created_at', 'desc')
                 ->first();
-            
-            $user = Auth::user();
 
             (is_null($lastOrder)) ? $orderData = null : $orderData = [
                 'first_name' => $lastOrder->customer_first_name,
