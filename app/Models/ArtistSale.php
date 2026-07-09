@@ -7,6 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class ArtistSale extends Model
 {
+    const PAYMENT_STATUS_AUTHORIZED = 'authorized';
+    const PAYMENT_STATUS_PENDING = 'pending';
+    const PAYMENT_STATUS_COMPLETED = 'completed';
+    const PAYMENT_STATUS_CANCELLED = 'cancelled';
+    const PAYMENT_STATUS_LIQUIDATED = 'liquidated';
+
+    const EVENT_STATUS_PENDING = 'pending';
+    const EVENT_STATUS_COMPLETED = 'completed';
+    const EVENT_STATUS_CANCELLED = 'cancelled';
+    const EVENT_STATUS_REJECTED = 'rejected';
+    const EVENT_STATUS_EXPIRED = 'expired';
+
+    const APPROVAL_STATUS_PENDING = 'pending_approval';
+    const APPROVAL_STATUS_ACCEPTED = 'accepted';
+    const APPROVAL_STATUS_REJECTED = 'rejected';
+    const APPROVAL_STATUS_EXPIRED = 'expired';
+
     protected $fillable = [
         'artist_id',
         'customer_id',

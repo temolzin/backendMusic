@@ -9,6 +9,11 @@ class ShoppingCard extends Model
 {
     use HasFactory;
     protected $table = "shoppings_cards";
+
+    const STATUS_INACTIVE = 0;
+    const STATUS_ACTIVE = 1;
+    const STATUS_PAID = 2;
+
     protected $fillable = [
         'user_id',
         'status',
