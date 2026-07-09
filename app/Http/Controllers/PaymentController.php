@@ -28,6 +28,7 @@ use App\Models\EventCancellation;
 use App\Services\DistanceMatrixService;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ArtistSaleRequest;
+use App\Mail\EventCancelledNotification;
 
 class PaymentController extends Controller
 {
@@ -1090,8 +1091,8 @@ class PaymentController extends Controller
                 return response()->json(['success' => false, 'message' => 'El evento no tiene fecha asignada'], 400);
             }
 
-            $now = Carbon::now();
-            $eventDate = Carbon::parse($sale->event_date);
+            $now = Carbon::now()->startOfDay();
+            $eventDate = Carbon::parse($sale->event_date)->startOfDay();
             $daysUntilEvent = $now->diffInDays($eventDate, false);
 
             if ($daysUntilEvent < 0) {
@@ -1142,6 +1143,8 @@ class PaymentController extends Controller
                 'penalty_paid' => false,
             ]);
 
+            $this->sendCancellationEmails($sale, $request->reason, 'artist', $amount, $penaltyAmount, $penaltyPercentage);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Evento cancelado exitosamente',
@@ -1183,8 +1186,8 @@ class PaymentController extends Controller
                 return response()->json(['success' => false, 'message' => 'El evento no tiene fecha asignada'], 400);
             }
 
-            $now = Carbon::now();
-            $eventDate = Carbon::parse($sale->event_date);
+            $now = Carbon::now()->startOfDay();
+            $eventDate = Carbon::parse($sale->event_date)->startOfDay();
             $daysUntilEvent = $now->diffInDays($eventDate, false);
 
             if ($daysUntilEvent < 0) {
@@ -1211,6 +1214,10 @@ class PaymentController extends Controller
             $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
             $refundAmount = $amount - $penaltyAmount;
 
+            $originalPenaltyPercentage = $penaltyPercentage;
+            $originalPenaltyAmount = $penaltyAmount;
+            $originalRefundAmount = $refundAmount;
+
             if ($sale->payment_method === 'card' && $sale->openpay_transaction_id && $sale->status === 'completed') {
                 try {
                     $keys = OpenpayKey::first();
@@ -1227,9 +1234,6 @@ class PaymentController extends Controller
                         } catch (\Exception $e) {
                             if (str_contains($e->getMessage(), 'can not be partially refunded')) {
                                 $charge->refund(['description' => 'Cancelación de evento por el cliente']);
-                                $penaltyAmount = 0;
-                                $penaltyPercentage = 0;
-                                $refundAmount = $amount;
                                 $refunded = true;
                             }
                             if (!str_contains($e->getMessage(), 'can not be partially refunded')) {
@@ -1246,6 +1250,10 @@ class PaymentController extends Controller
                 }
             }
 
+            $penaltyPercentage = $originalPenaltyPercentage;
+            $penaltyAmount = $originalPenaltyAmount;
+            $refundAmount = $originalRefundAmount;
+
             $sale->event_status = 'cancelled';
             $sale->save();
 
@@ -1259,6 +1267,8 @@ class PaymentController extends Controller
                 'penalty_paid' => true,
             ]);
 
+            $this->sendCancellationEmails($sale, $request->reason, 'client', $refundAmount, $penaltyAmount, $penaltyPercentage);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Evento cancelado exitosamente',
@@ -1270,6 +1280,32 @@ class PaymentController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    private function sendCancellationEmails(ArtistSale $sale, string $reason, string $cancelledBy, float $refundAmount, float $penaltyAmount, int $penaltyPercentage = 0)
+    {
+        $clientEmail = $sale->customer_email;
+
+        $artistUser = Artist::where('id', $sale->artist_id)->with('user')->first()?->user;
+        $artistEmail = $artistUser ? $artistUser->email : null;
+
+        $isBeforeApproval = $cancelledBy === 'client' && $sale->approval_status !== 'accepted';
+
+        if ($clientEmail) {
+            try {
+                Mail::to($clientEmail)->send(new EventCancelledNotification($sale, $reason, $cancelledBy, $refundAmount, $penaltyAmount, $penaltyPercentage, 'client', $isBeforeApproval));
+            } catch (\Exception $e) {
+                Log::warning('Error enviando correo de cancelación al cliente: ' . $e->getMessage());
+            }
+        }
+
+        if ($artistEmail) {
+            try {
+                Mail::to($artistEmail)->send(new EventCancelledNotification($sale, $reason, $cancelledBy, $refundAmount, $penaltyAmount, $penaltyPercentage, 'artist', $isBeforeApproval));
+            } catch (\Exception $e) {
+                Log::warning('Error enviando correo de cancelación al artista: ' . $e->getMessage());
+            }
         }
     }
 
@@ -1288,13 +1324,14 @@ class PaymentController extends Controller
 
     private function sendSaleRequestEmail(ArtistSale $sale)
     {
-        try {
-            $artistEmail = $sale->artist->user->email ?? null;
-            if ($artistEmail) {
+        $artistUser = Artist::where('id', $sale->artist_id)->with('user')->first()?->user;
+        $artistEmail = $artistUser ? $artistUser->email : null;
+        if ($artistEmail) {
+            try {
                 Mail::to($artistEmail)->send(new ArtistSaleRequest($sale));
+            } catch (\Exception $e) {
+                Log::warning('Error enviando correo de solicitud al artista: ' . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            Log::warning('Error enviando correo de solicitud al artista: ' . $e->getMessage());
         }
     }
 
