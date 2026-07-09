@@ -9,6 +9,11 @@ class SupportTicket extends Model implements HasMedia
 {
     use InteractsWithMedia;
 
+    const STATUS_OPEN = 'open';
+    const STATUS_UNDER_REVIEW = 'under_review';
+    const STATUS_RESOLVED = 'resolved';
+    const STATUS_REJECTED = 'rejected';
+
     protected $fillable = [
         'artist_sale_id',
         'reporter_user_id',
