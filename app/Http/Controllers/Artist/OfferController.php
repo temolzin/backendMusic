@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Artist;
 
 use App\Http\Controllers\Controller;
 use App\Models\Artist;
+use App\Models\ArtistSale;
 use App\Models\Offer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,13 @@ class OfferController extends Controller
         try {
             $artist = Artist::where('user_id', Auth::user()->id)->firstOrFail();
             $offers = Offer::where('artist_id', $artist->id)->orderBy('created_at', 'desc')->get();
+
+            $offers->each(function ($offer) {
+                $offer->has_pending_sale = ArtistSale::where('offer_id', $offer->id)
+                    ->where('approval_status', 'pending_approval')
+                    ->exists();
+            });
+
             return response()->json(['success' => true, 'offers' => $offers], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -81,6 +89,18 @@ class OfferController extends Controller
         try {
             $artist = Artist::where('user_id', Auth::user()->id)->firstOrFail();
             $offer = Offer::where('id', $id)->where('artist_id', $artist->id)->firstOrFail();
+
+            $hasPendingSale = ArtistSale::where('offer_id', $offer->id)
+                ->where('approval_status', 'pending_approval')
+                ->exists();
+
+            if ($hasPendingSale) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No puedes eliminar esta oferta: hay una venta en espera de tu respuesta (aceptar/rechazar) que la utilizó. Podrás eliminarla una vez que esa solicitud se resuelva.',
+                ], 422);
+            }
+
             $offer->delete();
             return response()->json(['success' => true, 'message' => 'Oferta eliminada'], 200);
         } catch (\Exception $e) {

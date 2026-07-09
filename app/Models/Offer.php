@@ -25,4 +25,9 @@ class Offer extends Model
     {
         return $this->belongsTo(Artist::class);
     }
+
+    public function sales()
+    {
+        return $this->hasMany(ArtistSale::class, 'offer_id');
+    }
 }
