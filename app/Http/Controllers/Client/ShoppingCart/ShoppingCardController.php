@@ -383,6 +383,8 @@ class ShoppingCardController extends Controller
                 'state' => $request->input('state'),
                 'zip_code' => $request->input('zip_code'),
                 'country' => $request->input('country'),
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude'),
             ]);
 
             return response()->json([

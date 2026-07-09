@@ -37,6 +37,7 @@ class CardSeeder extends Seeder
             Card::create([
                 'user_id' => $user->id,
                 'number_card' => $card['number'],
+                'card_type' => $card['type'],
                 'name' => $user->name,
                 'expiration_date' => '12/28',
             ]);

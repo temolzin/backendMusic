@@ -37,7 +37,9 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
         'city',
         'state',
         'zip_code',
-        'country'
+        'country',
+        'latitude',
+        'longitude'
     ];
 
     /**
