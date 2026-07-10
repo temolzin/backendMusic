@@ -439,7 +439,12 @@ class PaymentController extends Controller
                 ], 404);
             }
             
-            $sales = ArtistSale::where('artist_id', $artist->id)->get();
+            $sales = ArtistSale::where('artist_id', $artist->id)
+                ->where(function ($query) {
+                    $query->whereNull('approval_status')
+                          ->orWhere('approval_status', '!=', 'pending_approval');
+                })
+                ->get();
             
             $sales = $sales->map(function ($sale) {
                 $this->computeStatus($sale);
@@ -768,6 +773,7 @@ class PaymentController extends Controller
                     'amount' => $lineTotalPesos,
                     'event_date' => $normalizedEventDate,
                     'event_hour' => $normalizedEventHour,
+                    'hours' => $hours,
                     'extra_km_distance' => $extraKmDistance,
                     'extra_km_cost' => $extraKmCost,
                 ];
@@ -845,6 +851,7 @@ class PaymentController extends Controller
                     $sale->customer_zip_code      = $zip_code;
                     $sale->event_date             = $item['event_date'];
                     $sale->event_hour             = $item['event_hour'];
+                    $sale->event_hours            = $item['hours'] ?? null;
                     $sale->payment_method = 'cash';
                     $sale->store = $store;
                     $sale->latitude = $latitude;
@@ -922,6 +929,10 @@ class PaymentController extends Controller
                 return response()->json(['error' => 'Esta venta ya fue pagada'], 400);
             }
 
+            if ($sale->approval_status !== 'accepted') {
+                return response()->json(['error' => 'El artista aún no ha aceptado esta solicitud'], 422);
+            }
+
             $keys = OpenpayKey::first();
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", request()->ip());
             Openpay::setProductionMode(false);
@@ -957,14 +968,11 @@ class PaymentController extends Controller
             $barcodeUrl = $charge->payment_method->barcode_url ?? null;
             $dueDateStr = $dueDateInstance->toDateTimeString();
 
-            $relatedSales = ArtistSale::where('customer_id', $sale->customer_id)
-                ->where('openpay_transaction_id', $sale->openpay_transaction_id)
-                ->get();
-
-            foreach ($relatedSales as $related) {
-                $related->openpay_transaction_id = $charge->id;
-                $related->save();
-            }
+            $sale->openpay_transaction_id = $charge->id;
+            $sale->cash_reference = $cashRef;
+            $sale->cash_barcode_url = $barcodeUrl;
+            $sale->cash_due_date = $dueDateInstance;
+            $sale->save();
 
             return response()->json([
                 'data' => [
