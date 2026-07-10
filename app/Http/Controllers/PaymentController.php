@@ -276,12 +276,12 @@ class PaymentController extends Controller
                 }
 
                 $shoppingCards = ShoppingCard::where('user_id', $userId)
-                    ->where('status', 1)
+                    ->where('status', ShoppingCard::STATUS_ACTIVE)
                     ->get();
 
                 foreach ($shoppingCards as $shoppingCard) {
                     ShoppingCardDetail::where('shopping_card_id', $shoppingCard->id)->delete();
-                    $shoppingCard->status = 2;
+                    $shoppingCard->status = ShoppingCard::STATUS_PAID;
                     $shoppingCard->total = 0;
                     $shoppingCard->save();
                 }
@@ -470,7 +470,19 @@ class PaymentController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->first();
 
-            (is_null($lastOrder)) ? $orderData = null : $orderData = [
+            $fullName = explode(' ', $user->name, 2);
+            (is_null($lastOrder)) ? $orderData = [
+                'first_name' => $fullName[0] ?? '',
+                'last_name' => $fullName[1] ?? '',
+                'email' => $user->email,
+                'phone' => '',
+                'address' => $user->address ?? '',
+                'city' => $user->city ?? '',
+                'state' => $user->state ?? '',
+                'zip_code' => $user->zip_code ?? '',
+                'latitude' => $user->latitude,
+                'longitude' => $user->longitude,
+            ] : $orderData = [
                 'first_name' => $lastOrder->customer_first_name,
                 'last_name' => $lastOrder->customer_last_name,
                 'email' => $lastOrder->customer_email,
@@ -859,11 +871,11 @@ class PaymentController extends Controller
                     $this->sendSaleRequestEmail($sale);
                 }
 
-                $shoppingCard = ShoppingCard::where('user_id', $userId)->where('status', 1)->first();
+                $shoppingCard = ShoppingCard::where('user_id', $userId)->where('status', ShoppingCard::STATUS_ACTIVE)->first();
 
                 if ($shoppingCard) {
                     ShoppingCardDetail::where('shopping_card_id', $shoppingCard->id)->delete();
-                    $shoppingCard->status = 2;
+                    $shoppingCard->status = ShoppingCard::STATUS_PAID;
                     $shoppingCard->total  = 0;
                     $shoppingCard->save();
                 }
