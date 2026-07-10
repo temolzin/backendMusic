@@ -15,7 +15,7 @@ class ShoppingCardController extends Controller
 {
     private function getActiveShoppingCardForUser($userId, $lock = false)
     {
-        $query = ShoppingCard::where('status', 1)
+        $query = ShoppingCard::where('status', ShoppingCard::STATUS_ACTIVE)
             ->where('user_id', $userId)
             ->orderBy('id');
 
@@ -45,7 +45,7 @@ class ShoppingCardController extends Controller
                     : $this->moveDuplicateItem($duplicateItem, $mainCart);
             }
 
-            $duplicateCart->status = 0;
+            $duplicateCart->status = ShoppingCard::STATUS_INACTIVE;
             $duplicateCart->total = 0;
             $duplicateCart->save();
         }
@@ -153,7 +153,7 @@ class ShoppingCardController extends Controller
             } else {
                 $shopping_card = ShoppingCard::create([
                     'user_id' => $userId,
-                    'status' => 1, // 1 es creado 
+                    'status' => ShoppingCard::STATUS_ACTIVE,
                     'order_date_start' => $request->input("order_date_start"),
                     'order_date_finish' => $request->input("order_date_finish"),
                     'total' =>  floatval($hours) * floatval($price),
@@ -202,7 +202,7 @@ class ShoppingCardController extends Controller
                 },
                 'shoppingCardDetail.artist.manager'
             ])
-            ->where('status', 1)
+            ->where('status', ShoppingCard::STATUS_ACTIVE)
             ->where('id', $shoppingCard->id)
             ->get();
             return response()->json([
