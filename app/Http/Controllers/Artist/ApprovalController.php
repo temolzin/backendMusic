@@ -131,6 +131,9 @@ class ApprovalController extends Controller
 
                 $charge = $openpay->charges->create($chargeRequest);
                 $sale->openpay_transaction_id = $charge->id;
+                $sale->cash_reference = $charge->payment_method->reference ?? null;
+                $sale->cash_barcode_url = $charge->payment_method->barcode_url ?? null;
+                $sale->cash_due_date = Carbon::now()->addHours(24);
             }
 
             $sale->status = $sale->payment_method === 'card' ? 'completed' : 'pending';
