@@ -27,7 +27,7 @@ class ApprovalController extends Controller
             }
 
             $pending = ArtistSale::where('artist_id', $artist->id)
-                ->where('approval_status', 'pending_approval')
+                ->where('approval_status', ArtistSale::APPROVAL_STATUS_PENDING)
                 ->whereNotNull('approval_deadline')
                 ->where('approval_deadline', '>', Carbon::now())
                 ->with('customer')
@@ -58,7 +58,7 @@ class ApprovalController extends Controller
             }
 
             $history = ArtistSale::where('artist_id', $artist->id)
-                ->whereIn('approval_status', ['accepted', 'rejected', 'expired'])
+                ->whereIn('approval_status', [ArtistSale::APPROVAL_STATUS_ACCEPTED, ArtistSale::APPROVAL_STATUS_REJECTED, ArtistSale::APPROVAL_STATUS_EXPIRED])
                 ->with('customer')
                 ->orderByDesc('approval_responded_at')
                 ->get();
@@ -81,7 +81,7 @@ class ApprovalController extends Controller
 
             $sale = ArtistSale::where('id', $id)
                 ->where('artist_id', $artist->id)
-                ->where('approval_status', 'pending_approval')
+                ->where('approval_status', ArtistSale::APPROVAL_STATUS_PENDING)
                 ->first();
 
             if (!$sale) {
@@ -89,7 +89,7 @@ class ApprovalController extends Controller
             }
 
             if (Carbon::now()->gt(Carbon::parse($sale->approval_deadline))) {
-                $sale->approval_status = 'expired';
+                $sale->approval_status = ArtistSale::APPROVAL_STATUS_EXPIRED;
                 $sale->save();
                 return response()->json(['success' => false, 'message' => 'El tiempo para responder ha expirado'], 422);
             }
@@ -136,12 +136,12 @@ class ApprovalController extends Controller
                 $sale->cash_due_date = Carbon::now()->addHours(24);
             }
 
-            $sale->status = $sale->payment_method === 'card' ? 'completed' : 'pending';
-            $sale->approval_status = 'accepted';
+            $sale->status = $sale->payment_method === 'card' ? ArtistSale::PAYMENT_STATUS_COMPLETED : ArtistSale::PAYMENT_STATUS_PENDING;
+            $sale->approval_status = ArtistSale::APPROVAL_STATUS_ACCEPTED;
             $sale->approval_responded_at = Carbon::now();
             $sale->save();
 
-            $this->sendClientNotification($sale, 'accepted');
+            $this->sendClientNotification($sale, ArtistSale::APPROVAL_STATUS_ACCEPTED);
 
             return response()->json(['success' => true, 'message' => 'Solicitud aceptada correctamente', 'sale' => $sale]);
         } catch (\Exception $e) {
@@ -170,7 +170,7 @@ class ApprovalController extends Controller
 
             $sale = ArtistSale::where('id', $id)
                 ->where('artist_id', $artist->id)
-                ->where('approval_status', 'pending_approval')
+                ->where('approval_status', ArtistSale::APPROVAL_STATUS_PENDING)
                 ->first();
 
             if (!$sale) {
@@ -189,13 +189,13 @@ class ApprovalController extends Controller
                 }
             }
             
-            $sale->status = 'cancelled';
-            $sale->approval_status = 'rejected';
+            $sale->status = ArtistSale::PAYMENT_STATUS_CANCELLED;
+            $sale->approval_status = ArtistSale::APPROVAL_STATUS_REJECTED;
             $sale->approval_responded_at = Carbon::now();
-            $sale->event_status = 'rejected';
+            $sale->event_status = ArtistSale::EVENT_STATUS_REJECTED;
             $sale->save();
 
-            $this->sendClientNotification($sale, 'rejected');
+            $this->sendClientNotification($sale, ArtistSale::APPROVAL_STATUS_REJECTED);
 
             return response()->json(['success' => true, 'message' => 'Solicitud rechazada']);
         } catch (\Exception $e) {

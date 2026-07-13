@@ -24,7 +24,7 @@ class ArtistApprovalNotification extends Mailable
 
     public function build()
     {
-        $subject = $this->status === 'accepted'
+        $subject = $this->status === ArtistSale::APPROVAL_STATUS_ACCEPTED
             ? 'Solicitud de evento aceptada - Vibeer'
             : 'Solicitud de evento rechazada - Vibeer';
 
