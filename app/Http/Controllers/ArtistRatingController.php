@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Artist;
@@ -20,7 +19,7 @@ class ArtistRatingController extends Controller
                                 ->where('customer_id', auth()->id())
                                 ->firstOrFail();
 
-        if ($artistSale->event_status !== 'completed' && $artistSale->status !== 'completed') {
+        if ($artistSale->event_status !== ArtistSale::EVENT_STATUS_COMPLETED && $artistSale->status !== ArtistSale::PAYMENT_STATUS_COMPLETED) {
             return response()->json([
                 'success' => false,
                 'message' => 'Solo puedes calificar eventos que ya han finalizado.'

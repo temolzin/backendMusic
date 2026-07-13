@@ -14,8 +14,8 @@ class AdminPayoutController extends Controller
     public function pendingPayouts(): JsonResponse
     {
         $sales = ArtistSale::with(['artist.payoutMethod'])
-            ->where('status', 'completed')
-            ->where('event_status', '!=', 'cancelled')
+            ->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED)
+            ->where('event_status', '!=', ArtistSale::EVENT_STATUS_CANCELLED)
             ->get();
 
         $artistPenalties = EventCancellation::select(
@@ -115,7 +115,7 @@ class AdminPayoutController extends Controller
                 'adjusted_net_payout' => -$totalPenalties,
                 'event_date' => $firstPenalty->event_date,
                 'event_hour' => $firstPenalty->event_hour,
-                'event_status' => 'cancelled',
+                'event_status' => ArtistSale::EVENT_STATUS_CANCELLED,
                 'is_penalty_only' => true,
                 'penalties' => $penalties->map(function ($p) {
                     return [
@@ -157,21 +157,21 @@ class AdminPayoutController extends Controller
             ], 404);
         }
 
-        if ($sale->event_status !== 'completed') {
+        if ($sale->event_status !== ArtistSale::EVENT_STATUS_COMPLETED) {
             return response()->json([
                 'success' => false,
                 'message' => 'El evento físico aún no ha sido marcado como completado.'
             ], 400);
         }
 
-        if ($sale->status === 'liquidated') {
+        if ($sale->status === ArtistSale::PAYMENT_STATUS_LIQUIDATED) {
             return response()->json([
                 'success' => false,
                 'message' => 'Esta liquidación ya fue pagada anteriormente.'
             ], 400);
         }
 
-        $sale->status = 'liquidated';
+        $sale->status = ArtistSale::PAYMENT_STATUS_LIQUIDATED;
         $sale->save();
 
         EventCancellation::whereIn('artist_sale_id', function ($query) use ($sale) {

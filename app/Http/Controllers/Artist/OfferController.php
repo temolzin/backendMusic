@@ -20,7 +20,7 @@ class OfferController extends Controller
 
             $offers->each(function ($offer) {
                 $offer->has_pending_sale = ArtistSale::where('offer_id', $offer->id)
-                    ->where('approval_status', 'pending_approval')
+                    ->where('approval_status', ArtistSale::APPROVAL_STATUS_PENDING)
                     ->exists();
             });
 
@@ -91,7 +91,7 @@ class OfferController extends Controller
             $offer = Offer::where('id', $id)->where('artist_id', $artist->id)->firstOrFail();
 
             $hasPendingSale = ArtistSale::where('offer_id', $offer->id)
-                ->where('approval_status', 'pending_approval')
+                ->where('approval_status', ArtistSale::APPROVAL_STATUS_PENDING)
                 ->exists();
 
             if ($hasPendingSale) {

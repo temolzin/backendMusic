@@ -173,7 +173,7 @@ class PaymentController extends Controller
                 $alreadyBooked = DB::table('artist_sales')
                     ->where('artist_id', $item['artist_id'])
                     ->where('event_date', $item['event_date'])
-                    ->whereIn('event_status', ['pending', 'completed'])
+                    ->whereIn('event_status', [ArtistSale::EVENT_STATUS_PENDING, ArtistSale::EVENT_STATUS_COMPLETED])
                     ->exists();
 
                 if ($alreadyBooked) {
@@ -254,15 +254,15 @@ class PaymentController extends Controller
                     $sale->event_date = $item['event_date'];
                     $sale->event_hour = $item['event_hour'];
                     $sale->event_hours = $item['hours'] ?? null;
-                    $sale->event_status = 'pending';
-                    $sale->status = 'authorized';
+                    $sale->event_status = ArtistSale::EVENT_STATUS_PENDING;
+                    $sale->status = ArtistSale::PAYMENT_STATUS_AUTHORIZED;
                     $sale->payment_method = 'card';
                     $sale->latitude = $latitude;
                     $sale->longitude = $longitude;
                     $sale->google_place_id = $googlePlaceId;
                     $sale->extra_km_distance = $item['extra_km_distance'];
                     $sale->extra_km_cost = $item['extra_km_cost'];
-                    $sale->approval_status = 'pending_approval';
+                    $sale->approval_status = ArtistSale::APPROVAL_STATUS_PENDING;
                     $sale->approval_deadline = Carbon::now()->addHours(24);
                     $sale->openpay_customer_id = $charge->customer->id ?? null;
                     $sale->save();
@@ -402,7 +402,7 @@ class PaymentController extends Controller
             }
             
             $sales = ArtistSale::where('artist_id', $artistId)
-                ->whereIn('event_status', ['pending', 'completed'])
+                ->whereIn('event_status', [ArtistSale::EVENT_STATUS_PENDING, ArtistSale::EVENT_STATUS_COMPLETED])
                 ->select('id', 'artist_id', 'event_date', 'event_hour', 'event_hours', 'event_status', 'created_at')
                 ->get();
             
@@ -442,7 +442,7 @@ class PaymentController extends Controller
             $sales = ArtistSale::where('artist_id', $artist->id)
                 ->where(function ($query) {
                     $query->whereNull('approval_status')
-                          ->orWhere('approval_status', '!=', 'pending_approval');
+                          ->orWhere('approval_status', '!=', ArtistSale::APPROVAL_STATUS_PENDING);
                 })
                 ->get();
             
@@ -530,11 +530,11 @@ class PaymentController extends Controller
                 return response()->json(['success' => false, 'message' => 'Sale not found'], 404);
             }
 
-            if ($sale->event_status === 'completed') {
+            if ($sale->event_status === ArtistSale::EVENT_STATUS_COMPLETED) {
                 return response()->json(['success' => false, 'message' => 'Evento ya completado'], 400);
             }
 
-            if ($sale->event_status === 'expired') {
+            if ($sale->event_status === ArtistSale::EVENT_STATUS_EXPIRED) {
                 return response()->json(['success' => false, 'message' => 'Evento expirado, no se puede marcar como completado'], 400);
             }
 
@@ -542,7 +542,7 @@ class PaymentController extends Controller
                 return response()->json(['success' => false, 'message' => 'El evento aún no ha terminado. Debes esperar a la hora de finalización.'], 400);
             }
 
-            $sale->event_status = 'completed';
+            $sale->event_status = ArtistSale::EVENT_STATUS_COMPLETED;
             $sale->save();
 
             return response()->json(['success' => true, 'message' => 'Evento marcado como completado']);
@@ -557,7 +557,7 @@ class PaymentController extends Controller
             $now = Carbon::now();
             $cutoff = $now->copy()->subDay();
 
-            $expiredSales = ArtistSale::where('event_status', 'pending')
+            $expiredSales = ArtistSale::where('event_status', ArtistSale::EVENT_STATUS_PENDING)
                 ->whereNotNull('event_date')
                 ->whereNotNull('event_hour')
                 ->get()
@@ -572,7 +572,7 @@ class PaymentController extends Controller
 
             $count = 0;
             foreach ($expiredSales as $sale) {
-                $sale->event_status = 'expired';
+                $sale->event_status = ArtistSale::EVENT_STATUS_EXPIRED;
                 $sale->save();
                 $count++;
             }
@@ -614,20 +614,20 @@ class PaymentController extends Controller
 
     private function computeStatus($sale)
     {
-        if ($sale->event_status === 'completed') {
-            return 'completed';
+        if ($sale->event_status === ArtistSale::EVENT_STATUS_COMPLETED) {
+            return ArtistSale::EVENT_STATUS_COMPLETED;
         }
 
-        if ($sale->event_status === 'expired') {
-            return 'expired';
+        if ($sale->event_status === ArtistSale::EVENT_STATUS_EXPIRED) {
+            return ArtistSale::EVENT_STATUS_EXPIRED;
         }
 
-        if ($sale->event_status === 'cancelled') {
-            return 'cancelled';
+        if ($sale->event_status === ArtistSale::EVENT_STATUS_CANCELLED) {
+            return ArtistSale::EVENT_STATUS_CANCELLED;
         }
 
         if (!$sale->event_date || !$sale->event_hour) {
-            return 'pending';
+            return ArtistSale::EVENT_STATUS_PENDING;
         }
 
         $now = Carbon::now();
@@ -640,9 +640,9 @@ class PaymentController extends Controller
         if ($eventEnd < $now) {
             $cutoff = $eventEnd->copy()->addDay();
             if ($now > $cutoff) {
-                $sale->event_status = 'expired';
+                $sale->event_status = ArtistSale::EVENT_STATUS_EXPIRED;
                 $sale->save();
-                return 'expired';
+                return ArtistSale::EVENT_STATUS_EXPIRED;
             }
         }
 
@@ -651,7 +651,7 @@ class PaymentController extends Controller
 
     private function canComplete($sale)
     {
-        if ($sale->event_status !== 'pending') return false;
+        if ($sale->event_status !== ArtistSale::EVENT_STATUS_PENDING) return false;
         if (!$sale->event_date || !$sale->event_hour) return false;
 
         $now = Carbon::now();
@@ -685,7 +685,7 @@ class PaymentController extends Controller
                 ], 404);
             }
 
-            $salesQuery = ArtistSale::where('artist_id', $artist->id)->where('status', 'completed');
+            $salesQuery = ArtistSale::where('artist_id', $artist->id)->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED);
             $total = (float) $salesQuery->sum('amount');
             $count = (clone $salesQuery)->count();
 
@@ -829,7 +829,7 @@ class PaymentController extends Controller
                 $alreadyBooked = DB::table('artist_sales')
                     ->where('artist_id', $item['artist_id'])
                     ->where('event_date', $item['event_date'])
-                    ->whereIn('event_status', ['pending', 'completed'])
+                    ->whereIn('event_status', [ArtistSale::EVENT_STATUS_PENDING, ArtistSale::EVENT_STATUS_COMPLETED])
                     ->exists();
 
                 if ($alreadyBooked) {
@@ -847,8 +847,8 @@ class PaymentController extends Controller
             try {
                 foreach ($itemsForSales as $item) {
                     $sale = new ArtistSale();
-                    $sale->status = 'pending';
-                    $sale->event_status = 'pending';
+                    $sale->status = ArtistSale::PAYMENT_STATUS_PENDING;
+                    $sale->event_status = ArtistSale::EVENT_STATUS_PENDING;
                     $sale->artist_id              = $item['artist_id'];
                     $sale->offer_id               = $item['offer_id'] ?? null;
                     $sale->customer_id            = $userId;
@@ -871,7 +871,7 @@ class PaymentController extends Controller
                     $sale->google_place_id = $googlePlaceId;
                     $sale->extra_km_distance = $item['extra_km_distance'];
                     $sale->extra_km_cost = $item['extra_km_cost'];
-                    $sale->approval_status = 'pending_approval';
+                    $sale->approval_status = ArtistSale::APPROVAL_STATUS_PENDING;
                     $sale->approval_deadline = Carbon::now()->addHours(24);
                     $sale->save();
 
@@ -937,11 +937,11 @@ class PaymentController extends Controller
                 return response()->json(['error' => 'Venta no encontrada o no es un pago en efectivo'], 404);
             }
 
-            if ($sale->status === 'completed') {
+            if ($sale->status === ArtistSale::PAYMENT_STATUS_COMPLETED) {
                 return response()->json(['error' => 'Esta venta ya fue pagada'], 400);
             }
 
-            if ($sale->approval_status !== 'accepted') {
+            if ($sale->approval_status !== ArtistSale::APPROVAL_STATUS_ACCEPTED) {
                 return response()->json(['error' => 'El artista aún no ha aceptado esta solicitud'], 422);
             }
 
@@ -1070,14 +1070,14 @@ class PaymentController extends Controller
             return response()->json(['message' => 'No se encontró la transacción en el sistema'], 404);
         }
 
-        if ($sale->status === 'completed') {
+        if ($sale->status === ArtistSale::PAYMENT_STATUS_COMPLETED) {
             return response()->json([
                 'message' => 'El pago ya había sido confirmado previamente',
                 'updated' => 0,
             ], 200);
         }
 
-        $sale->status = 'completed';
+        $sale->status = ArtistSale::PAYMENT_STATUS_COMPLETED;
         $sale->save();
 
         return response()->json([
@@ -1106,11 +1106,11 @@ class PaymentController extends Controller
                 return response()->json(['success' => false, 'message' => 'Venta no encontrada'], 404);
             }
 
-            if ($sale->event_status === 'completed') {
+            if ($sale->event_status === ArtistSale::EVENT_STATUS_COMPLETED) {
                 return response()->json(['success' => false, 'message' => 'El evento ya fue completado'], 400);
             }
 
-            if ($sale->event_status === 'cancelled') {
+            if ($sale->event_status === ArtistSale::EVENT_STATUS_CANCELLED) {
                 return response()->json(['success' => false, 'message' => 'El evento ya fue cancelado'], 400);
             }
 
@@ -1143,7 +1143,7 @@ class PaymentController extends Controller
 
             $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
 
-            if ($sale->payment_method === 'card' && $sale->openpay_transaction_id && $sale->status === 'completed') {
+            if ($sale->payment_method === 'card' && $sale->openpay_transaction_id && $sale->status === ArtistSale::PAYMENT_STATUS_COMPLETED) {
                 try {
                     $keys = OpenpayKey::first();
                     $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
@@ -1157,7 +1157,7 @@ class PaymentController extends Controller
                 }
             }
 
-            $sale->event_status = 'cancelled';
+            $sale->event_status = ArtistSale::EVENT_STATUS_CANCELLED;
             $sale->save();
 
             EventCancellation::create([
@@ -1201,11 +1201,11 @@ class PaymentController extends Controller
                 return response()->json(['success' => false, 'message' => 'Compra no encontrada'], 404);
             }
 
-            if ($sale->event_status === 'completed') {
+            if ($sale->event_status === ArtistSale::EVENT_STATUS_COMPLETED) {
                 return response()->json(['success' => false, 'message' => 'El evento ya fue completado'], 400);
             }
 
-            if ($sale->event_status === 'cancelled') {
+            if ($sale->event_status === ArtistSale::EVENT_STATUS_CANCELLED) {
                 return response()->json(['success' => false, 'message' => 'El evento ya fue cancelado'], 400);
             }
 
@@ -1228,7 +1228,7 @@ class PaymentController extends Controller
             $amount = floatval($sale->amount);
             $penaltyPercentage = 0;
 
-            if ($sale->approval_status === 'accepted') {
+            if ($sale->approval_status === ArtistSale::APPROVAL_STATUS_ACCEPTED) {
                 if ($daysUntilEvent >= 3 && $daysUntilEvent < 7) {
                     $penaltyPercentage = 25;
                 }
@@ -1245,7 +1245,7 @@ class PaymentController extends Controller
             $originalPenaltyAmount = $penaltyAmount;
             $originalRefundAmount = $refundAmount;
 
-            if ($sale->payment_method === 'card' && $sale->openpay_transaction_id && $sale->status === 'completed') {
+            if ($sale->payment_method === 'card' && $sale->openpay_transaction_id && $sale->status === ArtistSale::PAYMENT_STATUS_COMPLETED) {
                 try {
                     $keys = OpenpayKey::first();
                     $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
@@ -1281,7 +1281,7 @@ class PaymentController extends Controller
             $penaltyAmount = $originalPenaltyAmount;
             $refundAmount = $originalRefundAmount;
 
-            $sale->event_status = 'cancelled';
+            $sale->event_status = ArtistSale::EVENT_STATUS_CANCELLED;
             $sale->save();
 
             EventCancellation::create([
@@ -1317,7 +1317,7 @@ class PaymentController extends Controller
         $artistUser = Artist::where('id', $sale->artist_id)->with('user')->first()?->user;
         $artistEmail = $artistUser ? $artistUser->email : null;
 
-        $isBeforeApproval = $cancelledBy === 'client' && $sale->approval_status !== 'accepted';
+        $isBeforeApproval = $cancelledBy === 'client' && $sale->approval_status !== ArtistSale::APPROVAL_STATUS_ACCEPTED;
 
         if ($clientEmail) {
             try {

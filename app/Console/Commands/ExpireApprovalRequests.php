@@ -16,7 +16,7 @@ class ExpireApprovalRequests extends Command
 
     public function handle()
     {
-        $expired = ArtistSale::where('approval_status', 'pending_approval')
+        $expired = ArtistSale::where('approval_status', ArtistSale::APPROVAL_STATUS_PENDING)
             ->whereNotNull('approval_deadline')
             ->where('approval_deadline', '<', Carbon::now())
             ->get();
@@ -37,9 +37,9 @@ class ExpireApprovalRequests extends Command
                 }
             }
 
-            $sale->status = 'cancelled';
-            $sale->approval_status = 'expired';
-            $sale->event_status = 'expired';
+            $sale->status = ArtistSale::PAYMENT_STATUS_CANCELLED;
+            $sale->approval_status = ArtistSale::APPROVAL_STATUS_EXPIRED;
+            $sale->event_status = ArtistSale::EVENT_STATUS_EXPIRED;
             $sale->approval_responded_at = Carbon::now();
             $sale->save();
             $count++;
