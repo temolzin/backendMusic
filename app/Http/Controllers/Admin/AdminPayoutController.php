@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Artist;
 use App\Models\ArtistSale;
 use App\Models\EventCancellation;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 
 class AdminPayoutController extends Controller
 {
@@ -15,7 +13,7 @@ class AdminPayoutController extends Controller
     {
         $sales = ArtistSale::with(['artist.payoutMethod'])
             ->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED)
-            ->where('event_status', '!=', ArtistSale::EVENT_STATUS_CANCELLED)
+            ->where('event_status', ArtistSale::EVENT_STATUS_COMPLETED)
             ->get();
 
         $artistPenalties = EventCancellation::select(
@@ -43,16 +41,15 @@ class AdminPayoutController extends Controller
             $penalties = collect($artistPenalties->get($artistId, []));
             $totalPenalties = $penalties->sum('penalty_amount');
 
-            if ($totalPenalties > 0 && !in_array($artistId, $artistsWithShownPenalties)) {
+            $showPenalty = $totalPenalties > 0 && !in_array($artistId, $artistsWithShownPenalties);
+
+            if ($showPenalty) {
                 $artistsWithShownPenalties[] = $artistId;
-                $adjustedNet = max(0, $netArtistPayout - $totalPenalties);
             }
 
-            if (!($totalPenalties > 0 && !in_array($artistId, $artistsWithShownPenalties))) {
-                $penalties = collect([]);
-                $totalPenalties = 0;
-                $adjustedNet = $netArtistPayout;
-            }
+            $penalties = $showPenalty ? $penalties : collect([]);
+            $totalPenalties = $showPenalty ? $totalPenalties : 0;
+            $adjustedNet = $showPenalty ? max(0, $netArtistPayout - $totalPenalties) : $netArtistPayout;
 
             return [
                 'sale_id' => $sale->id,
@@ -65,7 +62,6 @@ class AdminPayoutController extends Controller
                 'event_date' => $sale->event_date,
                 'event_hour' => $sale->event_hour,
                 'event_status' => $sale->event_status,
-                'is_penalty_only' => false,
                 'penalties' => $penalties->map(function ($p) {
                     return [
                         'sale_id' => $p->artist_sale_id,
@@ -88,57 +84,6 @@ class AdminPayoutController extends Controller
             ];
         });
 
-        foreach ($artistPenalties as $artistId => $penalties) {
-            if (in_array($artistId, $artistsWithShownPenalties)) {
-                continue;
-            }
-
-            $totalPenalties = $penalties->sum('penalty_amount');
-            if ($totalPenalties <= 0) {
-                continue;
-            }
-
-            $artist = Artist::with('payoutMethod')->find($artistId);
-            if (!$artist) {
-                continue;
-            }
-
-            $firstPenalty = $penalties->first();
-
-            $formattedPayouts->push([
-                'sale_id' => $firstPenalty->artist_sale_id,
-                'amount' => 0,
-                'openpay_fee' => 0,
-                'platform_fee' => 0,
-                'net_artist_payout' => 0,
-                'total_penalties' => $totalPenalties,
-                'adjusted_net_payout' => -$totalPenalties,
-                'event_date' => $firstPenalty->event_date,
-                'event_hour' => $firstPenalty->event_hour,
-                'event_status' => ArtistSale::EVENT_STATUS_CANCELLED,
-                'is_penalty_only' => true,
-                'penalties' => $penalties->map(function ($p) {
-                    return [
-                        'sale_id' => $p->artist_sale_id,
-                        'penalty_percentage' => $p->penalty_percentage,
-                        'penalty_amount' => $p->penalty_amount,
-                        'cancelled_at' => $p->created_at,
-                        'cancellation_reason' => $p->cancellation_reason,
-                    ];
-                })->values(),
-                'artist' => [
-                    'id' => $artist->id,
-                    'name' => $artist->name,
-                    'payout_method' => $artist->payoutMethod ? [
-                        'bank_name' => $artist->payoutMethod->bank_name,
-                        'account_holder' => $artist->payoutMethod->account_holder,
-                        'clabe' => $artist->payoutMethod->clabe,
-                        'rfc' => $artist->payoutMethod->rfc,
-                    ] : null,
-                ],
-            ]);
-        }
-        
         $formattedPayouts = $formattedPayouts->sortByDesc('sale_id')->values();
         
         return response()->json([
