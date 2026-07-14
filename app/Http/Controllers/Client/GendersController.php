@@ -57,6 +57,7 @@ class GendersController extends Controller
                 'musicalGenders',
                 'manager',
                 'media',
+                'artistVideos',
                 'offers' => function ($query) {
                     $query->where('is_active', true)
                         ->where('start_date', '<=', now())
