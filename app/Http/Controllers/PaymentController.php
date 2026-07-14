@@ -40,7 +40,7 @@ class PaymentController extends Controller
         try {
             $keys = OpenpayKey::first();
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
-            Openpay::setProductionMode(false);
+            Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
             
             $token = $request->input("token");
             $name = $request->input("name") ?? $request->input("order_details.first_name");
@@ -947,7 +947,7 @@ class PaymentController extends Controller
 
             $keys = OpenpayKey::first();
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", request()->ip());
-            Openpay::setProductionMode(false);
+            Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
 
             $dueDateInstance = Carbon::now()->addHours(24);
 
@@ -1147,7 +1147,7 @@ class PaymentController extends Controller
                 try {
                     $keys = OpenpayKey::first();
                     $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
-                    Openpay::setProductionMode(false);
+                    Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
 
                     $charge = $openpay->charges->get($sale->openpay_transaction_id);
                     $charge->refund(['description' => 'Cancelación de evento por el artista']);
@@ -1249,7 +1249,7 @@ class PaymentController extends Controller
                 try {
                     $keys = OpenpayKey::first();
                     $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
-                    Openpay::setProductionMode(false);
+                    Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
 
                     $charge = $openpay->charges->get($sale->openpay_transaction_id);
 
