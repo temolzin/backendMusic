@@ -30,6 +30,7 @@ class OpenpayKeysController extends Controller
                 'data' => [
                     'openpay_id'           => $keys->openpay_id,
                     'openpay_public_key'   => $keys->openpay_public_key,
+                    'openpay_sandbox_mode' => $keys->openpay_sandbox_mode,
                 ],
             ], 200);
         } catch (\Exception $e) {
@@ -44,6 +45,7 @@ class OpenpayKeysController extends Controller
                 'openpay_id'           => 'required|string',
                 'openpay_secret'       => 'required|string',
                 'openpay_public_key'   => 'required|string',
+                'openpay_sandbox_mode' => 'required|boolean',
             ]);
 
             OpenpayKey::updateOrCreate(
@@ -52,6 +54,7 @@ class OpenpayKeysController extends Controller
                     'openpay_id',
                     'openpay_secret',
                     'openpay_public_key',
+                    'openpay_sandbox_mode',
                 ])
             );
 

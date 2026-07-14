@@ -97,7 +97,7 @@ class ApprovalController extends Controller
 
             $keys = OpenpayKey::first();
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, 'MX', request()->ip());
-            Openpay::setProductionMode(false);
+            Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
 
             if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD && $sale->openpay_transaction_id) {
                 $charge = $openpay->charges->get($sale->openpay_transaction_id);
@@ -191,7 +191,7 @@ class ApprovalController extends Controller
                 try {
                     $keys = OpenpayKey::first();
                     $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, 'MX', request()->ip());
-                    Openpay::setProductionMode(false);
+                    Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
                     $charge = $openpay->charges->get($sale->openpay_transaction_id);
                     $charge->refund(['description' => 'Artista rechazó la solicitud']);
                 } catch (\Exception $e) {

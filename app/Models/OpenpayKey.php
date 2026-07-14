@@ -12,6 +12,7 @@ class OpenpayKey extends Model
         'openpay_id',
         'openpay_secret',
         'openpay_public_key',
+        'openpay_sandbox_mode',
     ];
 
     protected $casts = [

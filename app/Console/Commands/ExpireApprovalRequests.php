@@ -24,7 +24,7 @@ class ExpireApprovalRequests extends Command
         $keys = OpenpayKey::first();
         $clientIp = $this->getClientIp();
         $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, 'MX', $clientIp);
-        Openpay::setProductionMode(false);
+        Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
 
         $count = 0;
         foreach ($expired as $sale) {
