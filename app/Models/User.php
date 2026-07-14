@@ -61,6 +61,13 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
         'email_verified_at' => 'datetime',
     ];
 
+    protected $appends = ['image_profile'];
+
+    public function getImageProfileAttribute()
+    {
+        return $this->getFirstMediaUrl('profile_images');
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('profile_images')

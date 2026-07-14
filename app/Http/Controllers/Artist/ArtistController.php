@@ -9,7 +9,6 @@ use App\Rules\ValidImageUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Rules\ValidSocialMedia;
 use App\Models\ArtistVideo;
@@ -74,9 +73,6 @@ class ArtistController extends Controller
                 'image_manager'   => ['required', 'file', 'max:20480', new ValidImageUpload()],
             ]);
 
-            $urlStoreArtist = Storage::put('public/artist', request()->file('image_artist'));
-            $linkArtist = url(Storage::url($urlStoreArtist));
-
             DB::beginTransaction();
             $artist = Artist::create([
                 'user_id' => Auth::user()->id,
@@ -86,23 +82,26 @@ class ArtistController extends Controller
                 'history' => $request->input('history'),
                 'zone' => $request->input('zone'),
                 'price_hour' => $request->input('price_hour'),
-                'image' => $linkArtist,
                 'extra_kilometre' => $request->input('extra_kilometre'),
                 'coverage_radius' => $request->input('coverage_radius', 0),
                 'social_media' => $request->input('social_media') ? json_decode($request->input('social_media'), true) : null,
             ]);
 
-            $artist->musicalGenders()->sync(json_decode($request->selection));
-            $urlStoreManager = Storage::put('public/manager', request()->file('image_manager'));
-            $linkManager = url(Storage::url($urlStoreManager));
+            if ($request->hasFile('image_artist')) {
+                $artist->addMedia($request->file('image_artist'))->toMediaCollection('artist_image');
+            }
 
-            Manager::create([
+            $artist->musicalGenders()->sync(json_decode($request->selection));
+            $managerModel = Manager::create([
                 'artist_id' => $artist->id,
                 'name'      => $request->input('name_manager'),
                 'phone'     => $request->input('phone_manager'),
                 'email'     => $request->input('email_manager'),
-                'image'     => $linkManager,
             ]);
+
+            if ($request->hasFile('image_manager')) {
+                $managerModel->addMedia($request->file('image_manager'))->toMediaCollection('manager_image');
+            }
             DB::commit();
 
             return response()->json([
@@ -257,37 +256,14 @@ class ArtistController extends Controller
             $artist->extra_kilometre = $request->input('extra_kilometre');
             $artist->coverage_radius = $request->input('coverage_radius', 0);
             $artist->social_media = $request->input('social_media') ? json_decode($request->input('social_media'), true) : null;
-            $linkArtist = $artist->image;
-            $linkManager = $artist->manager->image;
 
-            if (request()->file('image_artist')) {
-                $urlStore = Storage::put('public/artist', request()->file('image_artist'));
-                $linkArtistNew = url(Storage::url($urlStore));
-                $img = str_replace('storage', 'public', $linkArtist);
-                $less = env('APP_URL') . '/public/';
-                $img = str_replace($less, '', $img);
-                $img = trim($img);
-                if (Storage::exists($img)) {
-                    Storage::delete($img);
-                }
-                $linkArtist = $linkArtistNew;
+            if ($request->hasFile('image_artist')) {
+                $artist->addMedia($request->file('image_artist'))->toMediaCollection('artist_image');
             }
 
-            if (request()->file('image_manager')) {
-                $urlStore = Storage::put('public/manager', request()->file('image_manager'));
-                $linkManagerNew = url(Storage::url($urlStore));
-                $img = str_replace('storage', 'public', $linkManager);
-                $less = env('APP_URL') . '/public/';
-                $img = str_replace($less, '', $img);
-                $img = trim($img);
-                if (Storage::exists($img)) {
-                    Storage::delete($img);
-                }
-                $linkManager = $linkManagerNew;
+            if ($request->hasFile('image_manager')) {
+                $artist->manager->addMedia($request->file('image_manager'))->toMediaCollection('manager_image');
             }
-
-            $artist->image = $linkArtist;
-            $artist->manager->image = $linkManager;
 
             $artist->manager->name = $request->input('name_manager');
             $artist->manager->phone = $request->input('phone_manager');
@@ -453,7 +429,7 @@ class ArtistController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Imagenes eiminadas'
+                'message' => 'Imagenes eliminadas'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

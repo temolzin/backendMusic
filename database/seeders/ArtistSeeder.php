@@ -19,7 +19,7 @@ class ArtistSeeder extends Seeder
         DB::statement('TRUNCATE TABLE artist_musical_gender, managers, artists RESTART IDENTITY CASCADE;');
 
         //Artista No.1
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 2,
             'name' => 'Grupo Firme',
             'slug' => 'grupo-firme',
@@ -28,22 +28,24 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 10000,
             'extra_kilometre' => '85',
-            'image' => 'https://i.pinimg.com/1200x/cc/df/36/ccdf3618be3546b80b281f1c5a4804a9.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
             rand(6, 7)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/1200x/cc/df/36/ccdf3618be3546b80b281f1c5a4804a9.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 1,
             'name' => 'Juan Alberto Guzmán Gómez',
             'phone' => '5542770864',
             'email' => 'juan@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2020/04/15/14/45/microphone-5046876_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2020/04/15/14/45/microphone-5046876_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.2
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 3,
             'name' => 'Joan Sebastian',
             'slug' => 'joan-sebastian',
@@ -52,22 +54,24 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 15000,
             'extra_kilometre' => '45',
-            'image' => 'https://i.pinimg.com/736x/0a/d7/00/0ad700ef77db65b7724f029d8327ab70.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
             rand(6, 7)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/736x/0a/d7/00/0ad700ef77db65b7724f029d8327ab70.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 2,
             'name' => 'Yatziry Guadalupe Gómez Gómez',
             'phone' => '5542770864',
             'email' => 'yatziry@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2016/09/10/11/11/musician-1658887_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2016/09/10/11/11/musician-1658887_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.3
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 4,
             'name' => 'Hombres G',
             'slug' => 'hombres-g',
@@ -76,21 +80,23 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 12000,
             'extra_kilometre' => '60',
-            'image' => 'https://i.pinimg.com/736x/23/ea/2f/23ea2f44d0c87703f57c2b3bea5d78ac.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/736x/23/ea/2f/23ea2f44d0c87703f57c2b3bea5d78ac.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 3,
             'name' => 'Karla Morales Gonzales',
             'phone' => '5542770864',
             'email' => 'karla@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2015/04/15/09/47/men-723557_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2015/04/15/09/47/men-723557_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.4
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 5,
             'name' => 'Voz de Mando',
             'slug' => 'voz-de-mando',
@@ -99,22 +105,24 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 8000,
             'extra_kilometre' => '50',
-            'image' => 'https://i.pinimg.com/736x/e9/50/13/e95013b2e8b7d7f53838c2f781da9dcb.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
             rand(6, 7)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/736x/e9/50/13/e95013b2e8b7d7f53838c2f781da9dcb.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 4,
             'name' => 'Harol Antonio Hidalgo Gutierrez',
             'phone' => '5542770864',
             'email' => 'harlo@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2015/04/15/09/47/men-723557_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2015/04/15/09/47/men-723557_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.5
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 6,
             'name' => 'Pancho Uresti',
             'slug' => 'pancho-uresti',
@@ -123,21 +131,23 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 6000,
             'extra_kilometre' => '30',
-            'image' => 'https://i.pinimg.com/736x/96/6c/b4/966cb48cb7837789152ddb0e2e3f2ade.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/736x/96/6c/b4/966cb48cb7837789152ddb0e2e3f2ade.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 5,
             'name' => 'Danna Herrera Peña',
             'phone' => '5542770864',
             'email' => 'danna@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2015/09/17/14/24/woman-944262_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2015/09/17/14/24/woman-944262_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.6
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 7,
             'name' => 'Adriel Favela',
             'slug' => 'adriel-favela',
@@ -146,21 +156,23 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 9000,
             'extra_kilometre' => '35',
-            'image' => 'https://i.pinimg.com/736x/03/e1/67/03e167ed063f427feba2b426dd4e174b.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/736x/03/e1/67/03e167ed063f427feba2b426dd4e174b.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 6,
             'name' => 'Angelica Morales Hernández',
             'phone' => '5542770864',
             'email' => 'angelica@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2019/10/04/05/42/workshop-4524838_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2019/10/04/05/42/workshop-4524838_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.7
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 8,
             'name' => 'Luis R Conriquez',
             'slug' => 'luis-r-conriquez',
@@ -169,21 +181,23 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 10000,
             'extra_kilometre' => '55',
-            'image' => 'https://i.pinimg.com/736x/d1/c6/48/d1c648c1e63daca81628d58dff214249.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/736x/d1/c6/48/d1c648c1e63daca81628d58dff214249.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 7,
             'name' => 'Issac Villalobos Molina',
             'phone' => '5542770864',
             'email' => 'issac@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2019/10/04/05/42/workshop-4524838_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2019/10/04/05/42/workshop-4524838_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.8
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 9,
             'name' => 'Los 2 de la S',
             'slug' => 'los-2-de-la-s',
@@ -192,21 +206,23 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 13000,
             'extra_kilometre' => '50',
-            'image' => 'https://i.pinimg.com/1200x/91/06/60/910660eee38a08159a5b35aa79c0c163.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/1200x/91/06/60/910660eee38a08159a5b35aa79c0c163.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 8,
             'name' => 'Fatima Leon García',
             'phone' => '5542770864',
             'email' => 'fatima@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2019/12/18/04/11/dj-4702977_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2019/12/18/04/11/dj-4702977_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.9
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 10,
             'name' => 'Remmy Valenzuela',
             'slug' => 'remmy-valenzuela',
@@ -215,21 +231,23 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 15000,
             'extra_kilometre' => '40',
-            'image' => 'https://i.pinimg.com/1200x/50/1b/14/501b144d5376547e6686e36ad4bde81b.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/1200x/50/1b/14/501b144d5376547e6686e36ad4bde81b.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 9,
             'name' => 'Monserath López Alarcón',
             'phone' => '5542770864',
             'email' => 'monse@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2016/03/27/21/44/musician-1284394_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2016/03/27/21/44/musician-1284394_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.10
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 11,
             'name' => 'Junior H',
             'slug' => 'junior-h',
@@ -238,21 +256,23 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 25000,
             'extra_kilometre' => '65',
-            'image' => 'https://i.pinimg.com/1200x/71/1b/e2/711be2b654a23146aa9ae0ad31e7cb31.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/1200x/71/1b/e2/711be2b654a23146aa9ae0ad31e7cb31.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 10,
             'name' => 'Luis Gómez Gómez',
             'phone' => '5542770864',
             'email' => 'luis@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2014/05/21/15/18/musician-349790_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2014/05/21/15/18/musician-349790_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.11
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 12,
             'name' => 'Inspector',
             'slug' => 'inspector',
@@ -261,21 +281,23 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 35000,
             'extra_kilometre' => '80',
-            'image' => 'https://i.pinimg.com/1200x/23/b9/82/23b98262e658f93a72822a667918e2fa.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/1200x/23/b9/82/23b98262e658f93a72822a667918e2fa.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 11,
             'name' => 'Iván Hernández Sanchez',
             'phone' => '5542770864',
             'email' => 'ivan@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2015/05/07/11/02/guitar-756326_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2015/05/07/11/02/guitar-756326_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.12
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 13,
             'name' => 'Los Caligaris',
             'slug' => 'los-caligaris',
@@ -284,22 +306,24 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 30000,
             'extra_kilometre' => '90',
-            'image' => 'https://i.pinimg.com/1200x/1d/76/a6/1d76a6acedc7acee80295d2f8ddc36a4.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
             rand(6, 7)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/1200x/1d/76/a6/1d76a6acedc7acee80295d2f8ddc36a4.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 12,
             'name' => 'Guadalupe Enciso Martínez',
             'phone' => '5542770864',
             'email' => 'lupe@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2016/01/14/06/09/woman-1139397_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2016/01/14/06/09/woman-1139397_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.13
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 14,
             'name' => 'Charles Ans',
             'slug' => 'charles-ans',
@@ -308,22 +332,24 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 45000,
             'extra_kilometre' => '35',
-            'image' => 'https://i.pinimg.com/736x/04/1d/3d/041d3da152a762abb95262f430ff3ab6.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
             rand(6, 7)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/736x/04/1d/3d/041d3da152a762abb95262f430ff3ab6.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 13,
             'name' => 'Miguel Francisco Gómez',
             'phone' => '5542770864',
             'email' => 'miguel@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2018/01/16/16/48/adult-3086307_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2018/01/16/16/48/adult-3086307_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.14
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 15,
             'name' => 'Grupo Fernandez',
             'slug' => 'grupo-fernandez',
@@ -332,22 +358,24 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 25000,
             'extra_kilometre' => '50',
-            'image' => 'https://i.pinimg.com/1200x/a4/65/92/a46592f025e0e84faec139809716fda6.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
             rand(6, 7)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/1200x/a4/65/92/a46592f025e0e84faec139809716fda6.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 14,
             'name' => 'Guillermo Cruz Castillo',
             'phone' => '5542770864',
             'email' => 'memo@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2020/04/15/14/45/microphone-5046876_960_720.jpg',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2020/04/15/14/45/microphone-5046876_960_720.jpg')->toMediaCollection('manager_image');
 
         //Artista No.15
-        Artist::create([
+        $artist = Artist::create([
             'user_id' => 16,
             'name' => 'Los Plebes del Rancho',
             'slug' => 'los-plebes-del-rancho',
@@ -356,18 +384,20 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 35000,
             'extra_kilometre' => '60',
-            'image' => 'https://i.pinimg.com/736x/38/15/e7/3815e71510f30c0cf528c997d6b6af76.jpg',
-        ])->musicalGenders()->sync([
+        ]);
+        $artist->musicalGenders()->sync([
             rand(1, 3),
             rand(4, 5),
             rand(6, 7)
         ]);
-        Manager::create([
+        $artist->addMediaFromUrl('https://i.pinimg.com/736x/38/15/e7/3815e71510f30c0cf528c997d6b6af76.jpg')->toMediaCollection('artist_image');
+
+        $manager = Manager::create([
             'artist_id' => 15,
             'name' => 'Cecilia Loera Cid',
             'phone' => '5542770864',
             'email' => 'cecilia@gmail.com',
-            'image' => 'https://cdn.pixabay.com/photo/2018/08/27/10/11/radio-cassette-3634616_960_720.png',
         ]);
+        $manager->addMediaFromUrl('https://cdn.pixabay.com/photo/2018/08/27/10/11/radio-cassette-3634616_960_720.png')->toMediaCollection('manager_image');
     }
 }

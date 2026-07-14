@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 
 class MusicalsGendersController extends Controller
 {
@@ -79,13 +78,12 @@ class MusicalsGendersController extends Controller
             $musicalGenders->slug = $slug;
             $musicalGenders->description = $request->input('description');
             $musicalGenders->color = $request->input('color');
+            $musicalGenders->save();
 
             if ($request->hasFile('image')) {
-                $urlStore = Storage::put('public/musical-genders', $request->file('image'));
-                $musicalGenders->image = url(Storage::url($urlStore));
+                $uploadedFile = $request->file('image');
+                $musicalGenders->addMedia($uploadedFile)->toMediaCollection('musical_gender_image');
             }
-
-            $musicalGenders->save();
 
             DB::commit();
 
@@ -159,19 +157,13 @@ class MusicalsGendersController extends Controller
             $musicalGenders->slug = $slug;
             $musicalGenders->description = $request->input('description');
             $musicalGenders->color = $request->input('color');
+            $musicalGenders->save();
 
             if ($request->hasFile('image')) {
-                if ($musicalGenders->image) {
-                    $oldPath = str_replace(url('storage'), 'public', $musicalGenders->image);
-                    $less = env('APP_URL') . '/public/';
-                    $oldPath = str_replace($less, '', $oldPath);
-                    Storage::delete($oldPath);
-                }
-                $urlStore = Storage::put('public/musical-genders', $request->file('image'));
-                $musicalGenders->image = url(Storage::url($urlStore));
+                $uploadedFile = $request->file('image');
+                $musicalGenders->addMedia($uploadedFile)->toMediaCollection('musical_gender_image');
             }
 
-            $musicalGenders->save();
             DB::commit();
 
             return response()->json([
