@@ -28,7 +28,7 @@ class ExpireApprovalRequests extends Command
 
         $count = 0;
         foreach ($expired as $sale) {
-            if ($sale->payment_method === 'card' && $sale->openpay_transaction_id) {
+            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD && $sale->openpay_transaction_id) {
                 try {
                     $charge = $openpay->charges->get($sale->openpay_transaction_id);
                     $charge->refund(['description' => 'Solicitud expirada sin respuesta del artista']);

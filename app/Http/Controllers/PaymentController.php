@@ -256,7 +256,7 @@ class PaymentController extends Controller
                     $sale->event_hours = $item['hours'] ?? null;
                     $sale->event_status = ArtistSale::EVENT_STATUS_PENDING;
                     $sale->status = ArtistSale::PAYMENT_STATUS_AUTHORIZED;
-                    $sale->payment_method = 'card';
+                    $sale->payment_method = ArtistSale::PAYMENT_METHOD_CARD;
                     $sale->latitude = $latitude;
                     $sale->longitude = $longitude;
                     $sale->google_place_id = $googlePlaceId;
@@ -864,7 +864,7 @@ class PaymentController extends Controller
                     $sale->event_date             = $item['event_date'];
                     $sale->event_hour             = $item['event_hour'];
                     $sale->event_hours            = $item['hours'] ?? null;
-                    $sale->payment_method = 'cash';
+                    $sale->payment_method = ArtistSale::PAYMENT_METHOD_CASH;
                     $sale->store = $store;
                     $sale->latitude = $latitude;
                     $sale->longitude = $longitude;
@@ -930,7 +930,7 @@ class PaymentController extends Controller
             }
 
             $sale = ArtistSale::where('id', $saleId)
-                ->where('payment_method', 'cash')
+                ->where('payment_method', ArtistSale::PAYMENT_METHOD_CASH)
                 ->first();
 
             if (!$sale) {
@@ -1143,7 +1143,7 @@ class PaymentController extends Controller
 
             $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
 
-            if ($sale->payment_method === 'card' && $sale->openpay_transaction_id && $sale->status === ArtistSale::PAYMENT_STATUS_COMPLETED) {
+            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD && $sale->openpay_transaction_id && $sale->status === ArtistSale::PAYMENT_STATUS_COMPLETED) {
                 try {
                     $keys = OpenpayKey::first();
                     $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
@@ -1245,7 +1245,7 @@ class PaymentController extends Controller
             $originalPenaltyAmount = $penaltyAmount;
             $originalRefundAmount = $refundAmount;
 
-            if ($sale->payment_method === 'card' && $sale->openpay_transaction_id && $sale->status === ArtistSale::PAYMENT_STATUS_COMPLETED) {
+            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD && $sale->openpay_transaction_id && $sale->status === ArtistSale::PAYMENT_STATUS_COMPLETED) {
                 try {
                     $keys = OpenpayKey::first();
                     $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
