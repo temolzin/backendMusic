@@ -69,6 +69,16 @@ class GendersController extends Controller
             ->where('slug', $request->slug)
             ->first();
                 
+            if ($artistGender) {
+                $artistGender->artistGallery = $artistGender->getMedia('artist_gallery')->map(function ($media) {
+                    return [
+                        'id' => $media->id,
+                        'file_name' => $media->file_name,
+                        'original_url' => $media->getUrl(),
+                    ];
+                })->values();
+            }
+
             return response()->json([
                 'success' => true,
                 'artistGender' => $artistGender,

@@ -20,7 +20,6 @@ class Artist extends Model implements HasMedia
         'history',
         'zone',
         'price_hour',
-        'image',
         'extra_kilometre',
         'coverage_radius',
         'points',
@@ -31,9 +30,17 @@ class Artist extends Model implements HasMedia
         'social_media' => 'array',
     ];
 
+    protected $appends = ['image'];
+
+    public function getImageAttribute()
+    {
+        return $this->getFirstMediaUrl('artist_image');
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('artist_gallery');
+        $this->addMediaCollection('artist_image')->singleFile();
     }
 
     public function user()

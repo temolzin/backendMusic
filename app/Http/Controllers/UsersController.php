@@ -51,9 +51,9 @@ class UsersController extends Controller
             $user->password = bcrypt($password);
             $user->save();
             $user->roles()->attach($developerRole->id);
-            DB::commit();
-
             $absoluteImageUrl = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
+            $user->addMediaFromUrl($absoluteImageUrl)->toMediaCollection('profile_images');
+            DB::commit();
 
             return response()->json([
                 'success' => true,
