@@ -43,9 +43,6 @@ class ArtistSale extends Model
         'event_hours',
         'event_status',
         'openpay_transaction_id',
-        'cash_reference',
-        'cash_barcode_url',
-        'cash_due_date',
         'payment_method',
         'store',
         'latitude',
@@ -58,6 +55,11 @@ class ArtistSale extends Model
         'approval_responded_at',
         'openpay_customer_id',
     ];
+
+    public function cashReference()
+    {
+        return $this->hasOne(ArtistSaleCashReference::class);
+    }
 
     public function artist()
     {
