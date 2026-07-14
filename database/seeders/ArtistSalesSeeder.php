@@ -29,9 +29,9 @@ class ArtistSalesSeeder extends Seeder
         $createdAtOffsets = [-150, -120, -90, -75, -60, -30, -20, -10];
         $paymentMethods   = ['card', 'cash'];
         $salesPattern = [
-            ['status' => 'completed', 'event_status' => 'completed'],
-            ['status' => 'completed', 'event_status' => 'pending'],
-            ['status' => 'pending',   'event_status' => 'pending'],
+            ['status' => ArtistSale::PAYMENT_STATUS_COMPLETED, 'event_status' => ArtistSale::EVENT_STATUS_COMPLETED],
+            ['status' => ArtistSale::PAYMENT_STATUS_COMPLETED, 'event_status' => ArtistSale::EVENT_STATUS_PENDING],
+            ['status' => ArtistSale::PAYMENT_STATUS_PENDING,   'event_status' => ArtistSale::EVENT_STATUS_PENDING],
         ];
 
         foreach ($customers as $customerIndex => $customer) {
@@ -54,9 +54,7 @@ class ArtistSalesSeeder extends Seeder
                     'customer_id'            => $customer->id,
                     'amount'                 => $amount,
                     'openpay_fee'            => $openpayFee,
-                    'openpay_transaction_id' => $paymentMethod === 'cash' && $statusPattern['status'] === 'pending'
-                        ? null
-                        : 'trx_test_' . $artistId . '_' . $customer->id . '_' . $j,
+                    'openpay_transaction_id' => $paymentMethod === 'cash' && $statusPattern['status'] === ArtistSale::PAYMENT_STATUS_PENDING ? null : 'trx_test_' . $artistId . '_' . $customer->id,
                     'customer_first_name'    => explode(' ', $customer->name)[0],
                     'customer_last_name'     => explode(' ', $customer->name)[1] ?? 'Usuario',
                     'customer_email'         => $customer->email,
@@ -71,13 +69,13 @@ class ArtistSalesSeeder extends Seeder
                     'payment_method'         => $paymentMethod,
                     'event_status'           => $statusPattern['event_status'],
                     'status'                 => $statusPattern['status'],
-                    'approval_status'        => 'accepted',
+                    'approval_status'        => ArtistSale::APPROVAL_STATUS_ACCEPTED, // --- CONSTANTE AQUÍ TAMBIÉN ---
                     'created_at'             => $createdAt,
                     'updated_at'             => $createdAt,
                 ]);
 
                 if ($paymentMethod === 'cash') {
-                    $isPending = $statusPattern['status'] === 'pending';
+                    $isPending = $statusPattern['status'] === ArtistSale::PAYMENT_STATUS_PENDING;
 
                     $sale->cashReference()->create([
                         'cash_reference'    => 'REF-' . strtoupper(uniqid()),

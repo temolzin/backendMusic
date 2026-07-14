@@ -13,7 +13,7 @@ class ShoppingCardDetailsSeeder extends Seeder
     public function run()
     {
         $client = User::whereHas('roles', function ($q) {
-            $q->where('slug', 'cliente');
+            $q->where('slug', User::ROLE_CLIENT);
         })->first();
 
         if (!$client) {
@@ -23,11 +23,11 @@ class ShoppingCardDetailsSeeder extends Seeder
         $userId = $client->id;
 
         $shoppingCard = ShoppingCard::create([
-            'user_id'           => $userId,
-            'status'            => 1,
+            'user_id' => $userId,
+            'status' => 1,
             'order_date_start'  => now(),
             'order_date_finish' => now()->addDays(7),
-            'total'             => 0,
+            'total' => 0,
         ]);
 
         $artistIds = DB::table('artists')->orderBy('id')->pluck('id')->values();
