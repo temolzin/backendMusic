@@ -39,13 +39,13 @@ class SupportTicketController extends Controller
             'reporter_user_id' => $userId,
             'category'         => $request->category,
             'description'      => $request->description,
-            'status'           => 'open',
+            'status'           => SupportTicket::STATUS_OPEN,
         ]);
 
         TicketLog::create([
             'support_ticket_id'  => $ticket->id,
             'changed_by_user_id' => $userId,
-            'status' => 'open',
+            'status' => TicketLog::STATUS_OPEN,
             'notes' => 'Ticket creado.',
         ]);
 

@@ -24,6 +24,9 @@ class ArtistSale extends Model
     const APPROVAL_STATUS_REJECTED = 'rejected';
     const APPROVAL_STATUS_EXPIRED = 'expired';
 
+    const PAYMENT_METHOD_CARD = 'card';
+    const PAYMENT_METHOD_CASH = 'cash';
+
     protected $fillable = [
         'artist_id',
         'offer_id',

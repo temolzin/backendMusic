@@ -98,14 +98,14 @@ class ApprovalController extends Controller
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, 'MX', request()->ip());
             Openpay::setProductionMode(false);
 
-            if ($sale->payment_method === 'card' && $sale->openpay_transaction_id) {
+            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD && $sale->openpay_transaction_id) {
                 $charge = $openpay->charges->get($sale->openpay_transaction_id);
                 $charge->capture([
                     'amount' => (float) $sale->amount,
                 ]);
             }
 
-            if ($sale->payment_method === 'cash') {
+            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CASH) {
                 $customerData = [
                     'name'             => $sale->customer_first_name,
                     'last_name'        => $sale->customer_last_name,
@@ -136,7 +136,7 @@ class ApprovalController extends Controller
                 $sale->cash_due_date = Carbon::now()->addHours(24);
             }
 
-            $sale->status = $sale->payment_method === 'card' ? ArtistSale::PAYMENT_STATUS_COMPLETED : ArtistSale::PAYMENT_STATUS_PENDING;
+            $sale->status = $sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD ? ArtistSale::PAYMENT_STATUS_COMPLETED : ArtistSale::PAYMENT_STATUS_PENDING;
             $sale->approval_status = ArtistSale::APPROVAL_STATUS_ACCEPTED;
             $sale->approval_responded_at = Carbon::now();
             $sale->save();
@@ -177,7 +177,7 @@ class ApprovalController extends Controller
                 return response()->json(['success' => false, 'message' => 'Solicitud no encontrada o ya fue respondida'], 404);
             }
 
-            if ($sale->payment_method === 'card' && $sale->openpay_transaction_id) {
+            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD && $sale->openpay_transaction_id) {
                 try {
                     $keys = OpenpayKey::first();
                     $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, 'MX', request()->ip());
