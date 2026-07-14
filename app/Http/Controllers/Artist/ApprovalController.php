@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Artist;
 
 use App\Http\Controllers\Controller;
 use App\Models\ArtistSale;
+use App\Models\ArtistSaleCashReference;
 use App\Models\Artist;
 use App\Models\OpenpayKey;
 use Illuminate\Http\Request;
@@ -131,15 +132,24 @@ class ApprovalController extends Controller
 
                 $charge = $openpay->charges->create($chargeRequest);
                 $sale->openpay_transaction_id = $charge->id;
-                $sale->cash_reference = $charge->payment_method->reference ?? null;
-                $sale->cash_barcode_url = $charge->payment_method->barcode_url ?? null;
-                $sale->cash_due_date = Carbon::now()->addHours(24);
+                $cashData = [
+                    'cash_reference'   => $charge->payment_method->reference ?? null,
+                    'cash_barcode_url' => $charge->payment_method->barcode_url ?? null,
+                    'cash_due_date'    => Carbon::now()->addHours(24),
+                ];
             }
 
             $sale->status = $sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD ? ArtistSale::PAYMENT_STATUS_COMPLETED : ArtistSale::PAYMENT_STATUS_PENDING;
             $sale->approval_status = ArtistSale::APPROVAL_STATUS_ACCEPTED;
             $sale->approval_responded_at = Carbon::now();
             $sale->save();
+
+            if ($sale->payment_method === 'cash' && isset($cashData)) {
+                ArtistSaleCashReference::updateOrCreate(
+                    ['artist_sale_id' => $sale->id],
+                    $cashData
+                );
+            }
 
             $this->sendClientNotification($sale, ArtistSale::APPROVAL_STATUS_ACCEPTED);
 

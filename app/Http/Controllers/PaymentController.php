@@ -15,6 +15,7 @@ use Openpay\Data\OpenpayApiConnectionError;
 use Openpay\Data\OpenpayApiTransactionError;
 use Illuminate\Http\JsonResponse;
 use App\Models\ArtistSale;
+use App\Models\ArtistSaleCashReference;
 use App\Models\Artist;
 use App\Models\ShoppingCard;
 use App\Models\ShoppingCardDetail;
@@ -981,10 +982,16 @@ class PaymentController extends Controller
             $dueDateStr = $dueDateInstance->toDateTimeString();
 
             $sale->openpay_transaction_id = $charge->id;
-            $sale->cash_reference = $cashRef;
-            $sale->cash_barcode_url = $barcodeUrl;
-            $sale->cash_due_date = $dueDateInstance;
             $sale->save();
+
+            ArtistSaleCashReference::updateOrCreate(
+                ['artist_sale_id' => $sale->id],
+                [
+                    'cash_reference'   => $cashRef,
+                    'cash_barcode_url' => $barcodeUrl,
+                    'cash_due_date'    => $dueDateInstance,
+                ]
+            );
 
             return response()->json([
                 'data' => [

@@ -267,9 +267,25 @@ class ShoppingCardController extends Controller
             $user_id = $auth_user->id;
 
             $purchases = ArtistSale::where('customer_id', $user_id)
-                ->with('artist', 'artist.manager', 'customer')
+                ->with('artist', 'artist.manager', 'customer', 'cashReference')
                 ->orderBy('created_at', 'desc')
                 ->get();
+
+            $purchases->each(function (ArtistSale $purchase) {
+                if (!$purchase->cashReference) {
+                    return;
+                }
+
+                $cashReference = $purchase->cashReference->cash_reference;
+                if (preg_match('/^LOCAL-(\d+)$/', (string) $cashReference, $matches)) {
+                    $cashReference = '1000' . str_pad($matches[1], 12, '0', STR_PAD_LEFT);
+                }
+
+                $purchase->setAttribute('cash_reference', $cashReference);
+                $purchase->setAttribute('cash_barcode_url', $purchase->cashReference->cash_barcode_url);
+                $purchase->setAttribute('cash_due_date', $purchase->cashReference->cash_due_date);
+                $purchase->unsetRelation('cashReference');
+            });
 
             return response()->json([
                 'success' => true,

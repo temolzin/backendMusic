@@ -11,7 +11,9 @@ class OfferSeeder extends Seeder
 {
     public function run()
     {
-        DB::statement('TRUNCATE TABLE offers RESTART IDENTITY CASCADE;');
+        DB::statement("UPDATE artist_sales SET offer_id = NULL WHERE offer_id IS NOT NULL;");
+        DB::statement('DELETE FROM offers;');
+        DB::statement("ALTER SEQUENCE offers_id_seq RESTART WITH 1;");
 
         $artistIds = DB::table('artists')->orderBy('id')->limit(7)->pluck('id')->all();
 
