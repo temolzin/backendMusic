@@ -64,6 +64,10 @@
                                                 <span class="info-label">Pagar antes de</span>
                                                 <span class="info-value">{{ Carbon::parse($sale->cash_due_date)->locale('es')->isoFormat('D [de] MMMM, HH:mm') }}</span>
                                             </div>
+                                            <div class="info-row" style="background-color: #fff3cd; padding: 12px; border-radius: 8px; border-left: 4px solid #ff9800; margin-top: 12px;">
+                                                <span class="info-label">⚠️ Recordatorio</span>
+                                                <span class="info-value" style="color: #d32f2f; font-weight: 600;">Completa el pago antes de la fecha del evento: {{ Carbon::parse($sale->event_date)->locale('es')->isoFormat('D [de] MMMM, YYYY [a las] HH:mm') }}</span>
+                                            </div>
                                             @if ($sale->cash_barcode_url)
                                                 <div class="info-row" style="border-bottom: none; justify-content: center;">
                                                     <img src="{{ $sale->cash_barcode_url }}" alt="Código de barras" style="max-width: 260px; height: 80px; object-fit: contain;">

@@ -127,7 +127,7 @@ class ApprovalController extends Controller
                     'currency'    => 'MXN',
                     'description' => 'Reserva artista - Pago en efectivo',
                     'customer'    => $customerData,
-                    'due_date'    => Carbon::now()->addHours(24)->format('Y-m-d\TH:i:s'),
+                    'due_date'    => $eventDate = Carbon::parse($sale->event_date)->format('Y-m-d\TH:i:s'),
                 ];
 
                 $charge = $openpay->charges->create($chargeRequest);
@@ -135,7 +135,7 @@ class ApprovalController extends Controller
                 $cashData = [
                     'cash_reference'   => $charge->payment_method->reference ?? null,
                     'cash_barcode_url' => $charge->payment_method->barcode_url ?? null,
-                    'cash_due_date'    => Carbon::now()->addHours(24),
+                    'cash_due_date'    => $charge->due_date ?? Carbon::now()->addHours(24),
                 ];
             }
 
