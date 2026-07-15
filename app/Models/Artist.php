@@ -87,4 +87,9 @@ class Artist extends Model implements HasMedia
     {
         return $this->hasOne(ArtistPayoutMethod::class, 'artist_id');
     }
+
+    public function artistVideos()
+    {
+        return $this->hasMany(ArtistVideo::class);
+    }
 }
