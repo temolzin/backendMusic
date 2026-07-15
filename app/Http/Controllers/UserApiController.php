@@ -80,9 +80,10 @@ class UserApiController extends Controller
             $user->name = $name;
             $user->email = $email;
             $user->password = bcrypt($password);
-            $user->image_profile = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
             $user->save();
             $user->roles()->attach($role->id);
+            $absoluteImageUrl = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
+            $user->addMediaFromUrl($absoluteImageUrl)->toMediaCollection('profile_images');
             DB::commit();
 
             return response()->json([
