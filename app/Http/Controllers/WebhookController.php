@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ArtistSale;
 use App\Models\OpenpayKey;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
@@ -13,11 +14,17 @@ class WebhookController extends Controller
     {
         $payload = $request->all();
         $type = $payload['type'] ?? null;
+        $eventId = $payload['id'] ?? null;
 
-        Log::info('OpenPay webhook recibido', ['type' => $type, 'payload' => $payload]);
+        Log::info('OpenPay webhook recibido', ['type' => $type, 'event_id' => $eventId]);
 
         if ($type === 'verification') {
             return response()->json(['code' => $payload['verification_code'] ?? ''], 200);
+        }
+
+        if ($eventId && Cache::has('webhook_' . $eventId)) {
+            Log::info('Webhook ya procesado', ['event_id' => $eventId]);
+            return response()->json(['message' => 'OK'], 200);
         }
 
         $transaction = $payload['transaction'] ?? null;
@@ -39,10 +46,22 @@ class WebhookController extends Controller
             return response()->json(['message' => 'OK'], 200);
         }
 
+        Cache::put('webhook_' . $eventId, true, now()->addHours(24));
+
         if ($type === 'charge.succeeded') {
             $method = $transaction['method'] ?? '';
 
-            if ($method === 'store' || $method === 'bank_account') {
+            if ($method === 'card') {
+                if ($sale->status === ArtistSale::PAYMENT_STATUS_AUTHORIZED) {
+                    $sale->status = ArtistSale::PAYMENT_STATUS_COMPLETED;
+                    $sale->save();
+
+                    Log::info('Webhook: pago con tarjeta confirmado', [
+                        'sale_id' => $sale->id,
+                        'transaction_id' => $transactionId
+                    ]);
+                }
+            } elseif ($method === 'store' || $method === 'bank_account') {
                 if ($sale->status === ArtistSale::PAYMENT_STATUS_PENDING) {
                     $sale->status = ArtistSale::PAYMENT_STATUS_COMPLETED;
                     $sale->save();
@@ -56,10 +75,19 @@ class WebhookController extends Controller
         }
 
         if ($type === 'charge.refunded') {
-            Log::info('Webhook: reembolso procesado', [
-                'sale_id' => $sale->id,
-                'transaction_id' => $transactionId
-            ]);
+            $method = $transaction['method'] ?? '';
+
+            if ($method === 'card') {
+                if ($sale->status === ArtistSale::PAYMENT_STATUS_COMPLETED || $sale->status === ArtistSale::PAYMENT_STATUS_AUTHORIZED) {
+                    $sale->status = ArtistSale::PAYMENT_STATUS_CANCELLED;
+                    $sale->save();
+
+                    Log::info('Webhook: reembolso de tarjeta procesado', [
+                        'sale_id' => $sale->id,
+                        'transaction_id' => $transactionId
+                    ]);
+                }
+            }
         }
 
         if ($type === 'charge.failed') {
