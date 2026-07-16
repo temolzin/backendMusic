@@ -26,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->resolving(Schedule::class, function (Schedule $schedule) {
             $schedule->command('approvals:expire')->hourly();
+            $schedule->command('events:send-reminders')->hourly();
         });
     }
 }
