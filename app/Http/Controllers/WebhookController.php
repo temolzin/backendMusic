@@ -51,26 +51,24 @@ class WebhookController extends Controller
         if ($type === 'charge.succeeded') {
             $method = $transaction['method'] ?? '';
 
-            if ($method === 'card') {
-                if ($sale->status === ArtistSale::PAYMENT_STATUS_AUTHORIZED) {
-                    $sale->status = ArtistSale::PAYMENT_STATUS_COMPLETED;
-                    $sale->save();
+            if ($method === 'card' && $sale->status === ArtistSale::PAYMENT_STATUS_AUTHORIZED) {
+                $sale->status = ArtistSale::PAYMENT_STATUS_COMPLETED;
+                $sale->save();
 
-                    Log::info('Webhook: pago con tarjeta confirmado', [
-                        'sale_id' => $sale->id,
-                        'transaction_id' => $transactionId
-                    ]);
-                }
-            } elseif ($method === 'store' || $method === 'bank_account') {
-                if ($sale->status === ArtistSale::PAYMENT_STATUS_PENDING) {
-                    $sale->status = ArtistSale::PAYMENT_STATUS_COMPLETED;
-                    $sale->save();
+                Log::info('Webhook: pago con tarjeta confirmado', [
+                    'sale_id' => $sale->id,
+                    'transaction_id' => $transactionId
+                ]);
+            }
 
-                    Log::info('Webhook: pago en efectivo confirmado', [
-                        'sale_id' => $sale->id,
-                        'transaction_id' => $transactionId
-                    ]);
-                }
+            if (($method === 'store' || $method === 'bank_account') && $sale->status === ArtistSale::PAYMENT_STATUS_PENDING) {
+                $sale->status = ArtistSale::PAYMENT_STATUS_COMPLETED;
+                $sale->save();
+
+                Log::info('Webhook: pago en efectivo confirmado', [
+                    'sale_id' => $sale->id,
+                    'transaction_id' => $transactionId
+                ]);
             }
         }
 
