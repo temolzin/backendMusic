@@ -42,7 +42,8 @@ class SendEventReminders extends Command
                 }
 
                 Mail::to($artistUser->email)->send(new EventReminderNotification($sale));
-                $sale->update(['reminder_sent_at' => now()]);
+                $sale->reminder_sent_at = now();
+                $sale->save();
                 $count++;
 
                 Log::info('Recordatorio enviado al artista', [
