@@ -686,8 +686,11 @@ class PaymentController extends Controller
                 ], 404);
             }
 
-            $salesQuery = ArtistSale::where('artist_id', $artist->id)->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED);
-            $total = (float) $salesQuery->sum('amount');
+            $salesQuery = ArtistSale::where('artist_id', $artist->id)->where('status', ArtistSale::PAYMENT_STATUS_LIQUIDATED);
+            $total = $salesQuery->get()->sum(function($sale) {
+                $netPayout = floatval($sale->amount) - floatval($sale->openpay_fee) - (floatval($sale->amount) * 0.10);
+                return max(0, $netPayout);
+            });
             $count = (clone $salesQuery)->count();
 
             return response()->json([
