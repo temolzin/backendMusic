@@ -116,6 +116,9 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::put('/artist/sales/check-expired', [PaymentController::class, 'checkExpiredStatuses']);
     Route::get('/admin/openpay-keys', [OpenpayKeysController::class, 'getKeys']);
     Route::put('/admin/openpay-keys', [OpenpayKeysController::class, 'updateKeys']);
+    Route::get('/admin/webhook-verification-codes', [App\Http\Controllers\Admin\WebhookVerificationController::class, 'index']);
+    Route::delete('/admin/webhook-verification-codes/{id}', [App\Http\Controllers\Admin\WebhookVerificationController::class, 'destroy']);
+    Route::delete('/admin/webhook-verification-codes', [App\Http\Controllers\Admin\WebhookVerificationController::class, 'clearAll']);
 });
 
 Route::get('/openpay-keys/public', [OpenpayKeysController::class, 'getPublicKeys']);
