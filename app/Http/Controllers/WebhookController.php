@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ArtistSale;
 use App\Models\OpenpayKey;
+use App\Models\WebhookVerificationCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +20,18 @@ class WebhookController extends Controller
         Log::info('OpenPay webhook recibido', ['type' => $type, 'event_id' => $eventId]);
 
         if ($type === 'verification') {
-            return response()->json(['code' => $payload['verification_code'] ?? ''], 200);
+            $code = $payload['verification_code'] ?? '';
+            $eventDate = $payload['event_date'] ?? null;
+
+            if ($code) {
+                WebhookVerificationCode::create([
+                    'verification_code' => $code,
+                    'event_id' => $eventId,
+                    'event_date' => $eventDate,
+                ]);
+            }
+
+            return response()->json(['code' => $code], 200);
         }
 
         if ($eventId && Cache::has('webhook_' . $eventId)) {
