@@ -53,6 +53,7 @@ class ArtistSale extends Model
         'google_place_id',
         'extra_km_distance',
         'extra_km_cost',
+        'reminder_sent_at',
         'approval_status',
         'approval_deadline',
         'approval_responded_at',
