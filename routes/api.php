@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\AdminPayoutController;
 use App\Http\Controllers\Artist\ApprovalController;
 use App\Http\Controllers\Admin\UserSanctionController;
 use App\Http\Middleware\CheckAccountStatus;
+use App\Http\Controllers\WebhookController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -121,6 +122,9 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::put('/artist/sales/check-expired', [PaymentController::class, 'checkExpiredStatuses']);
     Route::get('/admin/openpay-keys', [OpenpayKeysController::class, 'getKeys']);
     Route::put('/admin/openpay-keys', [OpenpayKeysController::class, 'updateKeys']);
+    Route::get('/admin/webhook-verification-codes', [App\Http\Controllers\Admin\WebhookVerificationController::class, 'index']);
+    Route::delete('/admin/webhook-verification-codes/{id}', [App\Http\Controllers\Admin\WebhookVerificationController::class, 'destroy']);
+    Route::delete('/admin/webhook-verification-codes', [App\Http\Controllers\Admin\WebhookVerificationController::class, 'clearAll']);
 });
 
 Route::get('/openpay-keys/public', [OpenpayKeysController::class, 'getPublicKeys']);
@@ -160,3 +164,5 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::patch('/admin/support-tickets/{ticket}/status', [SupportTicketController::class, 'updateStatus']);
     Route::get('/admin/support-tickets/{ticket}/logs', [SupportTicketController::class, 'logs']);
 });
+
+Route::post('/webhook/openpay', [WebhookController::class, 'handleOpenpay']);

@@ -53,6 +53,7 @@ class AdminPayoutController extends Controller
 
             return [
                 'sale_id' => $sale->id,
+                'status' => $sale->status,
                 'amount' => $amount,
                 'openpay_fee' => $openpayFee,
                 'platform_fee' => $platformFee,
