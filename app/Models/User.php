@@ -39,7 +39,8 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
         'zip_code',
         'country',
         'latitude',
-        'longitude'
+        'longitude',
+        'account_status',
     ];
 
     /**
@@ -135,6 +136,11 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMe
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetPasswordQueuedNotification($token));
+    }
+
+    public function sanctions()
+    {
+        return $this->hasMany(UserSanction::class);
     }
 
 }

@@ -32,6 +32,8 @@ use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\ArtistPayoutMethodController;
 use App\Http\Controllers\Admin\AdminPayoutController;
 use App\Http\Controllers\Artist\ApprovalController;
+use App\Http\Controllers\Admin\UserSanctionController;
+use App\Http\Middleware\CheckAccountStatus;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -45,8 +47,7 @@ Route::get('/authorize/google/callback', [SocialAuthController::class, 'handlesP
 // Routes for login with facebook
 Route::get('/authorize/facebook/redirect', [SocialAuthController::class, 'redirectToFacebookProvider']);
 Route::get('/authorize/facebook/callback', [SocialAuthController::class, 'handleFacebookProviderCallback']);
-// Routes protected by session middleware
-Route::group(["middleware" => "auth:api"], function () {
+Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function () {
     Route::get('/me', [UsersController::class, 'me']);
     Route::get('/logout', [AuthController::class, 'logout']);
     Route::put('/user/change-details', [UsersController::class, 'updateDetails']);
@@ -62,6 +63,11 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/admin/dashboard-overview', [DashboardStatsController::class, 'index']);
     Route::get('/admin/payouts/pending', [AdminPayoutController::class, 'pendingPayouts']);
     Route::post('/admin/payouts/{saleId}/release', [AdminPayoutController::class, 'releasePayout']);
+    Route::get('/admin/user-sanctions', [UserSanctionController::class, 'index']);
+    Route::post('/admin/user-sanctions', [UserSanctionController::class, 'store']);
+    Route::get('/admin/user-sanctions/{id}/tickets', [UserSanctionController::class, 'getUserTickets']);
+    Route::get('/admin/user-sanctions/{id}', [UserSanctionController::class, 'show']);
+    Route::put('/admin/user-sanctions/{id}/revoke', [UserSanctionController::class, 'revoke']);
 
     //Route for artist
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
@@ -132,11 +138,11 @@ Route::post('/users-subscribe/new', [UsersSubscribeController::class, 'store']);
 
 Route::post('/quotations', [QuotationsController::class, 'addQuotation']);
 Route::get('/artist-sales/public', [PaymentController::class, 'getSalesByArtist']);
-Route::group(["middleware" => "auth:api"], function () {
+Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function () {
     Route::get('/artist/quotations/count', [QuotationsController::class, 'countByArtist']);
 });
 
-Route::group(["middleware" => "auth:api"], function () {
+Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function () {
     Route::post('/process-payment', [ClientPaymentController::class, 'processPayment']);
     Route::get('/artist-sales', [PaymentController::class, 'getSalesByArtist']);
     Route::post('/payment/cash', [PaymentController::class, 'processCashPayment']);

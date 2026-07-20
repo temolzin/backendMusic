@@ -42,4 +42,9 @@ class SupportTicket extends Model implements HasMedia
     {
         return $this->hasMany(TicketLog::class)->with('changedBy')->latest();
     }
+
+    public function sanction()
+    {
+        return $this->morphOne(UserSanction::class, 'sanctionable');
+    }
 }

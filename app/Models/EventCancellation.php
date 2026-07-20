@@ -32,4 +32,9 @@ class EventCancellation extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function sanction()
+    {
+        return $this->morphOne(UserSanction::class, 'sanctionable');
+    }
 }
