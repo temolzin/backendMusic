@@ -144,8 +144,6 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
-
             $acquiredLocks = [];
             $lockKeys = [];
 
@@ -187,56 +185,76 @@ class PaymentController extends Controller
                 }
             }
 
-            if ($request->input("transaction_id")) {
-                $charge = new \stdClass();
-                $charge->id = $request->input("transaction_id");
-                $charge->amount = $amount;
-                $charge->status = "completed";
-            } else {
-                if (!$token) {
-                    return response()->json([
-                        'error' => [
-                            'category' => 'VALIDATION_ERROR',
-                            'error_code' => 'MISSING_TOKEN',
-                            'description' => 'El token de OpenPay es requerido'
-                        ]
-                    ], 400);
-                }
-                
-                $customerData = array(
-                    'name' => $name,
-                    'last_name' => $last_name,
-                    'email' => $email,
-                    'requires_account' => false,
-                    'address' => array(
-                        'line1' => $address,
-                        'state' => $state,
-                        'city' => $city,
-                        'postal_code' => $zip_code,
-                        'country_code' => 'MX'
-                    )
-                );
-
-                $chargeRequest = array(
-                    'method' => 'card',
-                    'source_id' => $token,
-                    'amount' => $amount,
-                    'currency' => 'MXN',
-                    'description' => 'Cargo de reserva de artista',
-                    'capture' => false,
-                    'customer' => $customerData,
-                    'redirect_url' => 'http://www.openpay.mx/index.html'
-                );
-                
-                $deviceSessionId = $request->input("deviceSessionId") ?? Str::uuid()->toString();
-                $chargeRequest['device_session_id'] = $deviceSessionId;
-                Log::info('Openpay charge request: ' . json_encode($chargeRequest));
-                $charge = $openpay->charges->create($chargeRequest);
+            if (!$token) {
+                return response()->json([
+                    'error' => [
+                        'category' => 'VALIDATION_ERROR',
+                        'error_code' => 'MISSING_TOKEN',
+                        'description' => 'El token de OpenPay es requerido'
+                    ]
+                ], 400);
             }
-            
+
+            $customerData = array(
+                'name' => $name,
+                'last_name' => $last_name,
+                'email' => $email,
+                'requires_account' => false,
+                'phone_number' => $phone,
+                'address' => array(
+                    'line1' => $address,
+                    'state' => $state,
+                    'city' => $city,
+                    'postal_code' => $zip_code,
+                    'country_code' => 'MX'
+                )
+            );
+
+            $createdCharges = [];
+            $openpayCustomerId = null;
+            $deviceSessionId = $request->input("deviceSessionId") ?? Str::uuid()->toString();
+
+            try {
+                $openpayCustomer = $openpay->customers->add($customerData);
+
+                $card = $openpayCustomer->cards->add([
+                    'token_id' => $token,
+                    'device_session_id' => $deviceSessionId,
+                ]);
+
+                $openpayCustomerId = $openpayCustomer->id;
+
+                foreach ($itemsForSales as $item) {
+                    $charge = $openpayCustomer->charges->create([
+                        'method' => 'card',
+                        'source_id' => $card->id,
+                        'amount' => (float) $item['amount'],
+                        'currency' => 'MXN',
+                        'description' => 'Cargo de reserva - Artista #' . $item['artist_id'],
+                        'capture' => false,
+                        'device_session_id' => $deviceSessionId,
+                    ]);
+
+                    $createdCharges[] = $charge;
+                }
+            } catch (\Exception $e) {
+                foreach ($createdCharges as $createdCharge) {
+                    try {
+                        $openpay->charges->get($createdCharge->id)->refund(['description' => 'Reembolso por fallo en cargo múltiple']);
+                    } catch (\Exception $refundErr) {
+                        Log::warning('No se pudo reembolsar cargo ' . $createdCharge->id . ': ' . $refundErr->getMessage());
+                    }
+                }
+                foreach ($acquiredLocks as $acquiredLock) {
+                    $acquiredLock->release();
+                }
+                throw $e;
+            }
+
             DB::beginTransaction();
             try {
-                foreach ($itemsForSales as $item) {
+                foreach ($itemsForSales as $index => $item) {
+                    $charge = $createdCharges[$index];
                     $sale = new ArtistSale();
                     $sale->openpay_transaction_id = $charge->id;
                     $sale->artist_id = $item['artist_id'];
@@ -265,18 +283,18 @@ class PaymentController extends Controller
                     $sale->extra_km_cost = $item['extra_km_cost'];
                     $sale->approval_status = ArtistSale::APPROVAL_STATUS_PENDING;
                     $sale->approval_deadline = Carbon::now()->addHours(24);
-                    $sale->openpay_customer_id = $charge->customer->id ?? null;
+                    $sale->openpay_customer_id = $openpayCustomerId;
                     $sale->save();
 
                     $this->sendSaleRequestEmail($sale);
                 }
 
-                $userId = Auth::user()?->id ?? $request->input("customer_id");
-                if (!$userId) {
+                $currentUserId = Auth::user()?->id ?? $request->input("customer_id");
+                if (!$currentUserId) {
                     throw new \Exception('No user ID available for cart cleanup');
                 }
 
-                $shoppingCards = ShoppingCard::where('user_id', $userId)
+                $shoppingCards = ShoppingCard::where('user_id', $currentUserId)
                     ->where('status', ShoppingCard::STATUS_ACTIVE)
                     ->get();
 
@@ -295,6 +313,14 @@ class PaymentController extends Controller
             } catch (\Exception $e) {
                 DB::rollBack();
 
+                foreach ($createdCharges as $createdCharge) {
+                    try {
+                        $openpay->charges->get($createdCharge->id)->refund(['description' => 'Reembolso por fallo en transacción']);
+                    } catch (\Exception $refundErr) {
+                        Log::warning('No se pudo reembolsar cargo ' . $createdCharge->id . ': ' . $refundErr->getMessage());
+                    }
+                }
+
                 foreach ($acquiredLocks as $acquiredLock) {
                     $acquiredLock->release();
                 }
@@ -303,8 +329,8 @@ class PaymentController extends Controller
             }
 
             return response()->json([
-                'data' => $charge,
-                'message' => 'Pago procesado correctamente'
+                'message' => 'Pago procesado correctamente',
+                'charges_count' => count($createdCharges),
             ]);
 
         } catch (OpenpayApiTransactionError $e) {
@@ -686,8 +712,11 @@ class PaymentController extends Controller
                 ], 404);
             }
 
-            $salesQuery = ArtistSale::where('artist_id', $artist->id)->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED);
-            $total = (float) $salesQuery->sum('amount');
+            $salesQuery = ArtistSale::where('artist_id', $artist->id)->where('status', ArtistSale::PAYMENT_STATUS_LIQUIDATED);
+            $total = $salesQuery->get()->sum(function($sale) {
+                $netPayout = floatval($sale->amount) - floatval($sale->openpay_fee) - (floatval($sale->amount) * 0.10);
+                return max(0, $netPayout);
+            });
             $count = (clone $salesQuery)->count();
 
             return response()->json([

@@ -26,13 +26,14 @@ class ResetPasswordQueuedNotification extends Notification
             'email' => $notifiable->email,
         ], true);
 
+        $appUrl = env('FRONTEND_APP');
+
         return (new MailMessage)
             ->subject('Recuperación de contraseña')
-            ->greeting('¡Hola!')
-            ->line('Recibimos una solicitud para restablecer tu contraseña de Vibeer.')
-            ->action('Cambiar contraseña', $resetUrl)
-            ->line('Este enlace expirará en 60 minutos.')
-            ->line('Si no realizaste esta solicitud, puedes ignorar este correo.')
-            ->salutation('Saludos, Vibeer');
+            ->view('emails.password-reset', [
+                'resetUrl' => $resetUrl,
+                'user' => $notifiable,
+                'frontendUrl' => $appUrl,
+            ]);
     }
 }
