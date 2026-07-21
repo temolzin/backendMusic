@@ -31,6 +31,7 @@ use App\Http\Controllers\GoogleMapsController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\ArtistPayoutMethodController;
 use App\Http\Controllers\Admin\AdminPayoutController;
+use App\Http\Controllers\Admin\ArtistApprovalController;
 use App\Http\Controllers\Artist\ApprovalController;
 use App\Http\Controllers\Admin\UserSanctionController;
 use App\Http\Middleware\CheckAccountStatus;
@@ -70,6 +71,9 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::get('/admin/user-sanctions/{id}', [UserSanctionController::class, 'show']);
     Route::put('/admin/user-sanctions/{id}/revoke', [UserSanctionController::class, 'revoke']);
     Route::post('/user-sanctions/evaluate-cancellation', [UserSanctionController::class, 'evaluateCancellation']);
+    Route::get('/admin/artist-approvals/pending', [ArtistApprovalController::class, 'pendingRequests']);
+    Route::put('/admin/artist-approvals/{id}/accept', [ArtistApprovalController::class, 'accept']);
+    Route::put('/admin/artist-approvals/{id}/reject', [ArtistApprovalController::class, 'reject']);
 
     //Route for artist
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
