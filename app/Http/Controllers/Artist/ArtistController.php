@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Artist;
 
 use App\Http\Controllers\Controller;
 use App\Models\Artist;
+use App\Models\ArtistProfileRequest;
 use App\Models\Manager;
 use App\Rules\ValidImageUpload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use App\Rules\ValidSocialMedia;
 use App\Models\ArtistVideo;
 use Carbon\Carbon;
@@ -27,9 +27,12 @@ class ArtistController extends Controller
         try {
             $artistMusicalGenders = Artist::with('musicalGenders')->with('manager')->where('user_id', Auth::user()->id)->first();
 
+            $latestRequest = ArtistProfileRequest::where('user_id', Auth::user()->id) ->latest() ->first();
+
             return response()->json([
                 'success' => true,
                 'artists' => $artistMusicalGenders,
+                'latestRequest' => $latestRequest,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -73,11 +76,22 @@ class ArtistController extends Controller
                 'image_manager'   => ['required', 'file', 'max:20480', new ValidImageUpload()],
             ]);
 
-            DB::beginTransaction();
-            $artist = Artist::create([
-                'user_id' => Auth::user()->id,
+            $existingArtist = Artist::where('user_id', Auth::user()->id)->first();
+            $existingPending = ArtistProfileRequest::where('user_id', Auth::user()->id)
+                ->where('approval_status', ArtistProfileRequest::APPROVAL_STATUS_PENDING)
+                ->exists();
+
+            if ($existingArtist || $existingPending) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $existingPending
+                        ? 'Ya tienes una solicitud en revisión.'
+                        : 'Ya tienes un perfil de artista registrado.',
+                ], 422);
+            }
+
+            $proposedData = [
                 'name' => $request->input('name'),
-                'slug' => Str::slug($request->input('name')),
                 'members' => $request->input('members'),
                 'history' => $request->input('history'),
                 'zone' => $request->input('zone'),
@@ -85,28 +99,33 @@ class ArtistController extends Controller
                 'extra_kilometre' => $request->input('extra_kilometre'),
                 'coverage_radius' => $request->input('coverage_radius', 0),
                 'social_media' => $request->input('social_media') ? json_decode($request->input('social_media'), true) : null,
+                'musical_genders' => json_decode($request->selection, true),
+                'name_manager' => $request->input('name_manager'),
+                'phone_manager' => $request->input('phone_manager'),
+                'email_manager' => $request->input('email_manager'),
+            ];
+
+            DB::beginTransaction();
+            $profileRequest = ArtistProfileRequest::create([
+                'user_id' => Auth::user()->id,
+                'artist_id' => null,
+                'request_type' => ArtistProfileRequest::TYPE_CREATION,
+                'proposed_data' => $proposedData,
             ]);
 
             if ($request->hasFile('image_artist')) {
-                $artist->addMedia($request->file('image_artist'))->toMediaCollection('artist_image');
+                $profileRequest->addMedia($request->file('image_artist'))->toMediaCollection('pending_artist_image');
             }
 
-            $artist->musicalGenders()->sync(json_decode($request->selection));
-            $managerModel = Manager::create([
-                'artist_id' => $artist->id,
-                'name'      => $request->input('name_manager'),
-                'phone'     => $request->input('phone_manager'),
-                'email'     => $request->input('email_manager'),
-            ]);
-
             if ($request->hasFile('image_manager')) {
-                $managerModel->addMedia($request->file('image_manager'))->toMediaCollection('manager_image');
+                $profileRequest->addMedia($request->file('image_manager'))->toMediaCollection('pending_manager_image');
             }
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'artist'  => $artist,
+                'message' => 'Tu solicitud fue enviada, Vibeer la revisará.',
+                'profileRequest' => $profileRequest,
             ], 200);
         } catch (ValidationException $e) {
             return response()->json([
@@ -244,38 +263,55 @@ class ArtistController extends Controller
                 'social_media' => ['nullable', new ValidSocialMedia()],
             ]);
 
-            DB::beginTransaction();
             $artist = Artist::find($request->id);
 
-            $artist->name = $request->input('name');
-            $artist->slug = Str::slug($request->input('name'));
-            $artist->members = $request->input('members');
-            $artist->history = $request->input('history');
-            $artist->zone = $request->input('zone');
-            $artist->price_hour = $request->input('price_hour');
-            $artist->extra_kilometre = $request->input('extra_kilometre');
-            $artist->coverage_radius = $request->input('coverage_radius', 0);
-            $artist->social_media = $request->input('social_media') ? json_decode($request->input('social_media'), true) : null;
+            $existingPending = ArtistProfileRequest::where('artist_id', $artist->id)
+                ->where('approval_status', ArtistProfileRequest::APPROVAL_STATUS_PENDING)
+                ->exists();
+
+            if ($existingPending) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tu perfil está en revisión, no puedes editar hasta que sea aprobado.',
+                ], 403);
+            }
+
+            $proposedData = [
+                'name' => $request->input('name'),
+                'members' => $request->input('members'),
+                'history' => $request->input('history'),
+                'zone' => $request->input('zone'),
+                'price_hour' => $request->input('price_hour'),
+                'extra_kilometre' => $request->input('extra_kilometre'),
+                'coverage_radius' => $request->input('coverage_radius', 0),
+                'social_media' => $request->input('social_media') ? json_decode($request->input('social_media'), true) : null,
+                'musical_genders' => json_decode($request->selection, true),
+                'name_manager' => $request->input('name_manager'),
+                'phone_manager' => $request->input('phone_manager'),
+                'email_manager' => $request->input('email_manager'),
+            ];
+
+            DB::beginTransaction();
+            $profileRequest = ArtistProfileRequest::create([
+                'user_id' => Auth::user()->id,
+                'artist_id' => $artist->id,
+                'request_type' => ArtistProfileRequest::TYPE_UPDATE,
+                'proposed_data' => $proposedData,
+            ]);
 
             if ($request->hasFile('image_artist')) {
-                $artist->addMedia($request->file('image_artist'))->toMediaCollection('artist_image');
+                $profileRequest->addMedia($request->file('image_artist'))->toMediaCollection('pending_artist_image');
             }
 
             if ($request->hasFile('image_manager')) {
-                $artist->manager->addMedia($request->file('image_manager'))->toMediaCollection('manager_image');
+                $profileRequest->addMedia($request->file('image_manager'))->toMediaCollection('pending_manager_image');
             }
-
-            $artist->manager->name = $request->input('name_manager');
-            $artist->manager->phone = $request->input('phone_manager');
-            $artist->manager->email = $request->input('email_manager');
-
-            $artist->push();
             DB::commit();
-            $artist->musicalGenders()->sync(json_decode($request->selection));
 
             return response()->json([
                 'success' => true,
-                'artist'  => $artist,
+                'message' => 'Tu solicitud fue enviada, Vibeer la revisará.',
+                'profileRequest' => $profileRequest,
             ], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollback();
@@ -438,7 +474,6 @@ class ArtistController extends Controller
             ], 401);
         }
     }
-
 
     /**
      * Display a listing of the resource of all Artists with Musical Genders.
