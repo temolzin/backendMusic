@@ -27,9 +27,7 @@ class ArtistController extends Controller
         try {
             $artistMusicalGenders = Artist::with('musicalGenders')->with('manager')->where('user_id', Auth::user()->id)->first();
 
-            $latestRequest = ArtistProfileRequest::where('user_id', Auth::user()->id)
-                ->latest()
-                ->first();
+            $latestRequest = ArtistProfileRequest::where('user_id', Auth::user()->id) ->latest() ->first();
 
             return response()->json([
                 'success' => true,
