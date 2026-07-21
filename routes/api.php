@@ -68,6 +68,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::get('/admin/user-sanctions/{id}/tickets', [UserSanctionController::class, 'getUserTickets']);
     Route::get('/admin/user-sanctions/{id}', [UserSanctionController::class, 'show']);
     Route::put('/admin/user-sanctions/{id}/revoke', [UserSanctionController::class, 'revoke']);
+    Route::post('/user-sanctions/evaluate-cancellation', [UserSanctionController::class, 'evaluateCancellation']);
 
     //Route for artist
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);

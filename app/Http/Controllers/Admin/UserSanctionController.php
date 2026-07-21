@@ -19,6 +19,17 @@ class UserSanctionController extends Controller
     const WEIGHT_FAULT = 100;
     const WEIGHT_TICKET = 10;
 
+    const DIRECT_SANCTION_MIN_DAYS = 0;
+    const DIRECT_SANCTION_MAX_DAYS = 2;
+    const DIRECT_SANCTION_DURATION = 15;
+
+    const FAULT_ACCUMULATION_MIN_DAYS = 3;
+    const FAULT_ACCUMULATION_MAX_DAYS = 6;
+    const FAULT_LOOKBACK_DAYS = 30;
+
+    const FAULT_THRESHOLD_CUSTOMER = 3;
+    const FAULT_THRESHOLD_ARTIST = 2;
+
     private function checkAndLiftExpiredSanction(User $user)
     {
         if ($user->account_status != 'active') {
@@ -110,7 +121,7 @@ class UserSanctionController extends Controller
                         });
                     })->count();
                 
-                $thirtyDaysAgo = Carbon::now()->subDays(30);
+                $thirtyDaysAgo = Carbon::now()->subDays(self::FAULT_LOOKBACK_DAYS);
 
                 $lastSanction = UserSanction::where('user_id', $user->id)
                     ->orderBy('id', 'desc')
@@ -133,8 +144,8 @@ class UserSanctionController extends Controller
                         $cDate = Carbon::parse($cancel->created_at)->startOfDay();
                         $diff = $cDate->diffInDays($eDate, false);
                         
-                        if ($diff >= 3) {
-                            if ($diff < 7) {
+                        if ($diff >= self::FAULT_ACCUMULATION_MIN_DAYS) {
+                            if ($diff <= self::FAULT_ACCUMULATION_MAX_DAYS) {
                                 $faults++;
                             }
                         }
@@ -437,6 +448,128 @@ class UserSanctionController extends Controller
                 'success' => false,
                 'message' => $e->getMessage()
             ], 401);
+        }
+    }
+    /**
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function evaluateCancellation(Request $request)
+    {
+        try {
+            $saleId = $request->input('sale_id');
+            if (empty($saleId)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Falta el ID de la venta.'
+                ], 422);
+            }
+            $cancellation = EventCancellation::with('artistSale')
+                ->where('artist_sale_id', $saleId)
+                ->orderBy('id', 'desc')
+                ->first();
+            if (empty($cancellation) || empty($cancellation->artistSale)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cancelación o venta no encontrada.'
+                ], 404);
+            }
+            $sale = $cancellation->artistSale;
+            if (empty($sale->event_date)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La venta no tiene fecha de evento asignada.'
+                ], 400);
+            }
+            $user = User::find($cancellation->user_id);
+            if (empty($user)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no encontrado.'
+                ], 404);
+            }
+            $now = Carbon::now()->startOfDay();
+            $eventDate = Carbon::parse($sale->event_date)->startOfDay();
+            $daysUntilEvent = $now->diffInDays($eventDate, false);
+            $threshold = ($sale->customer_id === $cancellation->user_id) ? self::FAULT_THRESHOLD_CUSTOMER : self::FAULT_THRESHOLD_ARTIST;
+            $this->processAutomaticCancellationSanction($cancellation, $user, $daysUntilEvent, $threshold);
+            $user->refresh();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Evaluación de sanciones procesada correctamente.',
+                'account_status' => $user->account_status
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+    /**
+     *
+     * @param EventCancellation
+     * @param User
+     * @param int
+     * @param int
+     */
+    public function processAutomaticCancellationSanction(EventCancellation $cancellation, User $user, int $daysUntilEvent, int $faultThreshold = 3)
+    {
+        $sanctionType = null;
+        $sanctionDays = null;
+        $sanctionReason = '';
+        if ($daysUntilEvent >= self::DIRECT_SANCTION_MIN_DAYS && $daysUntilEvent <= self::DIRECT_SANCTION_MAX_DAYS) {
+            $sanctionType = 'restricted';
+            $sanctionDays = self::DIRECT_SANCTION_DURATION;
+            $sanctionReason = 'Cancelación de evento con ' . $daysUntilEvent . ' día(s) de anticipación.';
+        }
+
+        if ($daysUntilEvent >= self::FAULT_ACCUMULATION_MIN_DAYS && $daysUntilEvent <= self::FAULT_ACCUMULATION_MAX_DAYS) {
+            $thirtyDaysAgo = Carbon::now()->subDays(self::FAULT_LOOKBACK_DAYS);
+            $lastSanction = UserSanction::where('user_id', $user->id)
+                ->latest('created_at')
+                ->first();
+            $cancellationsQuery = EventCancellation::where('user_id', $user->id)
+                ->where('id', '!=', $cancellation->id)
+                ->where('created_at', '>=', $thirtyDaysAgo)
+                ->with('artistSale');
+            if ($lastSanction) {
+                $cancellationsQuery->where('created_at', '>', $lastSanction->created_at);
+            }
+            $historicalFaults = $cancellationsQuery->get()
+                ->filter(function ($cancel) {
+                    if (empty($cancel->artistSale)) {
+                        return false;
+                    }
+                    $eDate = Carbon::parse($cancel->artistSale->event_date)->startOfDay();
+                    $cDate = Carbon::parse($cancel->created_at)->startOfDay();
+                    $diff = $cDate->diffInDays($eDate, false);
+
+                    return ($diff >= self::FAULT_ACCUMULATION_MIN_DAYS && $diff <= self::FAULT_ACCUMULATION_MAX_DAYS);
+                })->count();
+            $totalFaults = $historicalFaults + 1;
+            if ($totalFaults >= $faultThreshold) {
+                $sanctionType = 'restricted';
+                $sanctionDays = null;
+                $sanctionReason = 'SISTEMA: Acumulación de ' . $totalFaults . ' faltas (Faults) por cancelar eventos entre ' .
+                    self::FAULT_ACCUMULATION_MIN_DAYS . ' y ' . self::FAULT_ACCUMULATION_MAX_DAYS .
+                    ' días de anticipación en los últimos ' . self::FAULT_LOOKBACK_DAYS . ' días.';
+            }
+        }
+        if ($sanctionType) {
+            $endsAt = $sanctionDays ? Carbon::now()->addDays($sanctionDays) : null;
+            $cancellation->sanction()->create([
+                'user_id'    => $user->id,
+                'type'       => $sanctionType,
+                'reason'     => $sanctionReason,
+                'starts_at'  => Carbon::now(),
+                'ends_at'    => $endsAt,
+                'created_by' => 'system',
+            ]);
+            $user->account_status = $sanctionType;
+            $user->save();
         }
     }
 }

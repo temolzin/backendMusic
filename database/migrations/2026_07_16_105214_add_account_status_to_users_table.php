@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class AddAccountStatusToUsersTable extends Migration
 {
@@ -15,8 +16,6 @@ class AddAccountStatusToUsersTable extends Migration
 
     public function down()
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('account_status');
-        });
+        DB::statement('ALTER TABLE users DROP COLUMN account_status CASCADE;');
     }
 }

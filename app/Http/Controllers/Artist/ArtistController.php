@@ -25,9 +25,7 @@ class ArtistController extends Controller
     public function index()
     {
         try {
-            $artistMusicalGenders = Artist::with(['musicalGenders', 'manager', 'user:id,account_status'])
-                ->where('user_id', Auth::user()->id)
-                ->first();
+            $artistMusicalGenders = Artist::with(['musicalGenders', 'manager', 'user:id,account_status'])->where('user_id', Auth::user()->id)->first();
 
             return response()->json([
                 'success' => true,

@@ -30,8 +30,6 @@ use App\Services\DistanceMatrixService;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ArtistSaleRequest;
 use App\Mail\EventCancelledNotification;
-use App\Models\User;
-use App\Models\UserSanction;
 
 class PaymentController extends Controller
 {
@@ -1169,80 +1167,15 @@ class PaymentController extends Controller
             $sale->event_status = ArtistSale::EVENT_STATUS_CANCELLED;
             $sale->save();
 
-            $cancellation = EventCancellation::create([
+            EventCancellation::create([
                 'artist_sale_id' => $sale->id,
                 'user_id' => $user->id,
                 'cancellation_reason' => $request->reason,
                 'penalty_percentage' => $penaltyPercentage,
                 'penalty_amount' => $penaltyAmount,
-                'refunded_at' => Carbon::now(),
+                'refunded_at' => $now,
                 'penalty_paid' => false,
             ]);
-
-
-            $sanctionType = null;
-            $sanctionDays = null;
-            $sanctionReason = '';
-
-            if ($daysUntilEvent >= 1 && $daysUntilEvent <= 2) {
-                $sanctionType = 'restricted';
-                $sanctionDays = 15;
-                $sanctionReason = 'Cancelación de evento con ' . $daysUntilEvent . ' día(s) de anticipación.';
-            }
-
-            if ($daysUntilEvent >= 3 && $daysUntilEvent <= 6) {
-                $thirtyDaysAgo = Carbon::now()->subDays(30);
-
-                $lastSanction = UserSanction::where('user_id', $user->id)
-                    ->latest('created_at')
-                    ->first();
-
-                $cancellationsQuery = EventCancellation::where('user_id', $user->id)
-                    ->where('id', '!=', $cancellation->id)
-                    ->where('created_at', '>=', $thirtyDaysAgo)
-                    ->with('artistSale');
-
-                if ($lastSanction) {
-                    $cancellationsQuery->where('created_at', '>', $lastSanction->created_at);
-                }
-
-                $historicalFaults = $cancellationsQuery->get()
-                    ->filter(function ($cancel) {
-                        if (!$cancel->artistSale) {
-                            return false;
-                        }
-                        $eDate = Carbon::parse($cancel->artistSale->event_date)->startOfDay();
-                        $cDate = Carbon::parse($cancel->created_at)->startOfDay();
-                        $diff = $cDate->diffInDays($eDate, false);
-                        $isFault = false;
-                        if ($diff >= 3 && $diff <= 6) {
-                            $isFault = true;
-                        }
-                        return $isFault;
-                    })->count();
-
-                $totalFaults = $historicalFaults + 1;
-
-                if ($totalFaults >= 2) {
-                    $sanctionType = 'restricted';
-                    $sanctionDays = null;
-                    $sanctionReason = 'SISTEMA: Acumulación de ' . $totalFaults . ' faltas (Faults) por cancelar eventos entre 3 y 6 días de anticipación en los últimos 30 días.';
-                }
-            }
-
-            if ($sanctionType) {
-                $endsAt = $sanctionDays ? Carbon::now()->addDays($sanctionDays) : null;
-
-                $cancellation->sanction()->create([
-                    'user_id'    => $user->id,
-                    'type'       => $sanctionType,
-                    'reason'     => $sanctionReason,
-                    'starts_at'  => Carbon::now(),
-                    'ends_at'    => $endsAt,
-                    'created_by' => 'system',
-                ]);
-                User::where('id', $user->id)->update(['account_status' => $sanctionType]);
-            }
 
             $this->sendCancellationEmails($sale, $request->reason, 'artist', $amount, $penaltyAmount, $penaltyPercentage);
 
@@ -1358,79 +1291,15 @@ class PaymentController extends Controller
             $sale->event_status = ArtistSale::EVENT_STATUS_CANCELLED;
             $sale->save();
 
-            $cancellation = EventCancellation::create([
+            EventCancellation::create([
                 'artist_sale_id' => $sale->id,
                 'user_id' => $user->id,
                 'cancellation_reason' => $request->reason,
                 'penalty_percentage' => $penaltyPercentage,
                 'penalty_amount' => $penaltyAmount,
-                'refunded_at' => Carbon::now(),
+                'refunded_at' => $now,
                 'penalty_paid' => true,
             ]);
-
-            $sanctionType = null;
-            $sanctionDays = null;
-            $sanctionReason = '';
-
-            if ($daysUntilEvent >= 1 && $daysUntilEvent <= 2) {
-                $sanctionType = 'restricted';
-                $sanctionDays = 15;
-                $sanctionReason = 'Cancelación de evento con ' . $daysUntilEvent . ' día(s) de anticipación.';
-            }
-
-            if ($daysUntilEvent >= 3 && $daysUntilEvent <= 6) {
-                $thirtyDaysAgo = Carbon::now()->subDays(30);
-
-                $lastSanction = UserSanction::where('user_id', $user->id)
-                    ->latest('created_at')
-                    ->first();
-
-                $cancellationsQuery = EventCancellation::where('user_id', $user->id)
-                    ->where('id', '!=', $cancellation->id)
-                    ->where('created_at', '>=', $thirtyDaysAgo)
-                    ->with('artistSale');
-
-                if ($lastSanction) {
-                    $cancellationsQuery->where('created_at', '>', $lastSanction->created_at);
-                }
-
-                $historicalFaults = $cancellationsQuery->get()
-                    ->filter(function ($cancel) {
-                        if (!$cancel->artistSale) {
-                            return false;
-                        }
-                        $eDate = Carbon::parse($cancel->artistSale->event_date)->startOfDay();
-                        $cDate = Carbon::parse($cancel->created_at)->startOfDay();
-                        $diff = $cDate->diffInDays($eDate, false);
-                        $isFault = false;
-                        if ($diff >= 3 && $diff <= 6) {
-                            $isFault = true;
-                        }
-                        return $isFault;
-                    })->count();
-
-                $totalFaults = $historicalFaults + 1;
-
-                if ($totalFaults >= 3) {
-                    $sanctionType = 'restricted';
-                    $sanctionDays = null;
-                    $sanctionReason = 'SISTEMA: Acumulación de ' . $totalFaults . ' faltas (Faults) por cancelar eventos entre 3 y 6 días de anticipación en los últimos 30 días.';
-                }
-            }
-
-            if ($sanctionType) {
-                $endsAt = $sanctionDays ? Carbon::now()->addDays($sanctionDays) : null;
-
-                $cancellation->sanction()->create([
-                    'user_id'    => $user->id,
-                    'type'       => $sanctionType,
-                    'reason'     => $sanctionReason,
-                    'starts_at'  => Carbon::now(),
-                    'ends_at'    => $endsAt,
-                    'created_by' => 'system',
-                ]);
-                User::where('id', $user->id)->update(['account_status' => $sanctionType]);
-            }
 
             $this->sendCancellationEmails($sale, $request->reason, 'client', $refundAmount, $penaltyAmount, $penaltyPercentage);
 
