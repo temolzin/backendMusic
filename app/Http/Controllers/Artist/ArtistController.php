@@ -510,8 +510,6 @@ class ArtistController extends Controller
             $video = ArtistVideo::create([
                 'artist_id'   => $artist->id,
                 'youtube_url' => $matches[1],
-                'title'       => $oembed['title'] ?? null,
-                'thumbnail'   => $oembed['thumbnail_url'] ?? "https://img.youtube.com/vi/{$matches[1]}/hqdefault.jpg",
             ]);
 
             return response()->json(['success' => true, 'artistVideo' => $video], 201);
