@@ -16,7 +16,7 @@ class TicketPdfService
 
     public function generate(ArtistSale $sale): PDF
     {
-        $sale->loadMissing(['artist.musicalGenders', 'cashReference']);
+        $sale->loadMissing(['artist']);
 
         $this->pdf->loadView('pdf.ticket', [
             'sale' => $sale,

@@ -264,11 +264,6 @@ class PaymentController extends Controller
                     $sale->customer_id = $userId;
                     $sale->amount = $item['amount'];
                     $sale->openpay_fee = $this->resolveOpenpayFee($charge, (float) $item['amount']);
-                    if (isset($charge->payment_method->brand)) {
-                        $sale->card_brand = $charge->payment_method->brand;
-                        $cardNumber = $charge->payment_method->card_number ?? '';
-                        $sale->card_last_digits = substr($cardNumber, -4);
-                    }
                     $sale->customer_first_name = $name;
                     $sale->customer_last_name = $last_name;
                     $sale->customer_email = $email;
@@ -1423,6 +1418,37 @@ class PaymentController extends Controller
         1013 => 'El número de tarjeta no es válido.',
     ];
 
+    private function getCardDataForSale(ArtistSale $sale, $user): ?array
+    {
+        try {
+            $keys = OpenpayKey::first();
+            $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, 'MX', request()->ip());
+            Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
+            $charge = $openpay->charges->get($sale->openpay_transaction_id);
+            if (isset($charge->payment_method->brand)) {
+                $brand = $charge->payment_method->brand;
+                $cardNumber = $charge->payment_method->card_number ?? '';
+                return [
+                    'brand' => $brand,
+                    'last_digits' => substr($cardNumber, -4),
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::warning('No se pudo obtener datos de tarjeta desde OpenPay: ' . $e->getMessage());
+        }
+
+        $card = Card::where('user_id', $user->id)->orderBy('id', 'desc')->first();
+        if ($card) {
+            $cleanNumber = preg_replace('/[\s-]/', '', $card->number_card);
+            return [
+                'brand' => strtolower($card->card_type),
+                'last_digits' => substr($cleanNumber, -4),
+            ];
+        }
+
+        return null;
+    }
+
     private static function translateOpenpayError(?int $errorCode, string $fallbackMessage): string
     {
         return self::OPENPAY_ERROR_MESSAGES[$errorCode] ?? $fallbackMessage;
@@ -1450,13 +1476,11 @@ class PaymentController extends Controller
                 ], 403);
             }
 
-            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD && (!$sale->card_brand || !$sale->card_last_digits)) {
-                $card = Card::where('user_id', $user->id)->orderBy('id', 'desc')->first();
-                if ($card) {
-                    $sale->card_brand = strtolower($card->card_type);
-                    $cleanNumber = preg_replace('/[\s-]/', '', $card->number_card);
-                    $sale->card_last_digits = substr($cleanNumber, -4);
-                    $sale->save();
+            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD) {
+                $cardData = $this->getCardDataForSale($sale, $user);
+                if ($cardData) {
+                    $sale->setAttribute('_card_brand', $cardData['brand']);
+                    $sale->setAttribute('_card_last_digits', $cardData['last_digits']);
                 }
             }
 

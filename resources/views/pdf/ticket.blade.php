@@ -1,13 +1,12 @@
-<!DOCTYPE html>
+|   <!DOCTYPE html>
 <html lang="es">
 @php
     use Carbon\Carbon;
     $ticketNumber = $sale->id;
     $isCash = $sale->payment_method === 'cash';
     $isCard = $sale->payment_method === 'card';
-    $cashRef = $sale->cashReference;
-    $cardBrand = $sale->card_brand ?? '';
-    $cardLast = $sale->card_last_digits ?? '';
+    $cardBrand = $sale->_card_brand ?? '';
+    $cardLast = $sale->_card_last_digits ?? '';
     $cardLabel = '';
     if ($cardBrand === 'visa') { $cardLabel = 'Visa'; }
     elseif ($cardBrand === 'mastercard') { $cardLabel = 'Mastercard'; }
