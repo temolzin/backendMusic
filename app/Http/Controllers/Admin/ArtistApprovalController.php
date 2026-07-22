@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ArtistProfileReviewed;
 use App\Models\Artist;
 use App\Models\ArtistProfileRequest;
 use App\Models\Manager;
@@ -10,6 +11,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class ArtistApprovalController extends Controller
@@ -90,6 +93,8 @@ class ArtistApprovalController extends Controller
 
             DB::commit();
 
+            $this->sendReviewNotification($profileRequest, ArtistProfileRequest::APPROVAL_STATUS_ACCEPTED);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Solicitud aceptada, el artista ya es visible en tienda.',
@@ -119,9 +124,20 @@ class ArtistApprovalController extends Controller
             $profileRequest->reviewed_at = Carbon::now();
             $profileRequest->save();
 
+            $this->sendReviewNotification($profileRequest, ArtistProfileRequest::APPROVAL_STATUS_REJECTED);
+
             return response()->json(['success' => true, 'message' => 'Solicitud rechazada.']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    private function sendReviewNotification(ArtistProfileRequest $profileRequest, string $status)
+    {
+        try {
+            Mail::to($profileRequest->user->email)->send(new ArtistProfileReviewed($profileRequest, $status));
+        } catch (\Throwable $e) {
+            Log::warning('Error enviando notificación al artista: ' . $e->getMessage());
         }
     }
 }
