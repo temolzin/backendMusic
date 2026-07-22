@@ -167,7 +167,7 @@ class ApprovalController extends Controller
         try {
             Mail::to($sale->customer_email)->send(new ArtistApprovalNotification($sale, $status));
         } catch (\Exception $e) {
-            Log::warning('Error enviando notificaci&oacute;n al cliente: ' . $e->getMessage());
+            Log::warning('Error enviando notificación al cliente: ' . $e->getMessage());
         }
     }
 
@@ -176,7 +176,7 @@ class ApprovalController extends Controller
         try {
             Mail::to($sale->customer_email)->send(new PurchaseConfirmation($sale));
         } catch (\Exception $e) {
-            Log::warning('Error enviando confirmaci&oacute;n de compra: ' . $e->getMessage());
+            Log::warning('Error enviando confirmación de compra: ' . $e->getMessage());
         }
     }
 
