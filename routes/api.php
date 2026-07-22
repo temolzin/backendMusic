@@ -124,6 +124,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::put('/artist/sales/{id}/complete', [PaymentController::class, 'markAsCompleted']);
     Route::post('/artist/sales/{id}/cancel', [PaymentController::class, 'cancelEvent']);
     Route::post('/client/sales/{id}/cancel', [PaymentController::class, 'cancelClientEvent']);
+    Route::get('/client/sales/{id}/receipt', [PaymentController::class, 'downloadReceipt']);
     Route::put('/artist/sales/check-expired', [PaymentController::class, 'checkExpiredStatuses']);
     Route::get('/admin/openpay-keys', [OpenpayKeysController::class, 'getKeys']);
     Route::put('/admin/openpay-keys', [OpenpayKeysController::class, 'updateKeys']);
