@@ -64,6 +64,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::resource('/admin/musical-genders', MusicalsGendersController::class);
     Route::get('/admin/dashboard-overview', [DashboardStatsController::class, 'index']);
     Route::get('/admin/payouts/pending', [AdminPayoutController::class, 'pendingPayouts']);
+    Route::get('/admin/payouts/history', [AdminPayoutController::class, 'payoutHistory']);
     Route::post('/admin/payouts/{saleId}/release', [AdminPayoutController::class, 'releasePayout']);
     Route::get('/admin/user-sanctions', [UserSanctionController::class, 'index']);
     Route::post('/admin/user-sanctions', [UserSanctionController::class, 'store']);
