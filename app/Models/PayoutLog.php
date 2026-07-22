@@ -8,8 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class PayoutLog extends Model
 {
     use HasFactory;
-
-    protected $table = 'payouts_logs';
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    public const TABLE_PAYOUTS_LOGS = 'payouts_logs';
+    protected $table = self::TABLE_PAYOUTS_LOGS;
 
     protected $fillable = [
         'sale_id',
