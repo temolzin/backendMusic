@@ -65,6 +65,7 @@ Route::group(["middleware" => "auth:api"], function () {
     Route::get('/admin/payouts/pending', [AdminPayoutController::class, 'pendingPayouts']);
     Route::post('/admin/payouts/{saleId}/release', [AdminPayoutController::class, 'releasePayout']);
     Route::get('/admin/artist-approvals/pending', [ArtistApprovalController::class, 'pendingRequests']);
+    Route::get('/admin/artist-approvals/history', [ArtistApprovalController::class, 'history']);
     Route::put('/admin/artist-approvals/{id}/accept', [ArtistApprovalController::class, 'accept']);
     Route::put('/admin/artist-approvals/{id}/reject', [ArtistApprovalController::class, 'reject']);
 

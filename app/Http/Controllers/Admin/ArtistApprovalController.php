@@ -31,6 +31,23 @@ class ArtistApprovalController extends Controller
         }
     }
 
+    public function history()
+    {
+        try {
+            $history = ArtistProfileRequest::whereIn('approval_status', [
+                    ArtistProfileRequest::APPROVAL_STATUS_ACCEPTED,
+                    ArtistProfileRequest::APPROVAL_STATUS_REJECTED,
+                ])
+                ->with(['user', 'artist.manager', 'artist.musicalGenders', 'authorizedByUser'])
+                ->latest('reviewed_at')
+                ->get();
+
+            return response()->json(['success' => true, 'requests' => $history]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function accept($id)
     {
         try {
@@ -122,6 +139,7 @@ class ArtistApprovalController extends Controller
             $profileRequest->approval_status = ArtistProfileRequest::APPROVAL_STATUS_REJECTED;
             $profileRequest->rejection_reason = $request->input('rejection_reason');
             $profileRequest->reviewed_at = Carbon::now();
+            $profileRequest->authorized_by = Auth::id();
             $profileRequest->save();
 
             $this->sendReviewNotification($profileRequest, ArtistProfileRequest::APPROVAL_STATUS_REJECTED);
