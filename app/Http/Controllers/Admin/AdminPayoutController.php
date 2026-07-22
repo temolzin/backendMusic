@@ -5,10 +5,33 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ArtistSale;
 use App\Models\EventCancellation;
+use App\Models\PayoutLog as PayoutLogModel;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AdminPayoutController extends Controller
 {
+    private function calculateAdjustedNetPayout(ArtistSale $sale): float
+    {
+        $amount = floatval($sale->amount);
+        $openpayFee = floatval($sale->openpay_fee);
+        $platformFee = $amount * 0.10;
+        $netArtistPayout = $amount - $openpayFee - $platformFee;
+
+        $penalties = EventCancellation::select('event_cancellations.penalty_amount')
+            ->join('artist_sales', 'event_cancellations.artist_sale_id', '=', 'artist_sales.id')
+            ->where('artist_sales.artist_id', $sale->artist_id)
+            ->where('event_cancellations.penalty_paid', false)
+            ->where('event_cancellations.penalty_amount', '>', 0)
+            ->whereNotNull('event_cancellations.penalty_amount')
+            ->get();
+
+        $totalPenalties = $penalties->sum('penalty_amount');
+
+        return max(0, $netArtistPayout - $totalPenalties);
+    }
+
     public function pendingPayouts(): JsonResponse
     {
         $sales = ArtistSale::with(['artist.payoutMethod'])
@@ -117,22 +140,63 @@ class AdminPayoutController extends Controller
             ], 400);
         }
 
-        $sale->status = ArtistSale::PAYMENT_STATUS_LIQUIDATED;
-        $sale->save();
+        $adminId = Auth::id();
 
-        EventCancellation::whereIn('artist_sale_id', function ($query) use ($sale) {
-            $query->select('id')
-                ->from('artist_sales')
-                ->where('artist_id', $sale->artist_id);
-        })
-            ->where('penalty_paid', false)
-            ->where('penalty_amount', '>', 0)
-            ->whereNotNull('penalty_amount')
-            ->update(['penalty_paid' => true]);
+        if (!$adminId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo identificar al administrador autenticado.'
+            ], 401);
+        }
+
+        DB::transaction(function () use ($sale, $adminId) {
+            $adjustedNetPayout = $this->calculateAdjustedNetPayout($sale);
+
+            $sale->status = ArtistSale::PAYMENT_STATUS_LIQUIDATED;
+            $sale->save();
+
+            PayoutLogModel::create([
+                'sale_id' => $sale->id,
+                'artist_id' => $sale->artist_id,
+                'user_id' => $adminId,
+                'amount' => $adjustedNetPayout,
+            ]);
+
+            EventCancellation::whereIn('artist_sale_id', function ($query) use ($sale) {
+                $query->select('id')
+                    ->from('artist_sales')
+                    ->where('artist_id', $sale->artist_id);
+            })
+                ->where('penalty_paid', false)
+                ->where('penalty_amount', '>', 0)
+                ->whereNotNull('penalty_amount')
+                ->update(['penalty_paid' => true]);
+        });
 
         return response()->json([
             'success' => true,
             'message' => 'La liquidación ha sido marcada como pagada con éxito.'
+        ], 200);
+    }
+
+    public function payoutHistory(): JsonResponse
+    {
+        $payouts = PayoutLogModel::with(['sale', 'artist', 'administrator'])
+            ->latest()
+            ->get()
+            ->map(function (PayoutLogModel $payout) {
+                return [
+                    'sale_id' => $payout->sale_id,
+                    'artist_name' => $payout->artist ? $payout->artist->name : 'N/A',
+                    'admin_name' => $payout->administrator ? $payout->administrator->name : 'N/A',
+                    'amount' => floatval($payout->amount),
+                    'created_at' => $payout->created_at ? $payout->created_at->toDateTimeString() : null,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $payouts,
         ], 200);
     }
 }
