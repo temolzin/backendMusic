@@ -57,6 +57,8 @@ class ArtistSale extends Model
         'approval_deadline',
         'approval_responded_at',
         'openpay_customer_id',
+        'card_brand',
+        'card_last_digits',
     ];
 
     public function cashReference()

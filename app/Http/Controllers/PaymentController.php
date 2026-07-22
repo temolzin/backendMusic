@@ -26,8 +26,10 @@ use Carbon\Carbon;
 use App\Models\OpenpayKey;
 use App\Models\Offer;
 use App\Models\EventCancellation;
+use App\Models\Card;
 use App\Services\DistanceMatrixService;
 use Illuminate\Support\Facades\Mail;
+use App\Services\TicketPdfService;
 use App\Mail\ArtistSaleRequest;
 use App\Mail\EventCancelledNotification;
 
@@ -262,6 +264,11 @@ class PaymentController extends Controller
                     $sale->customer_id = $userId;
                     $sale->amount = $item['amount'];
                     $sale->openpay_fee = $this->resolveOpenpayFee($charge, (float) $item['amount']);
+                    if (isset($charge->payment_method->brand)) {
+                        $sale->card_brand = $charge->payment_method->brand;
+                        $cardNumber = $charge->payment_method->card_number ?? '';
+                        $sale->card_last_digits = substr($cardNumber, -4);
+                    }
                     $sale->customer_first_name = $name;
                     $sale->customer_last_name = $last_name;
                     $sale->customer_email = $email;
@@ -1419,5 +1426,46 @@ class PaymentController extends Controller
     private static function translateOpenpayError(?int $errorCode, string $fallbackMessage): string
     {
         return self::OPENPAY_ERROR_MESSAGES[$errorCode] ?? $fallbackMessage;
+    }
+
+    public function downloadReceipt($id)
+    {
+        try {
+            $user = Auth::user();
+            $sale = ArtistSale::where('id', $id)
+                ->where('customer_id', $user->id)
+                ->firstOrFail();
+
+            if ($sale->approval_status !== ArtistSale::APPROVAL_STATUS_ACCEPTED) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El recibo solo esta disponible despues de que el artista acepte la solicitud.'
+                ], 403);
+            }
+
+            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CASH && $sale->status !== ArtistSale::PAYMENT_STATUS_COMPLETED) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El recibo estara disponible cuando el pago en efectivo sea confirmado.'
+                ], 403);
+            }
+
+            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD && (!$sale->card_brand || !$sale->card_last_digits)) {
+                $card = Card::where('user_id', $user->id)->orderBy('id', 'desc')->first();
+                if ($card) {
+                    $sale->card_brand = strtolower($card->card_type);
+                    $cleanNumber = preg_replace('/[\s-]/', '', $card->number_card);
+                    $sale->card_last_digits = substr($cleanNumber, -4);
+                    $sale->save();
+                }
+            }
+
+            return app(TicketPdfService::class)->download($sale);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo generar el recibo: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

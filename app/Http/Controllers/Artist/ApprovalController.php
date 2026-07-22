@@ -14,6 +14,8 @@ use Openpay\Data\Openpay;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ArtistApprovalNotification;
+use App\Mail\PurchaseConfirmation;
+use App\Services\TicketPdfService;
 
 class ApprovalController extends Controller
 {
@@ -152,6 +154,7 @@ class ApprovalController extends Controller
             }
 
             $this->sendClientNotification($sale, ArtistSale::APPROVAL_STATUS_ACCEPTED);
+            $this->sendPurchaseConfirmation($sale);
 
             return response()->json(['success' => true, 'message' => 'Solicitud aceptada correctamente', 'sale' => $sale]);
         } catch (\Exception $e) {
@@ -164,7 +167,16 @@ class ApprovalController extends Controller
         try {
             Mail::to($sale->customer_email)->send(new ArtistApprovalNotification($sale, $status));
         } catch (\Exception $e) {
-            Log::warning('Error enviando notificación al cliente: ' . $e->getMessage());
+            Log::warning('Error enviando notificaci&oacute;n al cliente: ' . $e->getMessage());
+        }
+    }
+
+    private function sendPurchaseConfirmation(ArtistSale $sale)
+    {
+        try {
+            Mail::to($sale->customer_email)->send(new PurchaseConfirmation($sale));
+        } catch (\Exception $e) {
+            Log::warning('Error enviando confirmaci&oacute;n de compra: ' . $e->getMessage());
         }
     }
 
