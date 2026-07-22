@@ -30,6 +30,7 @@ class UserResource extends JsonResource
             "permissions" => $userPermissions,
             "image"       => $this->getFirstMediaUrl('profile_images') ?: $defaultGravatar,
             "dark_mode"   => $this->dark_mode,
+            'account_status' => $this->account_status
         ];
     }
 }

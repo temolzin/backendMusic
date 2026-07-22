@@ -25,7 +25,7 @@ class ArtistController extends Controller
     public function index()
     {
         try {
-            $artistMusicalGenders = Artist::with('musicalGenders')->with('manager')->where('user_id', Auth::user()->id)->first();
+            $artistMusicalGenders = Artist::with(['musicalGenders', 'manager', 'user:id,account_status'])->where('user_id', Auth::user()->id)->first();
 
             $latestRequest = ArtistProfileRequest::where('user_id', Auth::user()->id) ->latest() ->first();
 
@@ -150,7 +150,13 @@ class ArtistController extends Controller
     public function show($id)
     {
         try {
-            $artist = Artist::find($id);
+            $artist = Artist::with(['user:id,account_status', 'manager'])->find($id);
+            if (empty($artist)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Artista no encontrado'
+                ], 404);
+            }
 
             return response()->json([
                 'success' => true,
@@ -485,12 +491,17 @@ class ArtistController extends Controller
         try {
             $artistWithMusicalGender = Artist::with([
                 'musicalGenders',
+                'manager',
+                'user:id,account_status',
                 'offers' => function ($query) {
                 $query->where('is_active', true)
                     ->where('start_date', '<=', now())
                     ->where('end_date', '>=', now());
                 }
             ])
+                ->whereHas('user', function ($q) {
+                    $q->whereIn('account_status', ['active']);
+                })
                 ->withAvg("ratings","rating")
                 ->orderBy('id', 'asc')
                 ->get();

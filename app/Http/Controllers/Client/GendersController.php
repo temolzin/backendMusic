@@ -58,6 +58,7 @@ class GendersController extends Controller
                 'manager',
                 'media',
                 'artistVideos',
+                'user:id,account_status',
                 'offers' => function ($query) {
                     $query->where('is_active', true)
                         ->where('start_date', '<=', now())
