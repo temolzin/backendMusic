@@ -31,7 +31,7 @@ class ArtistApprovalController extends Controller
         }
     }
 
-    public function history()
+    public function getHistory()
     {
         try {
             $history = ArtistProfileRequest::whereIn('approval_status', [
