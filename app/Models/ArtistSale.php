@@ -23,6 +23,7 @@ class ArtistSale extends Model
     const APPROVAL_STATUS_ACCEPTED = 'accepted';
     const APPROVAL_STATUS_REJECTED = 'rejected';
     const APPROVAL_STATUS_EXPIRED = 'expired';
+    const APPROVAL_STATUS_CANCELLED = 'cancelled';
 
     const PAYMENT_METHOD_CARD = 'card';
     const PAYMENT_METHOD_CASH = 'cash';

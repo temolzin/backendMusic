@@ -61,7 +61,7 @@ class ApprovalController extends Controller
             }
 
             $history = ArtistSale::where('artist_id', $artist->id)
-                ->whereIn('approval_status', [ArtistSale::APPROVAL_STATUS_ACCEPTED, ArtistSale::APPROVAL_STATUS_REJECTED, ArtistSale::APPROVAL_STATUS_EXPIRED])
+                ->whereIn('approval_status', [ArtistSale::APPROVAL_STATUS_ACCEPTED, ArtistSale::APPROVAL_STATUS_REJECTED, ArtistSale::APPROVAL_STATUS_EXPIRED, ArtistSale::APPROVAL_STATUS_CANCELLED])
                 ->with('customer')
                 ->orderByDesc('approval_responded_at')
                 ->get();

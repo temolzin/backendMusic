@@ -1320,6 +1320,10 @@ class PaymentController extends Controller
             $refundAmount = $originalRefundAmount;
 
             $sale->event_status = ArtistSale::EVENT_STATUS_CANCELLED;
+            if (in_array($sale->approval_status, [ArtistSale::APPROVAL_STATUS_PENDING, ArtistSale::APPROVAL_STATUS_ACCEPTED])) {
+                $sale->approval_status = ArtistSale::APPROVAL_STATUS_CANCELLED;
+                $sale->approval_responded_at = Carbon::now();
+            }
             $sale->save();
 
             EventCancellation::create([
