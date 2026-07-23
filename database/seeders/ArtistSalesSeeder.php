@@ -29,9 +29,9 @@ class ArtistSalesSeeder extends Seeder
         $createdAtOffsets = [-150, -120, -90, -75, -60, -30, -20, -10];
         $paymentMethods   = ['card', 'cash'];
         $salesPattern = [
-            ['status' => ArtistSale::PAYMENT_STATUS_COMPLETED, 'event_status' => ArtistSale::EVENT_STATUS_COMPLETED],
-            ['status' => ArtistSale::PAYMENT_STATUS_COMPLETED, 'event_status' => ArtistSale::EVENT_STATUS_PENDING],
-            ['status' => ArtistSale::PAYMENT_STATUS_PENDING,   'event_status' => ArtistSale::EVENT_STATUS_PENDING],
+            ['status' => ArtistSale::PAYMENT_STATUS_COMPLETED, 'event_status' => ArtistSale::EVENT_STATUS_COMPLETED, 'approval_status' => ArtistSale::APPROVAL_STATUS_ACCEPTED],
+            ['status' => ArtistSale::PAYMENT_STATUS_COMPLETED, 'event_status' => ArtistSale::EVENT_STATUS_PENDING,   'approval_status' => ArtistSale::APPROVAL_STATUS_ACCEPTED],
+            ['status' => ArtistSale::PAYMENT_STATUS_PENDING,   'event_status' => ArtistSale::EVENT_STATUS_PENDING,  'approval_status' => ArtistSale::APPROVAL_STATUS_PENDING],
         ];
 
         foreach ($customers as $customerIndex => $customer) {
@@ -47,7 +47,22 @@ class ArtistSalesSeeder extends Seeder
                     : 0.00;
 
                 $eventDate = Carbon::now()->addDays($eventDateOffsets[($customerIndex + $j) % count($eventDateOffsets)])->format('Y-m-d');
-                $createdAt = Carbon::now()->addDays($createdAtOffsets[($customerIndex + $j) % count($createdAtOffsets)])->format('Y-m-d H:i:s');
+                $createdAt = Carbon::now()->addDays($createdAtOffsets[($customerIndex + $j) % count($createdAtOffsets)]);
+
+                $approvalStatus = $statusPattern['approval_status'];
+                $approvalDeadline = null;
+                $approvalRespondedAt = null;
+
+                if ($approvalStatus === ArtistSale::APPROVAL_STATUS_PENDING) {
+                    $approvalDeadline = Carbon::now()->addHours(24);
+                } elseif ($approvalStatus === ArtistSale::APPROVAL_STATUS_ACCEPTED) {
+                    $approvalDeadline = (clone $createdAt)->addHours(24);
+                    $approvalRespondedAt = (clone $createdAt)->addHours(2);
+                } elseif (in_array($approvalStatus, [ArtistSale::APPROVAL_STATUS_REJECTED, ArtistSale::APPROVAL_STATUS_EXPIRED])) {
+                    $approvalDeadline = (clone $createdAt)->addHours(24);
+                    $approvalRespondedAt = $approvalStatus === ArtistSale::APPROVAL_STATUS_REJECTED
+                        ? (clone $createdAt)->addHours(4) : null;
+                }
 
                 $sale = ArtistSale::create([
                     'artist_id'              => $artistId,
@@ -69,7 +84,9 @@ class ArtistSalesSeeder extends Seeder
                     'payment_method'         => $paymentMethod,
                     'event_status'           => $statusPattern['event_status'],
                     'status'                 => $statusPattern['status'],
-                    'approval_status'        => ArtistSale::APPROVAL_STATUS_ACCEPTED, // --- CONSTANTE AQUÍ TAMBIÉN ---
+                    'approval_status'        => $approvalStatus,
+                    'approval_deadline'      => $approvalDeadline,
+                    'approval_responded_at'  => $approvalRespondedAt,
                     'created_at'             => $createdAt,
                     'updated_at'             => $createdAt,
                 ]);
