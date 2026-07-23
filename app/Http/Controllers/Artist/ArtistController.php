@@ -464,23 +464,51 @@ class ArtistController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  Request  $request
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int|string|null  $id
      * @return \Illuminate\Http\Response
      */
-    public function deleteGaleryArtist(Request  $request)
+    public function deleteGaleryArtist(Request $request, $id = null)
     {
         try {
             $artist = Artist::where('user_id', Auth::user()->id)->firstOrFail();
 
+            $targetId = $id;
+            if (!$targetId) {
+                $targetId = $request->input('media_id');
+            }
+            if (!$targetId) {
+                $targetId = $request->input('id');
+            }
+            if (!$targetId) {
+                throw new \Exception('Petición rechazada: No se recibió un ID de imagen.');
+            }
+
             DB::beginTransaction();
-            $artist->clearMediaCollection('artist_gallery');
+
+            if ($targetId !== 'Yes' && !is_numeric($targetId)) {
+                throw new \Exception('ID de formato inválido.');
+            }
+
+            if ($targetId === 'Yes') {
+                $artist->clearMediaCollection('artist_gallery');
+            }
+            if (is_numeric($targetId)) {
+                $mediaItem = $artist->media()->find($targetId);
+                if (!$mediaItem) {
+                    throw new \Exception('La imagen no existe o no tienes permisos para borrarla.');
+                }
+                $mediaItem->delete();
+            }
+
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Imagenes eliminadas'
+                'message' => 'Operación realizada con éxito'
             ], 200);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -547,24 +575,35 @@ class ArtistController extends Controller
         try {
             $artist = Artist::where('user_id', Auth::user()->id)->first();
             $count = ArtistVideo::where('artist_id', $artist->id)->count();
+            $urls = $request->input('youtube_urls', []);
+            if (!is_array($urls)) {
+                if ($request->has('youtube_url')) {
+                    $urls = [$request->input('youtube_url')];
+                }
+            }
+            $urls = array_filter($urls);
 
-            if ($count >= 3) {
-                return response()->json(['message' => 'Máximo 3 videos permitidos'], 422);
+            if (($count + count($urls)) > 3) {
+                return response()->json(['message' => 'Máximo 3 videos permitidos en total'], 422);
             }
 
-            $url = $request->youtube_url;
-            preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $url, $matches);
-
-            if (empty($matches[1])) {
-                return response()->json(['message' => 'URL de YouTube no válida'], 422);
+            $addedVideos = [];
+            foreach ($urls as $url) {
+                preg_match('/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $url, $matches);
+                if (!empty($matches[1])) {
+                    $video = ArtistVideo::create([
+                        'artist_id'   => $artist->id,
+                        'youtube_url' => $matches[1],
+                    ]);
+                    $addedVideos[] = $video;
+                }
             }
 
-            $video = ArtistVideo::create([
-                'artist_id'   => $artist->id,
-                'youtube_url' => $matches[1],
-            ]);
+            if (count($addedVideos) === 0) {
+                return response()->json(['message' => 'Ninguna URL de YouTube fue válida'], 422);
+            }
 
-            return response()->json(['success' => true, 'artistVideo' => $video], 201);
+            return response()->json(['success' => true, 'artistVideos' => $addedVideos], 201);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }

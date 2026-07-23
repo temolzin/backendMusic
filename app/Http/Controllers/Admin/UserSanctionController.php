@@ -129,6 +129,9 @@ class UserSanctionController extends Controller
 
                 $cancellationsQuery = EventCancellation::where('user_id', $user->id)
                     ->where('created_at', '>=', $thirtyDaysAgo) 
+                    ->whereHas('artistSale', function ($q) {
+                        $q->where('approval_status', ArtistSale::APPROVAL_STATUS_ACCEPTED);
+                    })
                     ->with('artistSale');
                 
                 if (!empty($lastSanction)) {
@@ -224,6 +227,9 @@ class UserSanctionController extends Controller
                 ->get();
 
             $cancellations = EventCancellation::where('user_id', $user->id)
+                ->whereHas('artistSale', function ($q) {
+                    $q->where('approval_status', ArtistSale::APPROVAL_STATUS_ACCEPTED);
+                })
                 ->with('artistSale')
                 ->orderBy('id', 'desc')
                 ->get();
@@ -476,6 +482,14 @@ class UserSanctionController extends Controller
                 ], 404);
             }
             $sale = $cancellation->artistSale;
+
+            if ($sale->approval_status !== ArtistSale::APPROVAL_STATUS_ACCEPTED) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'El evento no había sido aceptado por el artista. No se aplican sanciones.'
+                ], 200);
+            }
+
             if (empty($sale->event_date)) {
                 return response()->json([
                     'success' => false,
@@ -534,6 +548,9 @@ class UserSanctionController extends Controller
             $cancellationsQuery = EventCancellation::where('user_id', $user->id)
                 ->where('id', '!=', $cancellation->id)
                 ->where('created_at', '>=', $thirtyDaysAgo)
+                ->whereHas('artistSale', function($q) {
+                    $q->where('approval_status', ArtistSale::APPROVAL_STATUS_ACCEPTED);
+                })
                 ->with('artistSale');
             if ($lastSanction) {
                 $cancellationsQuery->where('created_at', '>', $lastSanction->created_at);
