@@ -69,41 +69,41 @@ class ArtistSalesSeeder extends Seeder
                     : null;
 
                 $sale = ArtistSale::create([
-                    'artist_id'              => $artistId,
-                    'customer_id'            => $customer->id,
-                    'amount'                 => $amount,
-                    'openpay_fee'            => $openpayFee,
+                    'artist_id' => $artistId,
+                    'customer_id' => $customer->id,
+                    'amount' => $amount,
+                    'openpay_fee' => $openpayFee,
                     'openpay_transaction_id' => $paymentMethod === 'cash' && $eventStatus === ArtistSale::EVENT_STATUS_PENDING ? null : 'trx_test_' . $artistId . '_' . $customer->id,
                     'customer_first_name'    => explode(' ', $customer->name)[0],
                     'customer_last_name'     => explode(' ', $customer->name)[1] ?? 'Usuario',
-                    'customer_email'         => $customer->email,
-                    'customer_phone'         => '5512345678',
-                    'customer_address'       => 'Calle Principal 123',
-                    'customer_city'          => 'Ciudad de México',
-                    'customer_state'         => 'CDMX',
-                    'customer_zip_code'      => '28001',
-                    'event_date'             => $eventDate->format('Y-m-d'),
-                    'event_hour'             => $eventHours[array_rand($eventHours)],
-                    'event_hours'            => rand(2, 5),
-                    'payment_method'         => $paymentMethod,
-                    'event_status'           => $this->resolveEventStatus($eventDate),
-                    'status'                 => $eventStatus === ArtistSale::EVENT_STATUS_PENDING
+                    'customer_email' => $customer->email,
+                    'customer_phone' => '5512345678',
+                    'customer_address' => 'Calle Principal 123',
+                    'customer_city' => 'Ciudad de México',
+                    'customer_state' => 'CDMX',
+                    'customer_zip_code' => '28001',
+                    'event_date' => $eventDate->format('Y-m-d'),
+                    'event_hour' => $eventHours[array_rand($eventHours)],
+                    'event_hours' => rand(2, 5),
+                    'payment_method' => $paymentMethod,
+                    'event_status' => $this->resolveEventStatus($eventDate),
+                    'status' => $eventStatus === ArtistSale::EVENT_STATUS_PENDING
                         ? ArtistSale::PAYMENT_STATUS_PENDING
                         : ArtistSale::PAYMENT_STATUS_COMPLETED,
-                    'approval_status'        => $approvalStatus,
-                    'approval_deadline'      => $approvalDeadline,
-                    'approval_responded_at'  => $approvalRespondedAt,
-                    'created_at'             => $createdAt,
-                    'updated_at'             => $createdAt,
+                    'approval_status' => $approvalStatus,
+                    'approval_deadline' => $approvalDeadline,
+                    'approval_responded_at' => $approvalRespondedAt,
+                    'created_at' => $createdAt,
+                    'updated_at' => $createdAt,
                 ]);
 
                 if ($paymentMethod === 'cash') {
                     $isPending = $eventStatus === ArtistSale::EVENT_STATUS_PENDING;
 
                     $sale->cashReference()->create([
-                        'cash_reference'    => 'REF-' . strtoupper(uniqid()),
-                        'cash_barcode_url'  => 'https://sandbox-dashboard.openpay.mx/barcode/test_' . $sale->id . '.png',
-                        'cash_due_date'     => $isPending
+                        'cash_reference' => 'REF-' . strtoupper(uniqid()),
+                        'cash_barcode_url' => 'https://sandbox-dashboard.openpay.mx/barcode/test_' . $sale->id . '.png',
+                        'cash_due_date' => $isPending
                             ? Carbon::now()->addDays(3)
                             : Carbon::parse($createdAt)->addDays(3),
                     ]);
