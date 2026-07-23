@@ -73,6 +73,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::put('/admin/user-sanctions/{id}/revoke', [UserSanctionController::class, 'revoke']);
     Route::post('/user-sanctions/evaluate-cancellation', [UserSanctionController::class, 'evaluateCancellation']);
     Route::get('/admin/artist-approvals/pending', [ArtistApprovalController::class, 'pendingRequests']);
+    Route::get('/admin/artist-approvals/history', [ArtistApprovalController::class, 'getHistory']);
     Route::put('/admin/artist-approvals/{id}/accept', [ArtistApprovalController::class, 'accept']);
     Route::put('/admin/artist-approvals/{id}/reject', [ArtistApprovalController::class, 'reject']);
 

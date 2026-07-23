@@ -12,7 +12,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Rules\ValidSocialMedia;
 use App\Models\ArtistVideo;
+use App\Mail\ArtistProfileRequestSubmitted;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 
 class ArtistController extends Controller
@@ -121,6 +124,8 @@ class ArtistController extends Controller
                 $profileRequest->addMedia($request->file('image_manager'))->toMediaCollection('pending_manager_image');
             }
             DB::commit();
+
+            $this->sendAdminNotification($profileRequest);
 
             return response()->json([
                 'success' => true,
@@ -313,6 +318,8 @@ class ArtistController extends Controller
                 $profileRequest->addMedia($request->file('image_manager'))->toMediaCollection('pending_manager_image');
             }
             DB::commit();
+
+            $this->sendAdminNotification($profileRequest);
 
             return response()->json([
                 'success' => true,
@@ -580,6 +587,15 @@ class ArtistController extends Controller
                 'success' => false,
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    private function sendAdminNotification(ArtistProfileRequest $profileRequest)
+    {
+        try {
+            Mail::to(config('mail.from.address'))->send(new ArtistProfileRequestSubmitted($profileRequest));
+        } catch (\Throwable $e) {
+            Log::warning('Error enviando notificación de solicitud de artista a Vibeer: ' . $e->getMessage());
         }
     }
 }

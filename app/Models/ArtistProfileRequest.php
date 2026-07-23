@@ -62,7 +62,7 @@ class ArtistProfileRequest extends Model implements HasMedia
         return $this->belongsTo(Artist::class);
     }
 
-    public function authorizedBy()
+    public function authorizedByUser()
     {
         return $this->belongsTo(User::class, 'authorized_by');
     }
