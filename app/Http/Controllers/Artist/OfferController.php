@@ -22,6 +22,7 @@ class OfferController extends Controller
                 $offer->has_pending_sale = ArtistSale::where('offer_id', $offer->id)
                     ->where('approval_status', ArtistSale::APPROVAL_STATUS_PENDING)
                     ->exists();
+                $offer->is_active = now()->between($offer->start_date, $offer->end_date);
             });
 
             return response()->json(['success' => true, 'offers' => $offers], 200);
@@ -52,6 +53,12 @@ class OfferController extends Controller
             ]);
 
             return response()->json(['success' => true, 'offer' => $offer], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hay campos inválidos o faltantes en el formulario.',
+                'errors'  => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
@@ -79,6 +86,12 @@ class OfferController extends Controller
             ]);
 
             return response()->json(['success' => true, 'offer' => $offer], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hay campos inválidos o faltantes en el formulario.',
+                'errors'  => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }

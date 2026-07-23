@@ -501,8 +501,7 @@ class ArtistController extends Controller
                 'manager',
                 'user:id,account_status',
                 'offers' => function ($query) {
-                $query->where('is_active', true)
-                    ->where('start_date', '<=', now())
+                    $query->where('start_date', '<=', now())
                     ->where('end_date', '>=', now());
                 }
             ])

@@ -23,8 +23,7 @@ class FavouriteArtistsController extends Controller
         try {
             $now = Carbon::now('America/Mexico_City')->format('Y-m-d H:i:s');
             $favouriteArtists = FavouriteArtists::with(['artist', 'artist.offers' => function ($query) use ($now) {
-                $query->where('is_active', true)
-                    ->where('start_date', '<=', $now)
+                $query->where('start_date', '<=', $now)
                     ->where('end_date', '>=', $now);
             }])->where('user_id', Auth::user()->id)->get();
             return response()->json([
