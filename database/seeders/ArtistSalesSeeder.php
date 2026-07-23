@@ -50,19 +50,19 @@ class ArtistSalesSeeder extends Seeder
                 $createdAt = Carbon::now()->addDays($createdAtOffsets[($customerIndex + $j) % count($createdAtOffsets)]);
 
                 $approvalStatus = $statusPattern['approval_status'];
-                $approvalDeadline = null;
-                $approvalRespondedAt = null;
 
-                if ($approvalStatus === ArtistSale::APPROVAL_STATUS_PENDING) {
-                    $approvalDeadline = Carbon::now()->addHours(24);
-                } elseif ($approvalStatus === ArtistSale::APPROVAL_STATUS_ACCEPTED) {
-                    $approvalDeadline = (clone $createdAt)->addHours(24);
-                    $approvalRespondedAt = (clone $createdAt)->addHours(2);
-                } elseif (in_array($approvalStatus, [ArtistSale::APPROVAL_STATUS_REJECTED, ArtistSale::APPROVAL_STATUS_EXPIRED])) {
-                    $approvalDeadline = (clone $createdAt)->addHours(24);
-                    $approvalRespondedAt = $approvalStatus === ArtistSale::APPROVAL_STATUS_REJECTED
-                        ? (clone $createdAt)->addHours(4) : null;
-                }
+                $respondHours = [
+                    ArtistSale::APPROVAL_STATUS_ACCEPTED => 2,
+                    ArtistSale::APPROVAL_STATUS_REJECTED => 4,
+                ];
+
+                $approvalDeadline = $approvalStatus === ArtistSale::APPROVAL_STATUS_PENDING
+                    ? Carbon::now()->addHours(24)
+                    : (clone $createdAt)->addHours(24);
+
+                $approvalRespondedAt = isset($respondHours[$approvalStatus])
+                    ? (clone $createdAt)->addHours($respondHours[$approvalStatus])
+                    : null;
 
                 $sale = ArtistSale::create([
                     'artist_id'              => $artistId,
