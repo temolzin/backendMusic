@@ -23,21 +23,23 @@ class ArtistSalesSeeder extends Seeder
             return;
         }
 
-        $eventHours     = ['08:00', '10:00', '14:00', '16:00', '18:00', '20:00'];
-        $amounts        = [6000, 9000, 12000];
-        $eventDateOffsets = [-90, -60, -30, -15, 15, 30, 60, 90, 120, 150];
+        $eventHours = ['08:00', '10:00', '14:00', '16:00', '18:00', '20:00'];
+        $amounts = [6000, 9000, 12000];
         $createdAtOffsets = [-150, -120, -90, -75, -60, -30, -20, -10];
-        $paymentMethods   = ['card', 'cash'];
-        $salesPattern = [
-            ['status' => ArtistSale::PAYMENT_STATUS_COMPLETED, 'event_status' => ArtistSale::EVENT_STATUS_COMPLETED, 'approval_status' => ArtistSale::APPROVAL_STATUS_ACCEPTED],
-            ['status' => ArtistSale::PAYMENT_STATUS_COMPLETED, 'event_status' => ArtistSale::EVENT_STATUS_PENDING,   'approval_status' => ArtistSale::APPROVAL_STATUS_ACCEPTED],
-            ['status' => ArtistSale::PAYMENT_STATUS_PENDING,   'event_status' => ArtistSale::EVENT_STATUS_PENDING,  'approval_status' => ArtistSale::APPROVAL_STATUS_PENDING],
+        $paymentMethods = ['card', 'cash'];
+        $artistEventCounts = [];
+        $eventStatusCycle = [
+            ArtistSale::EVENT_STATUS_COMPLETED,
+            ArtistSale::EVENT_STATUS_PENDING,
+            ArtistSale::EVENT_STATUS_EXPIRED,
         ];
 
         foreach ($customers as $customerIndex => $customer) {
-            for ($j = 0; $j < count($salesPattern); $j++) {
+            for ($j = 0; $j < count($eventStatusCycle); $j++) {
                 $artistId = $artistIds[($customerIndex + $j) % count($artistIds)];
-                $statusPattern = $salesPattern[$j];
+                $eventStatus = $eventStatusCycle[$j];
+                $artistSaleIndex = $artistEventCounts[$artistId] ?? 0;
+                $artistEventCounts[$artistId] = $artistSaleIndex + 1;
 
                 $paymentMethod = $paymentMethods[($customerIndex + $j) % count($paymentMethods)];
 
@@ -46,10 +48,12 @@ class ArtistSalesSeeder extends Seeder
                     ? round(($amount * 0.029) * 1.16, 2)
                     : 0.00;
 
-                $eventDate = Carbon::now()->addDays($eventDateOffsets[($customerIndex + $j) % count($eventDateOffsets)])->format('Y-m-d');
+                $eventDate = $this->buildEventDate($eventStatus, $artistSaleIndex);
                 $createdAt = Carbon::now()->addDays($createdAtOffsets[($customerIndex + $j) % count($createdAtOffsets)]);
 
-                $approvalStatus = $statusPattern['approval_status'];
+                $approvalStatus = $eventStatus === ArtistSale::EVENT_STATUS_PENDING
+                    ? ArtistSale::APPROVAL_STATUS_PENDING
+                    : ArtistSale::APPROVAL_STATUS_ACCEPTED;
 
                 $respondHours = [
                     ArtistSale::APPROVAL_STATUS_ACCEPTED => 2,
@@ -69,7 +73,7 @@ class ArtistSalesSeeder extends Seeder
                     'customer_id'            => $customer->id,
                     'amount'                 => $amount,
                     'openpay_fee'            => $openpayFee,
-                    'openpay_transaction_id' => $paymentMethod === 'cash' && $statusPattern['status'] === ArtistSale::PAYMENT_STATUS_PENDING ? null : 'trx_test_' . $artistId . '_' . $customer->id,
+                    'openpay_transaction_id' => $paymentMethod === 'cash' && $eventStatus === ArtistSale::EVENT_STATUS_PENDING ? null : 'trx_test_' . $artistId . '_' . $customer->id,
                     'customer_first_name'    => explode(' ', $customer->name)[0],
                     'customer_last_name'     => explode(' ', $customer->name)[1] ?? 'Usuario',
                     'customer_email'         => $customer->email,
@@ -78,12 +82,14 @@ class ArtistSalesSeeder extends Seeder
                     'customer_city'          => 'Ciudad de México',
                     'customer_state'         => 'CDMX',
                     'customer_zip_code'      => '28001',
-                    'event_date'             => $eventDate,
+                    'event_date'             => $eventDate->format('Y-m-d'),
                     'event_hour'             => $eventHours[array_rand($eventHours)],
                     'event_hours'            => rand(2, 5),
                     'payment_method'         => $paymentMethod,
-                    'event_status'           => $statusPattern['event_status'],
-                    'status'                 => $statusPattern['status'],
+                    'event_status'           => $this->resolveEventStatus($eventDate),
+                    'status'                 => $eventStatus === ArtistSale::EVENT_STATUS_PENDING
+                        ? ArtistSale::PAYMENT_STATUS_PENDING
+                        : ArtistSale::PAYMENT_STATUS_COMPLETED,
                     'approval_status'        => $approvalStatus,
                     'approval_deadline'      => $approvalDeadline,
                     'approval_responded_at'  => $approvalRespondedAt,
@@ -92,7 +98,7 @@ class ArtistSalesSeeder extends Seeder
                 ]);
 
                 if ($paymentMethod === 'cash') {
-                    $isPending = $statusPattern['status'] === ArtistSale::PAYMENT_STATUS_PENDING;
+                    $isPending = $eventStatus === ArtistSale::EVENT_STATUS_PENDING;
 
                     $sale->cashReference()->create([
                         'cash_reference'    => 'REF-' . strtoupper(uniqid()),
@@ -104,5 +110,35 @@ class ArtistSalesSeeder extends Seeder
                 }
             }
         }
+    }
+
+    private function buildEventDate(string $eventStatus, int $artistSaleIndex): Carbon
+    {
+        $baseDate = Carbon::now()->startOfDay();
+
+        if ($eventStatus === ArtistSale::EVENT_STATUS_COMPLETED) {
+            return $baseDate->copy()->subDays(7 + ($artistSaleIndex * 3));
+        }
+
+        if ($eventStatus === ArtistSale::EVENT_STATUS_PENDING) {
+            return $baseDate->copy()->addDays(7 + ($artistSaleIndex * 3));
+        }
+
+        return $baseDate->copy()->subDays(45 + ($artistSaleIndex * 3));
+    }
+
+    private function resolveEventStatus(Carbon $eventDate): string
+    {
+        $today = Carbon::now()->startOfDay();
+
+        if ($eventDate->greaterThan($today)) {
+            return ArtistSale::EVENT_STATUS_PENDING;
+        }
+
+        if ($eventDate->lessThan($today->copy()->subDays(30))) {
+            return ArtistSale::EVENT_STATUS_EXPIRED;
+        }
+
+        return ArtistSale::EVENT_STATUS_COMPLETED;
     }
 }
