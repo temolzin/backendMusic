@@ -23,7 +23,7 @@ class ArtistCompletableEventsSeeder extends Seeder
             return;
         }
 
-        $paymentMethods = ['card', 'cash'];
+        $paymentMethods = [ArtistSale::PAYMENT_METHOD_CARD, ArtistSale::PAYMENT_METHOD_CASH];
         $customerCursor = 0;
 
         foreach ($artistIds as $artistIndex => $artistId) {
@@ -46,7 +46,7 @@ class ArtistCompletableEventsSeeder extends Seeder
                 $eventHour = $eventStart->format('H:i:s');
 
                 $amount = (float) $artist->price_hour * $eventHours;
-                $openpayFee = $paymentMethod === 'card'
+                $openpayFee = $paymentMethod === ArtistSale::PAYMENT_METHOD_CARD
                     ? round(($amount * 0.029) * 1.16, 2)
                     : 0.00;
 
@@ -79,7 +79,7 @@ class ArtistCompletableEventsSeeder extends Seeder
                     'updated_at' => $createdAt,
                 ]);
 
-                if ($paymentMethod === 'cash') {
+                if ($paymentMethod === ArtistSale::PAYMENT_METHOD_CASH) {
                     $sale->cashReference()->create([
                         'cash_reference' => 'REF-' . strtoupper(uniqid()),
                         'cash_barcode_url' => 'https://sandbox-dashboard.openpay.mx/barcode/test_' . $sale->id . '.png',
