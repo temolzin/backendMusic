@@ -324,6 +324,12 @@ class UserSanctionController extends Controller
                     'message' => 'Error por campos vacíos',
                 ], 422);
             }
+            if ($userId == auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acción denegada: No tienes permitido aplicar una sanción a tu propia cuenta.'
+                ], 403);
+            }
 
             $ticket = SupportTicket::find($ticketId);
 
