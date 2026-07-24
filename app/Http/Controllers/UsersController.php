@@ -212,6 +212,12 @@ class UsersController extends Controller
                 'image_profile' => $absoluteImageUrl,
                 'image' => $absoluteImageUrl,
             ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hay campos inválidos o faltantes en el formulario.',
+                'errors'  => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
