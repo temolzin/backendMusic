@@ -1317,6 +1317,8 @@ class PaymentController extends Controller
             $penaltyAmount = $originalPenaltyAmount;
             $refundAmount = $originalRefundAmount;
 
+            $originalApprovalStatus = $sale->approval_status;
+
             $sale->event_status = ArtistSale::EVENT_STATUS_CANCELLED;
             if (in_array($sale->approval_status, [ArtistSale::APPROVAL_STATUS_PENDING, ArtistSale::APPROVAL_STATUS_ACCEPTED])) {
                 $sale->approval_status = ArtistSale::APPROVAL_STATUS_CANCELLED;
@@ -1334,7 +1336,7 @@ class PaymentController extends Controller
                 'penalty_paid' => true,
             ]);
 
-            $this->sendCancellationEmails($sale, $request->reason, 'client', $refundAmount, $penaltyAmount, $penaltyPercentage);
+            $this->sendCancellationEmails($sale, $request->reason, 'client', $refundAmount, $penaltyAmount, $penaltyPercentage, $originalApprovalStatus);
 
             return response()->json([
                 'success' => true,
@@ -1350,14 +1352,14 @@ class PaymentController extends Controller
         }
     }
 
-    private function sendCancellationEmails(ArtistSale $sale, string $reason, string $cancelledBy, float $refundAmount, float $penaltyAmount, int $penaltyPercentage = 0)
+    private function sendCancellationEmails(ArtistSale $sale, string $reason, string $cancelledBy, float $refundAmount, float $penaltyAmount, int $penaltyPercentage = 0, ?string $originalApprovalStatus = null)
     {
         $clientEmail = $sale->customer_email;
 
         $artistUser = Artist::where('id', $sale->artist_id)->with('user')->first()?->user;
         $artistEmail = $artistUser ? $artistUser->email : null;
 
-        $isBeforeApproval = $cancelledBy === 'client' && $sale->approval_status !== ArtistSale::APPROVAL_STATUS_ACCEPTED;
+        $isBeforeApproval = $cancelledBy === 'client' && $originalApprovalStatus !== ArtistSale::APPROVAL_STATUS_ACCEPTED;
 
         if ($clientEmail) {
             try {
