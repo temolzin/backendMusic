@@ -29,22 +29,42 @@
                         <td class="newsletter-hero">
                             <img src="{{ $message->embed(public_path('logovibeer.png')) }}" alt="Vibeer" class="newsletter-logo">
                             <h1 class="newsletter-title" style="margin-top: 12px;">Recordatorio de evento</h1>
-                            <p style="font-size: 16px; margin-bottom: 4px;">Hola {{ $sale->artist->name ?? 'artista' }},</p>
-                            <p class="newsletter-subtitle">Tienes un evento programado para ma&ntilde;ana. Aqu&iacute; est&aacute;n los detalles:</p>
+                            @if($recipientType === 'artist')
+                                <p style="font-size: 16px; margin-bottom: 4px;">Hola {{ $sale->artist->name ?? 'artista' }},</p>
+                                <p class="newsletter-subtitle">Tienes un evento programado para ma&ntilde;ana. Aqu&iacute; est&aacute;n los detalles:</p>
+                            @endif
+                            @if($recipientType === 'customer')
+                                <p style="font-size: 16px; margin-bottom: 4px;">Hola {{ $sale->customer_first_name }},</p>
+                                <p class="newsletter-subtitle">Tu evento es ma&ntilde;ana. Aqu&iacute; est&aacute;n los detalles de la presentaci&oacute;n:</p>
+                            @endif
                         </td>
                     </tr>
                     <tr>
                         <td class="newsletter-content">
                             <div class="newsletter-body">
-                                <div class="highlight">
-                                    <strong>Recuerda:</strong> Este evento comienza en menos de 24 horas. Aseg&uacute;rate de llegar puntual.
-                                </div>
-
-                                <div class="info-grid">
-                                    <div class="info-row">
-                                        <span class="info-label">Cliente</span>
-                                        <span class="info-value">{{ $sale->customer_first_name }} {{ $sale->customer_last_name }}</span>
+                                @if($recipientType === 'artist')
+                                    <div class="highlight">
+                                        <strong>Recuerda:</strong> Este evento comienza en menos de 24 horas. Aseg&uacute;rate de llegar puntual.
                                     </div>
+                                @endif
+                                @if($recipientType === 'customer')
+                                    <div class="highlight">
+                                        <strong>Recuerda:</strong> Este evento comienza en menos de 24 horas. &iexcl;Prep&aacute;rate para disfrutar de la m&uacute;sica!
+                                    </div>
+                                @endif
+                                <div class="info-grid">
+                                    @if($recipientType === 'artist')
+                                        <div class="info-row">
+                                            <span class="info-label">Cliente</span>
+                                            <span class="info-value">{{ $sale->customer_first_name }} {{ $sale->customer_last_name }}</span>
+                                        </div>
+                                    @endif
+                                    @if($recipientType === 'customer')
+                                        <div class="info-row">
+                                            <span class="info-label">Artista</span>
+                                            <span class="info-value">{{ $sale->artist->name ?? 'Artista' }}</span>
+                                        </div>
+                                    @endif
                                     <div class="info-row">
                                         <span class="info-label">Fecha</span>
                                         <span class="info-value">{{ Carbon::parse($sale->event_date)->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY') }}</span>
@@ -64,9 +84,16 @@
                                 </div>
 
                                 <div style="margin-top: 28px; text-align: center;">
-                                    <a href="{{ $frontendUrl }}/artist/my-calendar" target="_blank" class="btn btn-primary" style="color: #fff; background: #094FAB;">
-                                        Ver mi calendario
-                                    </a>
+                                    @if($recipientType === 'artist')
+                                        <a href="{{ $frontendUrl }}/artist/my-calendar" target="_blank" class="btn btn-primary" style="color: #fff; background: #094FAB;">
+                                            Ver mi calendario
+                                        </a>
+                                    @endif
+                                    @if($recipientType === 'customer')
+                                        <a href="{{ $frontendUrl }}/client/shopping-cart/view-my-order-details" target="_blank" class="btn btn-primary" style="color: #fff; background: #094FAB;">
+                                            Ver mi compra
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
                         </td>

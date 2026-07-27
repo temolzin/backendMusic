@@ -12,7 +12,7 @@ use Carbon\Carbon;
 class SendEventReminders extends Command
 {
     protected $signature = 'events:send-reminders';
-    protected $description = 'Envía recordatorio al artista 24h antes del evento';
+    protected $description = 'Envía recordatorio al artista y cliente 24h antes del evento';
 
     public function handle()
     {
@@ -41,16 +41,28 @@ class SendEventReminders extends Command
                     continue;
                 }
 
-                Mail::to($artistUser->email)->send(new EventReminderNotification($sale));
-                $sale->reminder_sent_at = now();
-                $sale->save();
-                $count++;
-
+                Mail::to($artistUser->email)->send(new EventReminderNotification($sale, 'artist'));
                 Log::info('Recordatorio enviado al artista', [
                     'sale_id' => $sale->id,
                     'artist' => $artistUser->email,
                     'event_date' => $sale->event_date,
                 ]);
+
+                $customer = $sale->customer;
+                if (!$customer || !$customer->email) {
+                    Log::warning('Recordatorio: email de cliente no encontrado', ['sale_id' => $sale->id]);
+                }
+                if ($customer && $customer->email) {
+                    Mail::to($customer->email)->send(new EventReminderNotification($sale, 'customer'));
+                    Log::info('Recordatorio enviado al cliente', [
+                        'sale_id' => $sale->id,
+                        'customer' => $customer->email,
+                        'event_date' => $sale->event_date,
+                    ]);
+                }
+                $sale->reminder_sent_at = now();
+                $sale->save();
+                $count++;
             } catch (\Exception $e) {
                 Log::error('Error enviando recordatorio', [
                     'sale_id' => $sale->id,
