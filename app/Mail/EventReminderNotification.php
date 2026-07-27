@@ -13,10 +13,12 @@ class EventReminderNotification extends Mailable
 
     public $sale;
     public $frontendUrl;
+    public $recipientType;
 
-    public function __construct(ArtistSale $sale)
+    public function __construct(ArtistSale $sale, string $recipientType)
     {
         $this->sale = $sale;
+        $this->recipientType = $recipientType;
         $this->frontendUrl = config('app.frontend_url');
     }
 
