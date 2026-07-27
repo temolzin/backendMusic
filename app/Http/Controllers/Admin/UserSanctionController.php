@@ -123,22 +123,11 @@ class UserSanctionController extends Controller
                 
                 $thirtyDaysAgo = Carbon::now()->subDays(self::FAULT_LOOKBACK_DAYS);
 
-                $lastSanction = UserSanction::where('user_id', $user->id)
-                    ->orderBy('id', 'desc')
-                    ->first();
-
-                $cancellationsQuery = EventCancellation::where('user_id', $user->id)
+                $cancellations = EventCancellation::where('user_id', $user->id)
                     ->where('created_at', '>=', $thirtyDaysAgo) 
-                    ->whereHas('artistSale', function ($q) {
-                        $q->where('approval_status', ArtistSale::APPROVAL_STATUS_ACCEPTED);
-                    })
-                    ->with('artistSale');
-                
-                if (!empty($lastSanction)) {
-                    $cancellationsQuery->where('created_at', '>', $lastSanction->created_at);
-                }
-
-                $cancellations = $cancellationsQuery->get();
+                    ->where('penalty_percentage', '>', 0)
+                    ->with('artistSale')
+                    ->get();
                 $faults = 0;
                 
                 foreach($cancellations as $cancel) {
@@ -227,9 +216,7 @@ class UserSanctionController extends Controller
                 ->get();
 
             $cancellations = EventCancellation::where('user_id', $user->id)
-                ->whereHas('artistSale', function ($q) {
-                    $q->where('approval_status', ArtistSale::APPROVAL_STATUS_ACCEPTED);
-                })
+                ->where('penalty_percentage', '>', 0)
                 ->with('artistSale')
                 ->orderBy('id', 'desc')
                 ->get();
@@ -489,7 +476,7 @@ class UserSanctionController extends Controller
             }
             $sale = $cancellation->artistSale;
 
-            if ($sale->approval_status !== ArtistSale::APPROVAL_STATUS_ACCEPTED) {
+            if ($sale->approval_status !== ArtistSale::APPROVAL_STATUS_ACCEPTED && $cancellation->penalty_percentage == 0) {
                 return response()->json([
                     'success' => true,
                     'message' => 'El evento no había sido aceptado por el artista. No se aplican sanciones.'
@@ -554,9 +541,7 @@ class UserSanctionController extends Controller
             $cancellationsQuery = EventCancellation::where('user_id', $user->id)
                 ->where('id', '!=', $cancellation->id)
                 ->where('created_at', '>=', $thirtyDaysAgo)
-                ->whereHas('artistSale', function($q) {
-                    $q->where('approval_status', ArtistSale::APPROVAL_STATUS_ACCEPTED);
-                })
+                ->where('penalty_percentage', '>', 0)
                 ->with('artistSale');
             if ($lastSanction) {
                 $cancellationsQuery->where('created_at', '>', $lastSanction->created_at);
