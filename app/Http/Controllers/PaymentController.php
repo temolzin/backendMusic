@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Services\TicketPdfService;
 use App\Mail\ArtistSaleRequest;
 use App\Mail\EventCancelledNotification;
+use App\Models\ClientRefund;
 
 class PaymentController extends Controller
 {
@@ -1179,38 +1180,34 @@ class PaymentController extends Controller
 
             $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
 
-            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD && $sale->openpay_transaction_id && $sale->status === ArtistSale::PAYMENT_STATUS_COMPLETED) {
-                try {
-                    $keys = OpenpayKey::first();
-                    $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
-                    Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
-
-                    $charge = $openpay->charges->get($sale->openpay_transaction_id);
-                    $charge->refund(['description' => 'Cancelación de evento por el artista']);
-                } catch (\Exception $e) {
-                    Log::error('OpenPay refund failed: ' . $e->getMessage());
-                    return response()->json(['success' => false, 'message' => 'Error al procesar el reembolso: ' . $e->getMessage()], 500);
-                }
-            }
+           
 
             $sale->event_status = ArtistSale::EVENT_STATUS_CANCELLED;
             $sale->save();
 
-            EventCancellation::create([
+            $cancellation = EventCancellation::create([
                 'artist_sale_id' => $sale->id,
                 'user_id' => $user->id,
                 'cancellation_reason' => $request->reason,
                 'penalty_percentage' => $penaltyPercentage,
                 'penalty_amount' => $penaltyAmount,
-                'refunded_at' => $now,
+                'refunded_at' => null,
                 'penalty_paid' => false,
+            ]);
+
+            ClientRefund::create([
+                'event_cancellation_id' => $cancellation->id,
+                'customer_id'           => $sale->customer_id,
+                'refund_percentage'     => 100, 
+                'refund_amount'         => $amount,
+                'status'                => 'pending',
             ]);
 
             $this->sendCancellationEmails($sale, $request->reason, 'artist', $amount, $penaltyAmount, $penaltyPercentage);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Evento cancelado exitosamente',
+                'message' => 'Evento cancelado exitosamente. La solicitud de reembolso fue enviada al administrador.',
                 'data' => [
                     'refund_amount' => $amount,
                     'penalty_percentage' => $penaltyPercentage,
@@ -1281,38 +1278,6 @@ class PaymentController extends Controller
             $originalPenaltyAmount = $penaltyAmount;
             $originalRefundAmount = $refundAmount;
 
-            if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD && $sale->openpay_transaction_id && $sale->status === ArtistSale::PAYMENT_STATUS_COMPLETED) {
-                try {
-                    $keys = OpenpayKey::first();
-                    $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
-                    Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
-
-                    $charge = $openpay->charges->get($sale->openpay_transaction_id);
-
-                    $refunded = false;
-                    if ($penaltyAmount > 0) {
-                        try {
-                            $charge->refund(['description' => 'Cancelación de evento por el cliente', 'amount' => $refundAmount]);
-                            $refunded = true;
-                        } catch (\Exception $e) {
-                            if (str_contains($e->getMessage(), 'can not be partially refunded')) {
-                                $charge->refund(['description' => 'Cancelación de evento por el cliente']);
-                                $refunded = true;
-                            }
-                            if (!str_contains($e->getMessage(), 'can not be partially refunded')) {
-                                throw $e;
-                            }
-                        }
-                    }
-                    if (!$refunded) {
-                        $charge->refund(['description' => 'Cancelación de evento por el cliente']);
-                    }
-                } catch (\Exception $e) {
-                    Log::error('OpenPay refund failed: ' . $e->getMessage());
-                    return response()->json(['success' => false, 'message' => 'Error al procesar el reembolso: ' . $e->getMessage()], 500);
-                }
-            }
-
             $penaltyPercentage = $originalPenaltyPercentage;
             $penaltyAmount = $originalPenaltyAmount;
             $refundAmount = $originalRefundAmount;
@@ -1326,21 +1291,29 @@ class PaymentController extends Controller
             }
             $sale->save();
 
-            EventCancellation::create([
+            $cancellation = EventCancellation::create([
                 'artist_sale_id' => $sale->id,
                 'user_id' => $user->id,
                 'cancellation_reason' => $request->reason,
                 'penalty_percentage' => $penaltyPercentage,
                 'penalty_amount' => $penaltyAmount,
-                'refunded_at' => $now,
+                'refunded_at' => null,
                 'penalty_paid' => true,
+            ]);
+
+            ClientRefund::create([
+                'event_cancellation_id' => $cancellation->id,
+                'customer_id'           => $sale->customer_id,
+                'refund_percentage'     => (100 - $penaltyPercentage),
+                'refund_amount'         => $refundAmount,
+                'status'                => 'pending',
             ]);
 
             $this->sendCancellationEmails($sale, $request->reason, 'client', $refundAmount, $penaltyAmount, $penaltyPercentage, $originalApprovalStatus);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Evento cancelado exitosamente',
+                'message' => 'Evento cancelado exitosamente. La solicitud de reembolso fue enviada al administrador.',
                 'data' => [
                     'refund_amount' => $refundAmount,
                     'penalty_percentage' => $penaltyPercentage,
