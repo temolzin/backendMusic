@@ -36,6 +36,7 @@ use App\Http\Controllers\Artist\ApprovalController;
 use App\Http\Controllers\Admin\UserSanctionController;
 use App\Http\Middleware\CheckAccountStatus;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\ClientRefundController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -76,6 +77,8 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::get('/admin/artist-approvals/history', [ArtistApprovalController::class, 'getHistory']);
     Route::put('/admin/artist-approvals/{id}/accept', [ArtistApprovalController::class, 'accept']);
     Route::put('/admin/artist-approvals/{id}/reject', [ArtistApprovalController::class, 'reject']);
+    Route::get('/admin/client-refunds', [ClientRefundController::class, 'index']);
+    Route::post('/admin/client-refunds/{id}/process', [ClientRefundController::class, 'processRefund']);
 
     //Route for artist
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
