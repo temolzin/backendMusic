@@ -21,6 +21,7 @@ class PayoutLog extends Model
         'artist_id',
         'user_id',
         'amount',
+        'openpay_fee_applied',
     ];
 
     public function sale()

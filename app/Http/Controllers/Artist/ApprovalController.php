@@ -129,11 +129,12 @@ class ApprovalController extends Controller
                     'currency'    => 'MXN',
                     'description' => 'Reserva artista - Pago en efectivo',
                     'customer'    => $customerData,
-                    'due_date'    => $eventDate = Carbon::parse($sale->event_date)->format('Y-m-d\TH:i:s'),
+                    'due_date'    => $eventDate = Carbon::parse($sale->event_date)->endOfDay()->format('Y-m-d\TH:i:s'),
                 ];
 
                 $charge = $openpay->charges->create($chargeRequest);
                 $sale->openpay_transaction_id = $charge->id;
+                $sale->openpay_fee = $this->resolveOpenpayFee($charge, (float) $sale->amount);
                 $cashData = [
                     'cash_reference'   => $charge->payment_method->reference ?? null,
                     'cash_barcode_url' => $charge->payment_method->barcode_url ?? null,
@@ -178,6 +179,19 @@ class ApprovalController extends Controller
         } catch (\Exception $e) {
             Log::warning('Error enviando confirmación de compra: ' . $e->getMessage());
         }
+    }
+
+    private function resolveOpenpayFee($charge, float $amount): float
+    {
+        if (isset($charge->fee) && is_object($charge->fee) && isset($charge->fee->amount)) {
+            return (float) $charge->fee->amount;
+        }
+
+        $baseCommissionRate = 0.029;
+        $fixedCharge = 2.50;
+        $taxRate = 1.16;
+
+        return round((($amount * $baseCommissionRate) + $fixedCharge) * $taxRate, 2);
     }
 
     public function reject($id)
