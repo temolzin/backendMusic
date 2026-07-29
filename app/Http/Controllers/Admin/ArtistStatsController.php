@@ -11,7 +11,7 @@ use App\Models\UserSanction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class StatsController extends Controller
+class ArtistStatsController extends Controller
 {
     private function getMonthName(int $month): string
     {
