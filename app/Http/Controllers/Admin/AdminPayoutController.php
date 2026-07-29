@@ -7,15 +7,16 @@ use App\Models\ArtistSale;
 use App\Models\EventCancellation;
 use App\Models\PayoutLog as PayoutLogModel;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class AdminPayoutController extends Controller
 {
-    private function calculateAdjustedNetPayout(ArtistSale $sale): float
+    private function calculateAdjustedNetPayout(ArtistSale $sale, bool $applyOpenpayFee = true): float
     {
         $amount = floatval($sale->amount);
-        $openpayFee = floatval($sale->openpay_fee);
+        $openpayFee = $applyOpenpayFee ? floatval($sale->openpay_fee) : 0;
         $platformFee = $amount * 0.10;
         $netArtistPayout = $amount - $openpayFee - $platformFee;
 
@@ -116,8 +117,10 @@ class AdminPayoutController extends Controller
         ], 200);
     }
 
-    public function releasePayout(int $saleId): JsonResponse
+    public function releasePayout(Request $request, int $saleId): JsonResponse
     {
+        $applyFee = $request->boolean('apply_openpay_fee', true);
+
         $sale = ArtistSale::find($saleId);
         if (!$sale) {
             return response()->json([
@@ -149,8 +152,8 @@ class AdminPayoutController extends Controller
             ], 401);
         }
 
-        DB::transaction(function () use ($sale, $adminId) {
-            $adjustedNetPayout = $this->calculateAdjustedNetPayout($sale);
+        DB::transaction(function () use ($sale, $adminId, $applyFee) {
+            $adjustedNetPayout = $this->calculateAdjustedNetPayout($sale, $applyFee);
 
             $sale->status = ArtistSale::PAYMENT_STATUS_LIQUIDATED;
             $sale->save();
@@ -160,6 +163,7 @@ class AdminPayoutController extends Controller
                 'artist_id' => $sale->artist_id,
                 'user_id' => $adminId,
                 'amount' => $adjustedNetPayout,
+                'openpay_fee_applied' => $applyFee,
             ]);
 
             EventCancellation::whereIn('artist_sale_id', function ($query) use ($sale) {
