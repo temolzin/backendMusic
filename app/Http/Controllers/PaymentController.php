@@ -1167,15 +1167,7 @@ class PaymentController extends Controller
             }
 
             $amount = floatval($sale->amount);
-            $penaltyPercentage = 0;
-
-            if ($daysUntilEvent >= 3 && $daysUntilEvent < 7) {
-                $penaltyPercentage = 25;
-            }
-
-            if ($daysUntilEvent >= 1 && $daysUntilEvent < 3) {
-                $penaltyPercentage = 50;
-            }
+            $penaltyPercentage = $this->resolveArtistPenalty($daysUntilEvent);
 
             $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
 
@@ -1262,17 +1254,9 @@ class PaymentController extends Controller
             }
 
             $amount = floatval($sale->amount);
-            $penaltyPercentage = 0;
-
-            if ($sale->approval_status === ArtistSale::APPROVAL_STATUS_ACCEPTED) {
-                if ($daysUntilEvent >= 3 && $daysUntilEvent < 7) {
-                    $penaltyPercentage = 25;
-                }
-
-                if ($daysUntilEvent >= 1 && $daysUntilEvent < 3) {
-                    $penaltyPercentage = 50;
-                }
-            }
+            $penaltyPercentage = $sale->approval_status === ArtistSale::APPROVAL_STATUS_ACCEPTED
+                ? $this->resolveClientPenalty($daysUntilEvent)
+                : 0;
 
             $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
             $refundAmount = $amount - $penaltyAmount;
@@ -1376,6 +1360,32 @@ class PaymentController extends Controller
                 Log::warning('Error enviando correo de cancelación al artista: ' . $e->getMessage());
             }
         }
+    }
+
+    private function resolveArtistPenalty(int $daysUntilEvent): int
+    {
+        if ($daysUntilEvent >= 1 && $daysUntilEvent < ArtistSale::CANCEL_PENALTY_DAYS_SHORT) {
+            return ArtistSale::PENALTY_SHORT_TERM;
+        }
+
+        if ($daysUntilEvent >= ArtistSale::CANCEL_PENALTY_DAYS_SHORT && $daysUntilEvent < ArtistSale::CANCEL_PENALTY_DAYS_MEDIUM) {
+            return ArtistSale::PENALTY_MEDIUM_TERM;
+        }
+
+        return ArtistSale::PENALTY_LONG_TERM;
+    }
+
+    private function resolveClientPenalty(int $daysUntilEvent): int
+    {
+        if ($daysUntilEvent >= ArtistSale::CANCEL_PENALTY_DAYS_MEDIUM) {
+            return ArtistSale::PENALTY_LONG_TERM;
+        }
+
+        if ($daysUntilEvent >= ArtistSale::CANCEL_PENALTY_DAYS_SHORT && $daysUntilEvent < ArtistSale::CANCEL_PENALTY_DAYS_MEDIUM) {
+            return ArtistSale::PENALTY_MEDIUM_TERM;
+        }
+
+        return ArtistSale::PENALTY_SHORT_TERM;
     }
 
     private function resolveOpenpayFee($charge, float $amount): float

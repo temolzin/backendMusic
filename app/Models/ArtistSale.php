@@ -28,6 +28,13 @@ class ArtistSale extends Model
     const PAYMENT_METHOD_CARD = 'card';
     const PAYMENT_METHOD_CASH = 'cash';
 
+    const CANCEL_PENALTY_DAYS_SHORT = 7;
+    const CANCEL_PENALTY_DAYS_MEDIUM = 30;
+
+    const PENALTY_SHORT_TERM = 100;
+    const PENALTY_MEDIUM_TERM = 50;
+    const PENALTY_LONG_TERM = 0;
+
     protected $fillable = [
         'artist_id',
         'offer_id',
