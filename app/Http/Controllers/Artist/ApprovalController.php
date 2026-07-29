@@ -134,7 +134,7 @@ class ApprovalController extends Controller
 
                 $charge = $openpay->charges->create($chargeRequest);
                 $sale->openpay_transaction_id = $charge->id;
-                $sale->openpay_fee = $this->resolveOpenpayFee($charge, (float) $sale->amount);
+                $sale->openpay_fee = $this->resolveOpenpayFee($charge);
                 $cashData = [
                     'cash_reference'   => $charge->payment_method->reference ?? null,
                     'cash_barcode_url' => $charge->payment_method->barcode_url ?? null,
@@ -181,16 +181,13 @@ class ApprovalController extends Controller
         }
     }
 
-    private function resolveOpenpayFee($charge, float $amount): float
+    private function resolveOpenpayFee($charge): float
     {
         if (isset($charge->fee) && is_object($charge->fee) && isset($charge->fee->amount)) {
             return (float) $charge->fee->amount;
         }
 
-        $baseCommissionRate = 0.029;
-        $fixedCharge = 2.50;
-
-        return round(($amount * $baseCommissionRate) + $fixedCharge, 2);
+        return 0.00;
     }
 
     public function reject($id)
