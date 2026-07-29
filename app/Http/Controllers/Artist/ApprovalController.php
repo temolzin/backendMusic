@@ -189,9 +189,8 @@ class ApprovalController extends Controller
 
         $baseCommissionRate = 0.029;
         $fixedCharge = 2.50;
-        $taxRate = 1.16;
 
-        return round((($amount * $baseCommissionRate) + $fixedCharge) * $taxRate, 2);
+        return round(($amount * $baseCommissionRate) + $fixedCharge, 2);
     }
 
     public function reject($id)
