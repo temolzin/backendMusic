@@ -36,6 +36,7 @@ use App\Http\Controllers\Artist\ApprovalController;
 use App\Http\Controllers\Admin\UserSanctionController;
 use App\Http\Middleware\CheckAccountStatus;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\ClientRefundController;
 use App\Http\Controllers\Admin\ArtistStatsController;
 
 // Routes for login without sesion
@@ -57,7 +58,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::put('/user/change-password', [UsersController::class, 'updatePassword']);
     Route::post('/user/change-image-profile', [UsersController::class, 'updateImageProfile']);
     Route::put('/user/dark-mode', [UsersController::class, 'updateDarkMode']);
-    
+
     //Route for admin
     Route::resource('/admin/users', UserApiController::class);
     Route::resource('/admin/roles', RolesApiController::class);
@@ -79,6 +80,8 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::get('/admin/artist-approvals/history', [ArtistApprovalController::class, 'getHistory']);
     Route::put('/admin/artist-approvals/{id}/accept', [ArtistApprovalController::class, 'accept']);
     Route::put('/admin/artist-approvals/{id}/reject', [ArtistApprovalController::class, 'reject']);
+    Route::get('/admin/client-refunds', [ClientRefundController::class, 'index']);
+    Route::post('/admin/client-refunds/{id}/process', [ClientRefundController::class, 'processRefund']);
 
     //Route for artist
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
@@ -115,7 +118,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::post('/cliente/shopping_card/updateHourItemShoppingCart', [ShoppingCardController::class, 'update_item_shopping_card_details']);
     Route::post('/client/save-address', [ShoppingCardController::class, 'save_address']);
     Route::get('/client/favourite_artists/list', [FavouriteArtistsController::class, 'index']);
-    Route::post('/client/favourite_artists/new',[FavouriteArtistsController::class, 'store']);
+    Route::post('/client/favourite_artists/new', [FavouriteArtistsController::class, 'store']);
     Route::delete('/client/favourite_artists/destroy/{id}', [FavouriteArtistsController::class, 'destroyFavourite']);
     Route::get('/artist/favourite_artists/count', [FavouriteArtistsController::class, 'countByArtist']);
     Route::get('/artist/ratings/average', [ArtistRatingController::class, 'averageRating']);
