@@ -1167,15 +1167,7 @@ class PaymentController extends Controller
             }
 
             $amount = floatval($sale->amount);
-            $penaltyPercentage = 0;
-
-            if ($daysUntilEvent >= 3 && $daysUntilEvent < 7) {
-                $penaltyPercentage = 25;
-            }
-
-            if ($daysUntilEvent >= 1 && $daysUntilEvent < 3) {
-                $penaltyPercentage = 50;
-            }
+            $penaltyPercentage = $this->resolveArtistPenalty($daysUntilEvent);
 
             $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
 
@@ -1262,17 +1254,9 @@ class PaymentController extends Controller
             }
 
             $amount = floatval($sale->amount);
-            $penaltyPercentage = 0;
-
-            if ($sale->approval_status === ArtistSale::APPROVAL_STATUS_ACCEPTED) {
-                if ($daysUntilEvent >= 3 && $daysUntilEvent < 7) {
-                    $penaltyPercentage = 25;
-                }
-
-                if ($daysUntilEvent >= 1 && $daysUntilEvent < 3) {
-                    $penaltyPercentage = 50;
-                }
-            }
+            $penaltyPercentage = $sale->approval_status === ArtistSale::APPROVAL_STATUS_ACCEPTED
+                ? $this->resolveClientPenalty($daysUntilEvent)
+                : 0;
 
             $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
             $refundAmount = $amount - $penaltyAmount;
@@ -1375,6 +1359,70 @@ class PaymentController extends Controller
             } catch (\Exception $e) {
                 Log::warning('Error enviando correo de cancelación al artista: ' . $e->getMessage());
             }
+        }
+    }
+
+    private function resolveArtistPenalty(int $daysUntilEvent): int
+    {
+        if ($daysUntilEvent >= 1 && $daysUntilEvent < EventCancellation::CANCEL_PENALTY_DAYS_SHORT) {
+            return EventCancellation::PENALTY_SHORT_TERM;
+        }
+
+        if ($daysUntilEvent >= EventCancellation::CANCEL_PENALTY_DAYS_SHORT && $daysUntilEvent < EventCancellation::CANCEL_PENALTY_DAYS_MEDIUM) {
+            return EventCancellation::PENALTY_MEDIUM_TERM;
+        }
+
+        return EventCancellation::PENALTY_LONG_TERM;
+    }
+
+    private function resolveClientPenalty(int $daysUntilEvent): int
+    {
+        if ($daysUntilEvent >= EventCancellation::CANCEL_PENALTY_DAYS_MEDIUM) {
+            return EventCancellation::PENALTY_LONG_TERM;
+        }
+
+        if ($daysUntilEvent >= EventCancellation::CANCEL_PENALTY_DAYS_SHORT && $daysUntilEvent < EventCancellation::CANCEL_PENALTY_DAYS_MEDIUM) {
+            return EventCancellation::PENALTY_MEDIUM_TERM;
+        }
+
+        return EventCancellation::PENALTY_SHORT_TERM;
+    }
+
+    public function cancellationPreview($id)
+    {
+        try {
+            $sale = ArtistSale::find($id);
+            if (!$sale || !$sale->event_date) {
+                return response()->json(['success' => false, 'message' => 'Venta no encontrada'], 404);
+            }
+
+            $now = Carbon::now()->startOfDay();
+            $eventDate = Carbon::parse($sale->event_date)->startOfDay();
+            $daysUntilEvent = $now->diffInDays($eventDate, false);
+
+            $role = request('role', 'client');
+
+            $penaltyPercentage = $role === 'artist'
+                ? $this->resolveArtistPenalty(max(0, $daysUntilEvent))
+                : ($sale->approval_status === ArtistSale::APPROVAL_STATUS_ACCEPTED
+                    ? $this->resolveClientPenalty(max(0, $daysUntilEvent))
+                    : 0);
+
+            $amount = floatval($sale->amount);
+            $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
+            $refundAmount = $amount - $penaltyAmount;
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'days_until_event' => max(0, $daysUntilEvent),
+                    'penalty_percentage' => $penaltyPercentage,
+                    'penalty_amount' => $penaltyAmount,
+                    'refund_amount' => $refundAmount,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
