@@ -1364,28 +1364,66 @@ class PaymentController extends Controller
 
     private function resolveArtistPenalty(int $daysUntilEvent): int
     {
-        if ($daysUntilEvent >= 1 && $daysUntilEvent < ArtistSale::CANCEL_PENALTY_DAYS_SHORT) {
-            return ArtistSale::PENALTY_SHORT_TERM;
+        if ($daysUntilEvent >= 1 && $daysUntilEvent < EventCancellation::CANCEL_PENALTY_DAYS_SHORT) {
+            return EventCancellation::PENALTY_SHORT_TERM;
         }
 
-        if ($daysUntilEvent >= ArtistSale::CANCEL_PENALTY_DAYS_SHORT && $daysUntilEvent < ArtistSale::CANCEL_PENALTY_DAYS_MEDIUM) {
-            return ArtistSale::PENALTY_MEDIUM_TERM;
+        if ($daysUntilEvent >= EventCancellation::CANCEL_PENALTY_DAYS_SHORT && $daysUntilEvent < EventCancellation::CANCEL_PENALTY_DAYS_MEDIUM) {
+            return EventCancellation::PENALTY_MEDIUM_TERM;
         }
 
-        return ArtistSale::PENALTY_LONG_TERM;
+        return EventCancellation::PENALTY_LONG_TERM;
     }
 
     private function resolveClientPenalty(int $daysUntilEvent): int
     {
-        if ($daysUntilEvent >= ArtistSale::CANCEL_PENALTY_DAYS_MEDIUM) {
-            return ArtistSale::PENALTY_LONG_TERM;
+        if ($daysUntilEvent >= EventCancellation::CANCEL_PENALTY_DAYS_MEDIUM) {
+            return EventCancellation::PENALTY_LONG_TERM;
         }
 
-        if ($daysUntilEvent >= ArtistSale::CANCEL_PENALTY_DAYS_SHORT && $daysUntilEvent < ArtistSale::CANCEL_PENALTY_DAYS_MEDIUM) {
-            return ArtistSale::PENALTY_MEDIUM_TERM;
+        if ($daysUntilEvent >= EventCancellation::CANCEL_PENALTY_DAYS_SHORT && $daysUntilEvent < EventCancellation::CANCEL_PENALTY_DAYS_MEDIUM) {
+            return EventCancellation::PENALTY_MEDIUM_TERM;
         }
 
-        return ArtistSale::PENALTY_SHORT_TERM;
+        return EventCancellation::PENALTY_SHORT_TERM;
+    }
+
+    public function cancellationPreview($id)
+    {
+        try {
+            $sale = ArtistSale::find($id);
+            if (!$sale || !$sale->event_date) {
+                return response()->json(['success' => false, 'message' => 'Venta no encontrada'], 404);
+            }
+
+            $now = Carbon::now()->startOfDay();
+            $eventDate = Carbon::parse($sale->event_date)->startOfDay();
+            $daysUntilEvent = $now->diffInDays($eventDate, false);
+
+            $role = request('role', 'client');
+
+            $penaltyPercentage = $role === 'artist'
+                ? $this->resolveArtistPenalty(max(0, $daysUntilEvent))
+                : ($sale->approval_status === ArtistSale::APPROVAL_STATUS_ACCEPTED
+                    ? $this->resolveClientPenalty(max(0, $daysUntilEvent))
+                    : 0);
+
+            $amount = floatval($sale->amount);
+            $penaltyAmount = round($amount * ($penaltyPercentage / 100), 2);
+            $refundAmount = $amount - $penaltyAmount;
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'days_until_event' => max(0, $daysUntilEvent),
+                    'penalty_percentage' => $penaltyPercentage,
+                    'penalty_amount' => $penaltyAmount,
+                    'refund_amount' => $refundAmount,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     private function resolveOpenpayFee($charge, float $amount): float
