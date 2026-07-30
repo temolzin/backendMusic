@@ -9,6 +9,10 @@ class ClientRefund extends Model
 {
     use HasFactory;
 
+    public const STATUS_PENDING   = 'pending';
+    public const STATUS_PROCESSED = 'processed';
+    public const STATUS_REJECTED  = 'rejected';
+
     protected $fillable = [
         'event_cancellation_id',
         'customer_id',

@@ -1194,10 +1194,10 @@ class PaymentController extends Controller
 
             ClientRefund::create([
                 'event_cancellation_id' => $cancellation->id,
-                'customer_id'           => $sale->customer_id,
-                'refund_percentage'     => 100,
-                'refund_amount'         => $amount,
-                'status'                => 'pending',
+                'customer_id' => $sale->customer_id,
+                'refund_percentage' => 100,
+                'refund_amount' => $amount,
+                'status' => ClientRefund::STATUS_PENDING,
             ]);
 
             $this->sendCancellationEmails($sale, $request->reason, 'artist', $amount, $penaltyAmount, $penaltyPercentage);
