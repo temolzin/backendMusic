@@ -81,7 +81,7 @@ class ClientRefundController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => '¡Reembolso procesado con éxito en OpenPay!',
+                'message' => ' ¡Reembolso procesado correctamente en OpenPay!',
                 'data'    => $refund
             ], 200);
         } catch (Exception $e) {

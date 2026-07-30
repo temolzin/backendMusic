@@ -1204,7 +1204,7 @@ class PaymentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Evento cancelado exitosamente. La solicitud de reembolso fue enviada al administrador.',
+                'message' => 'Evento cancelado correctamente. La solicitud de reembolso fue enviada al administrador.',
                 'data' => [
                     'refund_amount' => $amount,
                     'penalty_percentage' => $penaltyPercentage,
@@ -1310,7 +1310,7 @@ class PaymentController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Evento cancelado exitosamente. La solicitud de reembolso fue enviada al administrador.',
+                'message' => 'Evento cancelado correctamente. La solicitud de reembolso fue enviada al administrador.',
                 'data' => [
                     'refund_amount' => $refundAmount,
                     'penalty_percentage' => $penaltyPercentage,
