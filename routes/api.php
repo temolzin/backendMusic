@@ -37,6 +37,7 @@ use App\Http\Controllers\Admin\UserSanctionController;
 use App\Http\Middleware\CheckAccountStatus;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\ClientRefundController;
+use App\Http\Controllers\Admin\ArtistStatsController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -64,6 +65,8 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::resource('/admin/permissions', PermissionsApiController::class);
     Route::resource('/admin/musical-genders', MusicalsGendersController::class);
     Route::get('/admin/dashboard-overview', [DashboardStatsController::class, 'index']);
+    Route::get('/admin/artists/list', [ArtistStatsController::class, 'getArtistsList']);
+    Route::get('/admin/artist-analytics/{artistId}', [ArtistStatsController::class, 'getArtistStats']);
     Route::get('/admin/payouts/pending', [AdminPayoutController::class, 'pendingPayouts']);
     Route::get('/admin/payouts/history', [AdminPayoutController::class, 'payoutHistory']);
     Route::post('/admin/payouts/{saleId}/release', [AdminPayoutController::class, 'releasePayout']);
