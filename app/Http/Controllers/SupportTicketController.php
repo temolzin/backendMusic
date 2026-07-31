@@ -72,7 +72,7 @@ class SupportTicketController extends Controller
         return response()->json(['message' => 'Evidencias guardadas'], 201);
     }
 
-    public function myTickets()
+    public function getTickets()
     {
         $tickets = SupportTicket::where('reporter_user_id', Auth::id())
             ->with(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
@@ -81,7 +81,7 @@ class SupportTicketController extends Controller
         return response()->json(['data' => $tickets]);
     }
 
-    public function myArtistTickets()
+    public function getArtistTickets()
     {
         $userId = Auth::id();
         $tickets = SupportTicket::whereHas('artistSale.artist', function ($q) use ($userId) {
@@ -94,7 +94,7 @@ class SupportTicketController extends Controller
         return response()->json(['data' => $tickets]);
     }
 
-    public function myCustomerTickets()
+    public function getCustomerTickets()
     {
         $userId = Auth::id();
         $tickets = SupportTicket::whereHas('artistSale', function ($q) use ($userId) {
@@ -155,14 +155,14 @@ class SupportTicketController extends Controller
         ]);
     }
 
-    public function logs(SupportTicket $ticket)
+    public function getLogs(SupportTicket $ticket)
     {
         return response()->json([
             'data' => $ticket->logs()->get()
         ]);
     }
 
-    public function myTicketLogs(SupportTicket $ticket)
+    public function getTicketLogs(SupportTicket $ticket)
     {
         $userId = Auth::id();
         $sale = $ticket->artistSale()->with('artist')->first();
