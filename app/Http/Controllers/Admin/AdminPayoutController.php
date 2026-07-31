@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ArtistSale;
 use App\Models\EventCancellation;
 use App\Models\PayoutLog as PayoutLogModel;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,17 @@ use Illuminate\Support\Facades\DB;
 
 class AdminPayoutController extends Controller
 {
+    private function canReleasePayout(ArtistSale $sale): bool
+    {
+        if (!$sale->event_date) {
+            return false;
+        }
+
+        $availableAt = Carbon::parse($sale->event_date)->startOfDay()->addDays(3);
+
+        return Carbon::now()->gte($availableAt);
+    }
+
     private function calculateAdjustedNetPayout(ArtistSale $sale, bool $applyOpenpayFee = true): float
     {
         $amount = floatval($sale->amount);
@@ -74,6 +86,11 @@ class AdminPayoutController extends Controller
             $penalties = $showPenalty ? $penalties : collect([]);
             $totalPenalties = $showPenalty ? $totalPenalties : 0;
             $adjustedNet = $showPenalty ? max(0, $netArtistPayout - $totalPenalties) : $netArtistPayout;
+            $availableAt = $sale->event_date 
+                ? Carbon::parse($sale->event_date)->startOfDay()->addDays(3) 
+                : null;
+                
+            $canRelease = $availableAt ? Carbon::now()->gte($availableAt) : false;
 
             return [
                 'sale_id' => $sale->id,
@@ -87,6 +104,8 @@ class AdminPayoutController extends Controller
                 'event_date' => $sale->event_date,
                 'event_hour' => $sale->event_hour,
                 'event_status' => $sale->event_status,
+                'can_release' => $canRelease,
+                'available_at' => $availableAt ? $availableAt->format('Y-m-d H:i:s') : 'Estamos teniendo problemas para mostrar la fecha',
                 'penalties' => $penalties->map(function ($p) {
                     return [
                         'sale_id' => $p->artist_sale_id,
@@ -140,6 +159,13 @@ class AdminPayoutController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Esta liquidación ya fue pagada anteriormente.'
+            ], 400);
+        }
+
+        if (!$this->canReleasePayout($sale)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La liquidación solo puede liberarse 3 días después del evento.'
             ], 400);
         }
 
