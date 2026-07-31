@@ -167,13 +167,17 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::get('/client/last-order', [PaymentController::class, 'getLastClientOrder']);
     Route::get('/artist/sales/details', [PaymentController::class, 'getArtistSalesDetails']);
     Route::post('/support-tickets', [SupportTicketController::class, 'store']);
-    Route::post('/support-tickets/{ticket}/evidences', [SupportTicketController::class, 'uploadEvidence']);
     Route::get('/support-tickets/my', [SupportTicketController::class, 'myTickets']);
+    Route::get('/support-tickets/my/artist', [SupportTicketController::class, 'myArtistTickets']);
+    Route::get('/support-tickets/my/customer', [SupportTicketController::class, 'myCustomerTickets']);
     Route::get('/support-tickets/{ticket}/logs', [SupportTicketController::class, 'myTicketLogs']);
+    Route::post('/support-tickets/{ticket}/evidences', [SupportTicketController::class, 'uploadEvidence']);
+    Route::post('/support-tickets/{ticket}/comment', [SupportTicketController::class, 'addComment']);
     Route::get('/admin/support-tickets', [SupportTicketController::class, 'index']);
     Route::get('/admin/support-tickets/{ticket}', [SupportTicketController::class, 'show']);
     Route::patch('/admin/support-tickets/{ticket}/status', [SupportTicketController::class, 'updateStatus']);
     Route::get('/admin/support-tickets/{ticket}/logs', [SupportTicketController::class, 'logs']);
+    Route::post('/admin/support-tickets/{ticket}/comment', [SupportTicketController::class, 'addComment']);
 });
 
 Route::post('/webhook/openpay', [WebhookController::class, 'handleOpenpay']);
