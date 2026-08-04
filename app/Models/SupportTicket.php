@@ -40,7 +40,7 @@ class SupportTicket extends Model implements HasMedia
 
     public function logs()
     {
-        return $this->hasMany(TicketLog::class)->with('changedBy')->latest();
+        return $this->hasMany(TicketLog::class)->with('changedBy')->orderBy('created_at', 'asc');
     }
 
     public function sanction()

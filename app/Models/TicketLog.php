@@ -17,6 +17,7 @@ class TicketLog extends Model
         'status',
         'resolution_type',
         'notes',
+        'message',
     ];
 
     public function supportTicket()

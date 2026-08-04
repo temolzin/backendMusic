@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\TicketLog;
+use App\Models\User;
 
 class SupportTicketController extends Controller
 {
@@ -71,13 +72,38 @@ class SupportTicketController extends Controller
         return response()->json(['message' => 'Evidencias guardadas'], 201);
     }
 
-    public function myTickets()
+    public function getTickets()
     {
         $tickets = SupportTicket::where('reporter_user_id', Auth::id())
-            ->with(['artistSale.artist', 'media'])
+            ->with(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
             ->latest()
             ->get();
+        return response()->json(['data' => $tickets]);
+    }
 
+    public function getArtistTickets()
+    {
+        $userId = Auth::id();
+        $tickets = SupportTicket::whereHas('artistSale.artist', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
+            ->where('reporter_user_id', '!=', $userId)
+            ->with(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
+            ->latest()
+            ->get();
+        return response()->json(['data' => $tickets]);
+    }
+
+    public function getCustomerTickets()
+    {
+        $userId = Auth::id();
+        $tickets = SupportTicket::whereHas('artistSale', function ($q) use ($userId) {
+                $q->where('customer_id', $userId);
+            })
+            ->where('reporter_user_id', '!=', $userId)
+            ->with(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
+            ->latest()
+            ->get();
         return response()->json(['data' => $tickets]);
     }
 
@@ -129,21 +155,58 @@ class SupportTicketController extends Controller
         ]);
     }
 
-    public function logs(SupportTicket $ticket)
+    public function getLogs(SupportTicket $ticket)
     {
         return response()->json([
             'data' => $ticket->logs()->get()
         ]);
     }
 
-    public function myTicketLogs(SupportTicket $ticket)
+    public function getTicketLogs(SupportTicket $ticket)
     {
-        if ($ticket->reporter_user_id !== Auth::id()) {
+        $userId = Auth::id();
+        $sale = $ticket->artistSale()->with('artist')->first();
+
+        $isAdmin = Auth::user() && Auth::user()->hasRole(User::ROLE_ADMIN);
+        $isReporter = $ticket->reporter_user_id === $userId;
+        $isArtist = $sale && $sale->artist && $sale->artist->user_id === $userId;
+        $isCustomer = $sale && $sale->customer_id === $userId;
+
+        if (!$isAdmin && !$isReporter && !$isArtist && !$isCustomer) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
         return response()->json([
             'data' => $ticket->logs()->get()
         ]);
+    }
+
+    public function addComment(Request $request, SupportTicket $ticket)
+    {
+        $request->validate([
+            'message' => 'required|string|max:1000',
+        ]);
+        if (in_array($ticket->status, [SupportTicket::STATUS_RESOLVED, SupportTicket::STATUS_REJECTED])) {
+            return response()->json([
+                'message' => 'No es posible agregar comentarios a un ticket resuelto o rechazado.'
+            ], 422);
+        }
+        $userId = Auth::id();
+        $sale = $ticket->artistSale()->with('artist')->first();
+        $isAdmin = Auth::user() && Auth::user()->hasRole(User::ROLE_ADMIN);
+        $isCustomer = $sale && $sale->customer_id === $userId;
+        $isArtist = $sale && $sale->artist && $sale->artist->user_id === $userId;
+        $isReporter = $ticket->reporter_user_id === $userId;
+        if (!$isAdmin && !$isCustomer && !$isArtist && !$isReporter) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+        $log = TicketLog::create([
+            'support_ticket_id'  => $ticket->id,
+            'changed_by_user_id' => $userId,
+            'status' => $ticket->status,
+            'message' => $request->message,
+        ]);
+        $log->load('changedBy');
+        return response()->json(['data' => $log], 201);
     }
 }
