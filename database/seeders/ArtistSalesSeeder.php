@@ -14,6 +14,8 @@ class ArtistSalesSeeder extends Seeder
     {
         $this->call(ArtistPayoutMethodSeeder::class);
 
+        DB::statement('TRUNCATE TABLE artist_sales RESTART IDENTITY CASCADE;');
+
         $artistIds = DB::table('artists')->orderBy('id')->pluck('id')->all();
         $customers = User::whereHas('roles', function ($q) {
             $q->where('slug', User::ROLE_CLIENT);
@@ -34,23 +36,25 @@ class ArtistSalesSeeder extends Seeder
             ArtistSale::EVENT_STATUS_EXPIRED,
         ];
 
-        foreach ($artistIds as $artistIndex => $artistId) {
-            for ($j = 0; $j < 1; $j++) {
-                $customer = $customers[($artistIndex + $j) % count($customers)];
-                $statusIndex = ($artistIndex + $j) % count($eventStatusCycle);
-                $eventStatus = $eventStatusCycle[$statusIndex];
+        $globalSaleCounter = 0;
+
+        foreach ($customers as $customerIndex => $customer) {
+            for ($j = 0; $j < count($eventStatusCycle); $j++) {
+                $artistId = $artistIds[$globalSaleCounter % count($artistIds)];
+                $globalSaleCounter++;
+                $eventStatus = $eventStatusCycle[$j];
                 $artistSaleIndex = $artistEventCounts[$artistId] ?? 0;
                 $artistEventCounts[$artistId] = $artistSaleIndex + 1;
 
-                $paymentMethod = $paymentMethods[($artistIndex + $j) % count($paymentMethods)];
+                $paymentMethod = $paymentMethods[($customerIndex + $j) % count($paymentMethods)];
 
-                $amount = $amounts[($artistIndex + $j) % count($amounts)];
+                $amount = $amounts[($customerIndex + $j) % count($amounts)];
                 $openpayFee = ($paymentMethod === 'card')
                     ? round(($amount * 0.029) * 1.16, 2)
                     : 0.00;
 
                 $eventDate = $this->buildEventDate($eventStatus, $artistSaleIndex);
-                $createdAt = Carbon::now()->addDays($createdAtOffsets[($artistIndex + $j) % count($createdAtOffsets)]);
+                $createdAt = Carbon::now()->addDays($createdAtOffsets[($customerIndex + $j) % count($createdAtOffsets)]);
 
                 $approvalStatus = $eventStatus === ArtistSale::EVENT_STATUS_PENDING
                     ? ArtistSale::APPROVAL_STATUS_PENDING
