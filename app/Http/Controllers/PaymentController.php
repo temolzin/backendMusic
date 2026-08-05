@@ -773,8 +773,10 @@ class PaymentController extends Controller
 
                 $artistId = (int) $element['artist_id'];
                 $hours    = isset($element['hours']) ? (int) $element['hours'] : 1;
-                $normalizedEventDate = $eventDate ? Carbon::parse($eventDate)->toDateString() : null;
-                $normalizedEventHour = $eventHour ? Carbon::parse($eventHour)->format('H:i:s') : null;
+                $itemEventDate = $element['event_date'] ?? $eventDate;
+                $itemEventHour = $element['event_hour'] ?? $eventHour;
+                $normalizedEventDate = $itemEventDate ? Carbon::parse($itemEventDate)->toDateString() : null;
+                $normalizedEventHour = $itemEventHour ? Carbon::parse($itemEventHour)->format('H:i:s') : null;
 
                 $artist = Artist::find($artistId);
                 if (!$artist) {
