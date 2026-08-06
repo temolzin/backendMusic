@@ -63,7 +63,7 @@
 
                                 <div class="info-row" style="background-color: #e3f2fd; padding: 12px; border-radius: 8px; border-left: 4px solid #094FAB; margin-top: 16px;">
                                     <span class="info-value" style="color: #0d47a1; font-size: 13px;">
-                                        ℹ️ Dependiendo de tu institución bancaria, el reembolso puede tardar entre 3 y 10 días hábiles en verse reflejado en tu cuenta o tarjeta.
+                                        Dependiendo de tu institución bancaria, el reembolso puede tardar entre 3 y 10 días hábiles en verse reflejado en tu cuenta o tarjeta.
                                     </span>
                                 </div>
 
