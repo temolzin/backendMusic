@@ -28,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
             $schedule->command('approvals:expire')->hourly();
             $schedule->command('sanctions:lift-expired')->hourly();
             $schedule->command('events:send-reminders')->hourly();
+            $schedule->command('events:send-artist-hour-reminders')->everyMinute();
         });
     }
 }
