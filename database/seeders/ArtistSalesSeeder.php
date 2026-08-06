@@ -14,8 +14,6 @@ class ArtistSalesSeeder extends Seeder
     {
         $this->call(ArtistPayoutMethodSeeder::class);
 
-        DB::statement('TRUNCATE TABLE artist_sales RESTART IDENTITY CASCADE;');
-
         $artistIds = DB::table('artists')->orderBy('id')->pluck('id')->all();
         $customers = User::whereHas('roles', function ($q) {
             $q->where('slug', User::ROLE_CLIENT);
