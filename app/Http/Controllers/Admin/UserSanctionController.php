@@ -123,11 +123,20 @@ class UserSanctionController extends Controller
                 
                 $thirtyDaysAgo = Carbon::now()->subDays(self::FAULT_LOOKBACK_DAYS);
 
-                $cancellations = EventCancellation::where('user_id', $user->id)
+                $lastSanction = UserSanction::where('user_id', $user->id)
+                    ->latest('created_at')
+                    ->first();
+
+                $cancellationsQuery = EventCancellation::where('user_id', $user->id)
                     ->where('created_at', '>=', $thirtyDaysAgo) 
                     ->where('penalty_percentage', '>', 0)
-                    ->with('artistSale')
-                    ->get();
+                    ->with('artistSale');
+
+                if ($lastSanction) {
+                    $cancellationsQuery->where('created_at', '>', $lastSanction->created_at);
+                }
+
+                $cancellations = $cancellationsQuery->get();
                 $faults = 0;
                 
                 foreach($cancellations as $cancel) {
@@ -169,7 +178,6 @@ class UserSanctionController extends Controller
 
             return response()->json($users, 200);
         } catch (\Exception $e) {
-            DB::rollback();
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -230,7 +238,6 @@ class UserSanctionController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            DB::rollback();
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -281,7 +288,6 @@ class UserSanctionController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            DB::rollback();
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
