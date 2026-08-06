@@ -34,9 +34,12 @@ class ArtistSalesSeeder extends Seeder
             ArtistSale::EVENT_STATUS_EXPIRED,
         ];
 
+        $globalSaleCounter = 0;
+
         foreach ($customers as $customerIndex => $customer) {
             for ($j = 0; $j < count($eventStatusCycle); $j++) {
-                $artistId = $artistIds[($customerIndex + $j) % count($artistIds)];
+                $artistId = $artistIds[$globalSaleCounter % count($artistIds)];
+                $globalSaleCounter++;
                 $eventStatus = $eventStatusCycle[$j];
                 $artistSaleIndex = $artistEventCounts[$artistId] ?? 0;
                 $artistEventCounts[$artistId] = $artistSaleIndex + 1;
