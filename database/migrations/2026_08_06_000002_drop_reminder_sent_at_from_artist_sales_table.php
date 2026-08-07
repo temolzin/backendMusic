@@ -9,14 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('artist_sales', function (Blueprint $table) {
-            $table->timestamp('hour_reminder_sent_at')->nullable()->after('reminder_sent_at');
+            $table->dropColumn('reminder_sent_at');
         });
     }
 
     public function down(): void
     {
         Schema::table('artist_sales', function (Blueprint $table) {
-            $table->dropColumn('hour_reminder_sent_at');
+            $table->timestamp('reminder_sent_at')->nullable();
         });
     }
 };

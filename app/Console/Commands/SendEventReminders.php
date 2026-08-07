@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\ArtistSale;
+use App\Models\EventReminder;
 use App\Mail\EventReminderNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +23,9 @@ class SendEventReminders extends Command
             ->where('event_status', ArtistSale::EVENT_STATUS_PENDING)
             ->where('approval_status', ArtistSale::APPROVAL_STATUS_ACCEPTED)
             ->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED)
-            ->whereNull('reminder_sent_at')
+            ->whereDoesntHave('reminders', function ($q) {
+                $q->where('lapse', EventReminder::LAPSE_24H);
+            })
             ->get();
 
         $count = 0;
@@ -60,8 +63,10 @@ class SendEventReminders extends Command
                         'event_date' => $sale->event_date,
                     ]);
                 }
-                $sale->reminder_sent_at = now();
-                $sale->save();
+                $sale->reminders()->create([
+                    'lapse' => EventReminder::LAPSE_24H,
+                    'sent_at' => now(),
+                ]);
                 $count++;
             } catch (\Exception $e) {
                 Log::error('Error enviando recordatorio', [

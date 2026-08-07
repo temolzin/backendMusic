@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\ArtistSale;
+use App\Models\EventReminder;
 use App\Mail\ArtistHourReminderNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -26,7 +27,9 @@ class SendArtistHourReminders extends Command
             ->where('event_status', ArtistSale::EVENT_STATUS_PENDING)
             ->where('approval_status', ArtistSale::APPROVAL_STATUS_ACCEPTED)
             ->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED)
-            ->whereNull('hour_reminder_sent_at')
+            ->whereDoesntHave('reminders', function ($q) {
+                $q->where('lapse', EventReminder::LAPSE_30MIN);
+            })
             ->get();
 
         $count = 0;
@@ -41,7 +44,9 @@ class SendArtistHourReminders extends Command
                     : $sale->event_hour;
 
                 $startsAt = Carbon::parse("{$eventDateStr} {$eventHourStr}");
-                $minutesUntilStart = $now->diffInMinutes($startsAt, false);
+
+                $secondsUntilStart = $startsAt->getTimestamp() - $now->getTimestamp();
+                $minutesUntilStart = (int) floor($secondsUntilStart / 60);
 
                 if ($minutesUntilStart < 0 || $minutesUntilStart > self::REMINDER_MINUTES_BEFORE) {
                     continue;
@@ -64,8 +69,10 @@ class SendArtistHourReminders extends Command
 
                 Mail::to($artistUser->email)->send(new ArtistHourReminderNotification($sale));
 
-                $sale->hour_reminder_sent_at = now();
-                $sale->save();
+                $sale->reminders()->create([
+                    'lapse' => EventReminder::LAPSE_30MIN,
+                    'sent_at' => now(),
+                ]);
 
                 Log::info('Recordatorio de hora enviado al artista', [
                     'sale_id' => $sale->id,

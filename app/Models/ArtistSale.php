@@ -70,6 +70,11 @@ class ArtistSale extends Model
         return $this->belongsTo(Artist::class, 'artist_id');
     }
 
+    public function reminders()
+    {
+        return $this->hasMany(EventReminder::class);
+    }
+
     public function offer()
     {
         return $this->belongsTo(Offer::class, 'offer_id');
