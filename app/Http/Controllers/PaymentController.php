@@ -124,7 +124,7 @@ class PaymentController extends Controller
                 }
 
                 $totalExtraKmCostPesos += $extraKmCost;
-                $lineTotalPesos = $baseAmount + $extraKmCost;
+                $lineTotalPesos = round($baseAmount + $extraKmCost, 2);
                 $calculatedTotalCents += (int) round($baseAmount * 100);
 
                 $itemsForSales[] = [
@@ -231,7 +231,7 @@ class PaymentController extends Controller
                     $charge = $openpayCustomer->charges->create([
                         'method' => 'card',
                         'source_id' => $card->id,
-                        'amount' => (float) $item['amount'],
+                        'amount' => round((float) $item['amount'], 2),
                         'currency' => 'MXN',
                         'description' => 'Cargo de reserva - Artista #' . $item['artist_id'],
                         'capture' => false,
@@ -807,7 +807,7 @@ class PaymentController extends Controller
                 }
 
                 $totalExtraKmCostPesos += $extraKmCost;
-                $lineTotalPesos = $baseAmount + $extraKmCost;
+                $lineTotalPesos = round($baseAmount + $extraKmCost, 2);
                 $calculatedTotalCents += (int) round($baseAmount * 100);
 
                 $itemsForSales[] = [
@@ -830,7 +830,7 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $amount = ($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100;
+            $amount = round(($calculatedTotalCents + (int) round($totalExtraKmCostPesos * 100)) / 100, 2);
 
             $acquiredLocks = [];
             $lockKeys = [];
@@ -997,7 +997,7 @@ class PaymentController extends Controller
 
             $chargeRequest = [
                 'method'      => 'store',
-                'amount'      => (float) $sale->amount,
+                'amount'      => round((float) $sale->amount, 2),
                 'currency'    => 'MXN',
                 'description' => 'Re-generación referencia - Reserva artista',
                 'customer'    => $customerData,
