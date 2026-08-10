@@ -177,7 +177,50 @@ class ArtistStatsController extends Controller
     {
         try {
             $artist = Artist::with(['user', 'musicalGenders'])->findOrFail($artistId);
-            $isActive = optional($artist->user)->account_status !== 'restricted';
+            return $this->buildArtistStatsResponse($artist, $request);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getMyArtistStats(Request $request)
+    {
+        try {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated',
+                ], 401);
+            }
+
+            $artist = Artist::with(['user', 'musicalGenders'])
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$artist) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Artist profile not found for this user',
+                ], 404);
+            }
+
+            return $this->buildArtistStatsResponse($artist, $request);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function buildArtistStatsResponse(Artist $artist, Request $request)
+    {
+        $artistId = $artist->id;
+        $isActive = optional($artist->user)->account_status !== 'restricted';
             $currentStart = Carbon::now()->startOfMonth();
             $currentEnd = Carbon::now()->endOfMonth();
             $previousStart = Carbon::now()->subMonth()->startOfMonth();
@@ -265,11 +308,5 @@ class ArtistStatsController extends Controller
                     'upcoming_events' => $upcomingEvents->values(),
                 ],
             ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-        }
     }
 }
