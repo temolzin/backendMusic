@@ -93,14 +93,15 @@ class UserSanctionSeeder extends Seeder
 
     private function createCancellationHistory(User $user, string $role, string $reason)
     {
-        $sale = null;
-        if ($role === 'artista') {
-            $sale = ArtistSale::whereHas('artist', function ($query) use ($user) {
+        $saleQuery = match ($role) {
+            'artista' => ArtistSale::whereHas('artist', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
-            })->orderBy('event_date')->first();
-        } else {
-            $sale = ArtistSale::where('customer_id', $user->id)->orderBy('event_date')->first();
-        }
+            })->orderBy('event_date'),
+            'cliente' => ArtistSale::where('customer_id', $user->id)->orderBy('event_date'),
+            default => null,
+        };
+
+        $sale = $saleQuery?->first();
 
         if (!$sale) {
             return;
