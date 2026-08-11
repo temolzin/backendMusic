@@ -84,6 +84,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::post('/admin/client-refunds/{id}/process', [ClientRefundController::class, 'processRefund']);
 
     //Route for artist
+    Route::get('/artist/my-analytics', [ArtistStatsController::class, 'getMyArtistStats']);
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
     Route::get('/artist-new/gallery', [ArtistController::class, 'artistGalleryIndex']);
     Route::get('/artist-new/videos', [ArtistController::class, 'artistVideosIndex']);

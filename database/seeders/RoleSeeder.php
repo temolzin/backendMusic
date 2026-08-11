@@ -56,6 +56,7 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'Ver su perfil de artista', 'slug' => 'view-profile-artist', 'description' => 'Ver su perfil de artista'])->roles()->sync([2]);
         Permission::create(['name' => 'Crear perfil de artista', 'slug' => 'create-profile-artist', 'description' => 'Crear perfil de artista'])->roles()->sync([2]);
         Permission::create(['name' => 'Editar su perfil de artista', 'slug' => 'edit-profile-artist', 'description' => 'Editar su perfil de artista'])->roles()->sync([2]);
+        Permission::create(['name' => 'Ver sus propias estadísticas', 'slug' => 'view-own-artist-stats', 'description' => 'Ver el análisis y estadísticas de su propio perfil de artista'])->roles()->sync([2]);
         //Permission::create(['name' => 'Eliminar su perfil de artista', 'slug' => 'delete-profile-artist', 'description' => 'Eliminar su perfil de artista'])->roles()->sync([2]);
 
         //Ruta de Cliente
