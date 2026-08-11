@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\ArtistSale;
+use App\Models\EventCancellation;
 use App\Models\SupportTicket;
 use App\Models\User;
 use App\Models\UserSanction;
@@ -15,46 +16,40 @@ class UserSanctionSeeder extends Seeder
     {
         $sale = ArtistSale::first();
         $adminUser = User::first();
-        $candidates = User::has('roles')
-            ->where('id', '!=', $adminUser->id)
-            ->inRandomOrder()
-            ->get();
-        $users = collect();
-        for ($i = 0; $i < 3; $i++) {
-            if (isset($candidates[$i])) {
-                $users->push($candidates[$i]);
-            }
-        }
-        if ($users->isEmpty() || !$sale || !$adminUser) {
+
+        $artistAccount = User::where('email', 'miguel@gmail.com')->first();
+        $clientAccount = User::where('email', 'carlosramirez@gmail.com')->first();
+
+        $targets = [
+            'artista' => $artistAccount,
+            'cliente' => $clientAccount,
+        ];
+
+        $targets = array_filter($targets);
+
+        if (empty($targets) || !$sale || !$adminUser) {
             return;
         }
 
-        $sanctionsPattern = [
-            [
+        $sanctionByRole = [
+            'artista' => [
                 'type' => 'restricted',
                 'days' => 7,
                 'reason' => 'Uso de lenguaje inapropiado en el chat del evento.',
                 'source' => 'ticket',
                 'created_by' => 'admin',
             ],
-            [
+            'cliente' => [
                 'type' => 'restricted',
                 'days' => null,
                 'reason' => 'Intento de engaño al cliente fuera de la plataforma.',
                 'source' => 'ticket',
                 'created_by' => 'admin',
             ],
-            [
-                'type' => 'restricted',
-                'days' => 30,
-                'reason' => 'SISTEMA: Restricción automática por acumulación de faltas.',
-                'source' => 'expired_approval',
-                'created_by' => 'system',
-            ]
         ];
 
-        foreach ($users as $index => $user) {
-            $pattern = $sanctionsPattern[$index % count($sanctionsPattern)];
+        foreach ($targets as $role => $user) {
+            $pattern = $sanctionByRole[$role];
             $user->update(['account_status' => $pattern['type']]);
             $sanctionableType = null;
             $sanctionableId = null;
@@ -71,12 +66,8 @@ class UserSanctionSeeder extends Seeder
                 $sanctionableType = SupportTicket::class;
                 $sanctionableId = $ticket->id;
             }
-            if ($pattern['source'] === 'expired_approval') {
-                $sanctionableType = ArtistSale::class;
-                $sanctionableId = $sale->id;
-            }
             $endsAt = $pattern['days'] ? Carbon::now()->addDays($pattern['days']) : null;
-            $creator = $pattern['created_by'] === 'system' ? 'system' : (string) $adminUser->id;
+            $creator = (string) $adminUser->id;
 
             UserSanction::create([
                 'user_id' => $user->id,
@@ -88,6 +79,44 @@ class UserSanctionSeeder extends Seeder
                 'ends_at' => $endsAt,
                 'created_by' => $creator,
             ]);
+
+            $this->createCancellationHistory($user, $role, $pattern['reason']);
         }
+    }
+
+    private function createCancellationHistory(User $user, string $role, string $reason)
+    {
+        $saleQuery = match ($role) {
+            'artista' => ArtistSale::whereHas('artist', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->orderBy('event_date'),
+            'cliente' => ArtistSale::where('customer_id', $user->id)->orderBy('event_date'),
+            default => null,
+        };
+
+        $sale = $saleQuery?->first();
+
+        if (!$sale) {
+            return;
+        }
+
+        $penaltyPercentage = 30;
+        $sale->event_date = Carbon::now()->addDays(4)->toDateString();
+        $sale->event_status = ArtistSale::EVENT_STATUS_CANCELLED;
+        $sale->approval_status = ArtistSale::APPROVAL_STATUS_CANCELLED;
+        $sale->approval_responded_at = Carbon::now();
+        $sale->save();
+
+        $cancellation = new EventCancellation([
+            'artist_sale_id' => $sale->id,
+            'user_id' => $user->id,
+            'cancellation_reason' => 'Cancelación registrada para historial: ' . $reason,
+            'penalty_percentage' => $penaltyPercentage,
+            'penalty_amount' => round(floatval($sale->amount) * ($penaltyPercentage / 100), 2),
+            'refunded_at' => null,
+            'penalty_paid' => true,
+        ]);
+        $cancellation->created_at = Carbon::now()->addMinute();
+        $cancellation->save();
     }
 }
