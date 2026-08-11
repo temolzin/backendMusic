@@ -1284,13 +1284,15 @@ class PaymentController extends Controller
                 'penalty_paid' => true,
             ]);
 
-            ClientRefund::create([
-                'event_cancellation_id' => $cancellation->id,
-                'customer_id' => $sale->customer_id,
-                'refund_percentage' => (100 - $penaltyPercentage),
-                'refund_amount' => $refundAmount,
-                'status' => 'pending',
-            ]);
+            if ($refundAmount > 0) {
+                ClientRefund::create([
+                    'event_cancellation_id' => $cancellation->id,
+                    'customer_id' => $sale->customer_id,
+                    'refund_percentage' => (100 - $penaltyPercentage),
+                    'refund_amount' => $refundAmount,
+                    'status' => 'pending',
+                ]);
+            }
 
             $this->sendCancellationEmails($sale, $request->reason, 'client', $refundAmount, $penaltyAmount, $penaltyPercentage, $originalApprovalStatus);
 
