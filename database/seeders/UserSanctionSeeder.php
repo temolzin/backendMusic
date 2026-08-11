@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Artist;
 use App\Models\ArtistSale;
 use App\Models\EventCancellation;
 use App\Models\SupportTicket;
@@ -18,14 +17,8 @@ class UserSanctionSeeder extends Seeder
         $sale = ArtistSale::first();
         $adminUser = User::first();
 
-        $artistAccount = Artist::where('slug', 'charles-ans')->first()?->user;
-        $clientAccount = User::whereHas('roles', function ($query) {
-            $query->where('slug', User::ROLE_CLIENT);
-        })
-            ->where('id', '!=', $adminUser->id)
-            ->whereNotIn('email', ['alexis@gmail.com', 'fernando@gmail.com'])
-            ->orderBy('id')
-            ->first();
+        $artistAccount = User::where('email', 'miguel@gmail.com')->first();
+        $clientAccount = User::where('email', 'carlosramirez@gmail.com')->first();
 
         $targets = [
             'artista' => $artistAccount,
