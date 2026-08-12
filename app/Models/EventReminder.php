@@ -9,7 +9,7 @@ class EventReminder extends Model
 {
     const LAPSE_24H = '24h';
     const LAPSE_30MIN = '30min';
-    const LAPSE_COMPLETION = 'completion';
+    const LAPSE_COMPLETED = 'completed';
 
     protected $fillable = [
         'artist_sale_id',

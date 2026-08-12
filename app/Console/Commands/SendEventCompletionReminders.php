@@ -28,7 +28,7 @@ class SendEventCompletionReminders extends Command
             ->whereNotNull('event_date')
             ->whereNotNull('event_hour')
             ->whereDoesntHave('reminders', function ($q) {
-                $q->where('lapse', EventReminder::LAPSE_COMPLETION);
+                $q->where('lapse', EventReminder::LAPSE_COMPLETED);
             })
             ->get()
             ->filter(function ($sale) use ($now, $cutoff) {
@@ -63,7 +63,7 @@ class SendEventCompletionReminders extends Command
                 Mail::to($artistUser->email)->send(new EventCompletionReminderNotification($sale));
 
                 $sale->reminders()->create([
-                    'lapse' => EventReminder::LAPSE_COMPLETION,
+                    'lapse' => EventReminder::LAPSE_COMPLETED,
                     'sent_at' => now(),
                 ]);
 

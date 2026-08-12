@@ -10,6 +10,7 @@ use App\Models\EventCancellation;
 use App\Models\ArtistSale;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AccountBlockedNotification;
 use Carbon\Carbon;
@@ -390,7 +391,7 @@ class UserSanctionController extends Controller
             try {
                 Mail::to($user->email)->send(new AccountBlockedNotification($user, $reason, $startsAt, $endsAt));
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Error enviando correo de bloqueo manual', [
+                Log::error('Error enviando correo de bloqueo manual', [
                     'user_id' => $user->id,
                     'error' => $e->getMessage(),
                 ]);
@@ -599,7 +600,7 @@ class UserSanctionController extends Controller
             try {
                 Mail::to($user->email)->send(new AccountBlockedNotification($user, $sanctionReason, Carbon::now(), $endsAt));
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Error enviando correo de bloqueo automático', [
+                Log::error('Error enviando correo de bloqueo automático', [
                     'user_id' => $user->id,
                     'error' => $e->getMessage(),
                 ]);

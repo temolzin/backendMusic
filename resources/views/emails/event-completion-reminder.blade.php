@@ -53,7 +53,6 @@
                                         <span class="info-value">{{ $sale->event_hour }} &middot; {{ $sale->event_hours }} hora(s)</span>
                                     </div>
                                 </div>
-
                                 <div style="margin-top: 28px; text-align: center;">
                                     <a href="{{ $frontendUrl }}/artist/my-calendar" target="_blank" class="btn btn-primary" style="color: #fff; background: #094FAB;">
                                         Marcar evento como completado

@@ -54,13 +54,11 @@
                                         <span class="info-value">{{ $sale->event_hour }} &middot; {{ $sale->event_hours }} hora(s)</span>
                                     </div>
                                 </div>
-
                                 <div style="margin-top: 28px; text-align: center;">
                                     <a href="{{ $frontendUrl }}/client/shopping-cart/view-my-order-details" target="_blank" class="btn btn-primary" style="color: #fff; background: #094FAB;">
                                         Calificar a {{ $sale->artist->name ?? 'mi artista' }}
                                     </a>
                                 </div>
-
                                 <p style="font-size: 14px; color: var(--gsm-text); line-height: 1.6; margin-top: 24px;">
                                     ¿Tuviste algún problema o inconsistencia durante el evento? Nuestro equipo de soporte puede ayudarte.
                                 </p>

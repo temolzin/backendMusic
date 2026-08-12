@@ -39,7 +39,6 @@
                                 <div class="highlight">
                                     <strong>Importante:</strong> Tu cuenta ha sido bloqueada temporalmente mientras revisamos tu actividad.
                                 </div>
-
                                 <div class="info-grid" style="margin-top: 16px;">
                                     <div class="info-row">
                                         <span class="info-label">Inicio del bloqueo:</span>
@@ -58,22 +57,18 @@
                                         </div>
                                     @endif
                                 </div>
-
                                 <p style="font-size: 14px; color: var(--gsm-text); line-height: 1.6; margin-top: 20px;">
                                     A partir de este momento, tu cuenta ya no podrá utilizarse para acceder a los servicios de Vibeer.
                                 </p>
-
                                 <div class="info-row" style="background-color: #fdecea; padding: 14px; border-radius: 8px; border-left: 4px solid #d32f2f; border-bottom: none; margin-top: 16px;">
                                     <span class="info-value" style="color: #d32f2f; line-height: 1.5;">
                                         <strong style="display: block; margin-bottom: 4px;">Motivo del bloqueo:</strong>
                                         {{ $reason ?: 'No se especificó un motivo. Contacta a soporte de Vibeer para más información.' }}
                                     </span>
                                 </div>
-
                                 <p style="font-size: 14px; color: var(--gsm-text); line-height: 1.6; margin-top: 20px;">
                                     Si consideras que esto es un error, nuestro equipo de soporte está disponible para revisar tu caso.
                                 </p>
-
                                 <div style="margin-top: 28px; text-align: center;">
                                     <a href="{{ $frontendUrl }}" target="_blank" class="btn btn-primary" style="color: #fff; background: #094FAB;">
                                         Ir a Vibeer
