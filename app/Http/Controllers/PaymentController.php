@@ -33,6 +33,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Services\TicketPdfService;
 use App\Mail\ArtistSaleRequest;
 use App\Mail\EventCancelledNotification;
+use App\Mail\EventCompletedNotification;
 use App\Models\ClientRefund;
 
 class PaymentController extends Controller
@@ -571,6 +572,18 @@ class PaymentController extends Controller
 
             $sale->event_status = ArtistSale::EVENT_STATUS_COMPLETED;
             $sale->save();
+
+            $clientEmail = $sale->customer_email ?? $sale->customer?->email;
+            if ($clientEmail) {
+                try {
+                    Mail::to($clientEmail)->send(new EventCompletedNotification($sale));
+                } catch (\Exception $e) {
+                    Log::error('Error enviando correo de evento completado', [
+                        'sale_id' => $sale->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             return response()->json(['success' => true, 'message' => 'Evento marcado como completado']);
         } catch (\Exception $e) {
