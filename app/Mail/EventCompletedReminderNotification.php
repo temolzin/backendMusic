@@ -7,7 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class EventCompletionReminderNotification extends Mailable
+class EventCompletedReminderNotification extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -22,7 +22,7 @@ class EventCompletionReminderNotification extends Mailable
 
     public function build()
     {
-        return $this->view('emails.event-completion-reminder')
+        return $this->view('emails.event-completed-reminder')
                     ->subject('Tu evento terminó, márcalo como completado - Vibeer');
     }
 }

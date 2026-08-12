@@ -4,15 +4,15 @@ namespace App\Console\Commands;
 
 use App\Models\ArtistSale;
 use App\Models\EventReminder;
-use App\Mail\EventCompletionReminderNotification;
+use App\Mail\EventCompletedReminderNotification;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 
-class SendEventCompletionReminders extends Command
+class SendEventCompletedReminders extends Command
 {
-    protected $signature = 'events:send-completion-reminders';
+    protected $signature = 'events:send-completed-reminders';
     protected $description = 'Envía al artista un recordatorio para marcar como completado el evento terminado';
 
     private const COMPLETION_LOOKBACK_HOURS = 24;
@@ -60,7 +60,7 @@ class SendEventCompletionReminders extends Command
                     continue;
                 }
 
-                Mail::to($artistUser->email)->send(new EventCompletionReminderNotification($sale));
+                Mail::to($artistUser->email)->send(new EventCompletedReminderNotification($sale));
 
                 $sale->reminders()->create([
                     'lapse' => EventReminder::LAPSE_COMPLETED,
