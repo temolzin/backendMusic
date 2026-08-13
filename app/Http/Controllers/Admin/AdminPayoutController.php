@@ -86,6 +86,9 @@ class AdminPayoutController extends Controller
             $penalties = $showPenalty ? $penalties : collect([]);
             $totalPenalties = $showPenalty ? $totalPenalties : 0;
             $adjustedNet = $showPenalty ? max(0, $netArtistPayout - $totalPenalties) : $netArtistPayout;
+            $penaltyExceedsPayout = $showPenalty && ($totalPenalties > $netArtistPayout);
+            $remainingPenalty = $penaltyExceedsPayout ? ($totalPenalties - $netArtistPayout) : 0;
+            $hasPendingPenalties = $showPenalty && ($totalPenalties > 0);
             $availableAt = $sale->event_date 
                 ? Carbon::parse($sale->event_date)->startOfDay()->addDays(3) 
                 : null;
@@ -101,6 +104,9 @@ class AdminPayoutController extends Controller
                 'net_artist_payout' => $netArtistPayout,
                 'total_penalties' => $totalPenalties,
                 'adjusted_net_payout' => $adjustedNet,
+                'penalty_exceeds_payout' => $penaltyExceedsPayout,
+                'remaining_penalty' => $remainingPenalty,
+                'has_pending_penalties' => $hasPendingPenalties,
                 'event_date' => $sale->event_date,
                 'event_hour' => $sale->event_hour,
                 'event_status' => $sale->event_status,
@@ -179,7 +185,45 @@ class AdminPayoutController extends Controller
         }
 
         DB::transaction(function () use ($sale, $adminId, $applyFee) {
-            $adjustedNetPayout = $this->calculateAdjustedNetPayout($sale, $applyFee);
+            $amount = floatval($sale->amount);
+            $openpayFee = $applyFee ? floatval($sale->openpay_fee) : 0;
+            $platformFee = $amount * 0.10;
+            $netArtistPayout = $amount - $openpayFee - $platformFee;
+            $penalties = EventCancellation::whereIn('artist_sale_id', function ($query) use ($sale) {
+                $query->select('id')
+                    ->from('artist_sales')
+                    ->where('artist_id', $sale->artist_id);
+            })
+                ->where('penalty_paid', false)
+                ->where('penalty_amount', '>', 0)
+                ->whereNotNull('penalty_amount')
+                ->orderBy('created_at', 'asc')
+                ->lockForUpdate()
+                ->get();
+            $remainingPayout = $netArtistPayout;
+            $coveredPenaltiesTotal = 0;
+            foreach ($penalties as $penalty) {
+                if ($remainingPayout <= 0) {
+                    break;
+                }
+                $penaltyAmount = floatval($penalty->penalty_amount);
+                if ($remainingPayout < $penaltyAmount) {
+                    $paidPenalty = $penalty->replicate();
+                    $paidPenalty->penalty_amount = $remainingPayout;
+                    $paidPenalty->penalty_paid = true;
+                    $paidPenalty->save();
+                    $penalty->penalty_amount = $penaltyAmount - $remainingPayout;
+                    $penalty->save();
+                    $coveredPenaltiesTotal += $remainingPayout;
+                    $remainingPayout = 0;
+                    break;
+                }
+                $penalty->penalty_paid = true;
+                $penalty->save();
+                $remainingPayout -= $penaltyAmount;
+                $coveredPenaltiesTotal += $penaltyAmount;
+            }
+            $adjustedNetPayout = max(0, $netArtistPayout - $coveredPenaltiesTotal);
 
             $sale->status = ArtistSale::PAYMENT_STATUS_LIQUIDATED;
             $sale->save();
@@ -191,16 +235,6 @@ class AdminPayoutController extends Controller
                 'amount' => $adjustedNetPayout,
                 'openpay_fee_applied' => $applyFee,
             ]);
-
-            EventCancellation::whereIn('artist_sale_id', function ($query) use ($sale) {
-                $query->select('id')
-                    ->from('artist_sales')
-                    ->where('artist_id', $sale->artist_id);
-            })
-                ->where('penalty_paid', false)
-                ->where('penalty_amount', '>', 0)
-                ->whereNotNull('penalty_amount')
-                ->update(['penalty_paid' => true]);
         });
 
         return response()->json([
