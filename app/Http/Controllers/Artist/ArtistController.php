@@ -8,6 +8,7 @@ use App\Models\ArtistProfileRequest;
 use App\Models\Manager;
 use App\Rules\ValidImageUpload;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Rules\ValidSocialMedia;
@@ -375,38 +376,54 @@ class ArtistController extends Controller
     public function storeGaleryArtist(Request $request)
     {
         $request->validate([
-            'sub_files_paths' => ['required', 'file', 'max:1024', new ValidImageUpload()],
+            'sub_files_paths' => ['required'],
         ]);
     
         try {
             $artist = Artist::where('user_id', Auth::user()->id)->firstOrFail();
             $artistGalleryCount = $artist->getMedia('artist_gallery')->count();
     
-            if ($artistGalleryCount < 5) {
-                if ($request->hasFile('sub_files_paths')) {
-                    $uploadedFile = $request->file('sub_files_paths');
-    
-                    DB::beginTransaction();
-                    $media = $artist->addMedia($uploadedFile)->toMediaCollection('artist_gallery');
-                    DB::commit();
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Imagen almacenada',
-                        'artistGallery' => [
-                            'id' => $media->id,
-                            'file_name' => $media->file_name,
-                            'original_url' => $media->getUrl(),
-                        ],
-                    ], 201);
-                }
-            } else {
+            if ($artistGalleryCount >= 5) {
                 return response()->json([
                     'success' => false,
                     'message' => "Máximo de imágenes almacenadas"
                 ], 401);
             }
+
+            $files = $request->file('sub_files_paths');
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+
+            $availableSlots = 5 - $artistGalleryCount;
+            if (count($files) > $availableSlots) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Solo puedes subir {$availableSlots} imagen(es) más. Máximo 5 en total."
+                ], 422);
+            }
+
+            $this->validateGalleryFiles($files);
+
+            DB::beginTransaction();
+            $savedGallery = [];
+            foreach ($files as $uploadedFile) {
+                $media = $artist->addMedia($uploadedFile)->toMediaCollection('artist_gallery');
+                $savedGallery[] = [
+                    'id' => $media->id,
+                    'file_name' => $media->file_name,
+                    'original_url' => $media->getUrl(),
+                ];
+            }
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Imágenes almacenadas',
+                'artistGallery' => $savedGallery,
+            ], 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -423,42 +440,74 @@ class ArtistController extends Controller
     public function updateGaleryArtist(Request $request)
     {
         $request->validate([
-            'sub_files_paths' => ['required', 'file', 'max:1024', new ValidImageUpload()],
+            'sub_files_paths' => ['required'],
         ]);
     
         try {
             $artist = Artist::where('user_id', Auth::user()->id)->firstOrFail();
             $artistGalleryCount = $artist->getMedia('artist_gallery')->count();
     
-            if ($artistGalleryCount < 5) {
-                if ($request->hasFile('sub_files_paths')) {
-                    $uploadedFile = $request->file('sub_files_paths');
-    
-                    DB::beginTransaction();
-                    $media = $artist->addMedia($uploadedFile)->toMediaCollection('artist_gallery');
-                    DB::commit();
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Imagen actualizada',
-                        'artistGallery' => [
-                            'id' => $media->id,
-                            'file_name' => $media->file_name,
-                            'original_url' => $media->getUrl(),
-                        ],
-                    ], 201);
-                }
-            } else {
+            if ($artistGalleryCount >= 5) {
                 return response()->json([
                     'success' => false,
                     'message' => "Máximo de imágenes almacenadas"
                 ], 401);
             }
+
+            $files = $request->file('sub_files_paths');
+            if (!is_array($files)) {
+                $files = [$files];
+            }
+
+            $availableSlots = 5 - $artistGalleryCount;
+            if (count($files) > $availableSlots) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Solo puedes subir {$availableSlots} imagen(es) más. Máximo 5 en total."
+                ], 422);
+            }
+
+            $this->validateGalleryFiles($files);
+
+            DB::beginTransaction();
+            $savedGallery = [];
+            foreach ($files as $uploadedFile) {
+                $media = $artist->addMedia($uploadedFile)->toMediaCollection('artist_gallery');
+                $savedGallery[] = [
+                    'id' => $media->id,
+                    'file_name' => $media->file_name,
+                    'original_url' => $media->getUrl(),
+                ];
+            }
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Imágenes actualizadas',
+                'artistGallery' => $savedGallery,
+            ], 201);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
             ], 401);
+        }
+    }
+
+    private function validateGalleryFiles(array $files)
+    {
+        foreach ($files as $file) {
+            if (!$file instanceof UploadedFile || !$file->isValid()) {
+                throw new \InvalidArgumentException('Uno de los archivos no es una imagen válida.');
+            }
+            if ($file->getSize() > 1048576) {
+                throw new \InvalidArgumentException("La imagen \"{$file->getClientOriginalName()}\" supera el peso máximo de 1 MB.");
+            }
+            $rule = new ValidImageUpload();
+            if (!$rule->passes('sub_files_paths', $file)) {
+                throw new \InvalidArgumentException($rule->message());
+            }
         }
     }
     /**
