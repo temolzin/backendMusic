@@ -28,6 +28,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 10000,
             'extra_kilometre' => '85',
+            'coverage_radius' => 50,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -54,6 +55,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 15000,
             'extra_kilometre' => '45',
+            'coverage_radius' => 40,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -80,6 +82,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 12000,
             'extra_kilometre' => '60',
+            'coverage_radius' => 45,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -105,6 +108,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 8000,
             'extra_kilometre' => '50',
+            'coverage_radius' => 35,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -131,6 +135,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 6000,
             'extra_kilometre' => '30',
+            'coverage_radius' => 30,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -156,6 +161,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 9000,
             'extra_kilometre' => '35',
+            'coverage_radius' => 25,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -181,6 +187,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 10000,
             'extra_kilometre' => '55',
+            'coverage_radius' => 55,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -206,6 +213,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 13000,
             'extra_kilometre' => '50',
+            'coverage_radius' => 40,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -231,6 +239,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 15000,
             'extra_kilometre' => '40',
+            'coverage_radius' => 60,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -256,6 +265,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 25000,
             'extra_kilometre' => '65',
+            'coverage_radius' => 70,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -281,6 +291,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 35000,
             'extra_kilometre' => '80',
+            'coverage_radius' => 80,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -306,6 +317,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 30000,
             'extra_kilometre' => '90',
+            'coverage_radius' => 90,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -332,6 +344,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 45000,
             'extra_kilometre' => '35',
+            'coverage_radius' => 35,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -358,6 +371,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 25000,
             'extra_kilometre' => '50',
+            'coverage_radius' => 50,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
@@ -384,6 +398,7 @@ class ArtistSeeder extends Seeder
             'zone' => 'Ciudad de México. Méx.',
             'price_hour' => 35000,
             'extra_kilometre' => '60',
+            'coverage_radius' => 65,
         ]);
         $artist->musicalGenders()->sync([
             rand(1, 3),
