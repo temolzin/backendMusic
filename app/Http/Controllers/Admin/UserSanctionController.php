@@ -157,6 +157,9 @@ class UserSanctionController extends Controller
                 }
 
                 $user->faults_count = $faults; 
+                $user->total_cancellations_count = EventCancellation::where('user_id', $user->id)
+                    ->where('penalty_percentage', '>', 0)
+                    ->count();
                 
                 $statusWeight = 0;
                 if ($user->account_status == 'restricted') {
@@ -231,6 +234,19 @@ class UserSanctionController extends Controller
                 ->with('artistSale')
                 ->orderBy('id', 'desc')
                 ->get();
+
+            $cancellations->transform(function ($cancel) use ($user) {
+                if (!empty($cancel->artistSale)) {
+                    $eDate = \Carbon\Carbon::parse($cancel->artistSale->event_date)->startOfDay();
+                    $cDate = \Carbon\Carbon::parse($cancel->created_at)->startOfDay();
+                    $diff = $cDate->diffInDays($eDate, false);
+                    $cancel->days_difference = $diff;
+                    $cancel->is_direct_sanction = ($diff >= self::DIRECT_SANCTION_MIN_DAYS && $diff <= self::DIRECT_SANCTION_MAX_DAYS);
+                    $cancel->is_accumulated_fault = ($diff >= self::FAULT_ACCUMULATION_MIN_DAYS && $diff <= self::FAULT_ACCUMULATION_MAX_DAYS);
+                    $cancel->fault_threshold = ($cancel->artistSale->customer_id === $user->id) ? self::FAULT_THRESHOLD_CUSTOMER : self::FAULT_THRESHOLD_ARTIST;
+                }
+                return $cancel;
+            });
 
             return response()->json([
                 'success' => true,
