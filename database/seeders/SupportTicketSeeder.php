@@ -17,7 +17,8 @@ class SupportTicketSeeder extends Seeder
     {
         DB::statement('TRUNCATE TABLE ticket_logs, support_tickets RESTART IDENTITY CASCADE;');
 
-        $categories = ['no_show', 'delay', 'bad_service', 'cancellation', 'other'];
+        $clientCategories = ['no_show', 'delay', 'bad_service', 'cancellation', 'other'];
+        $artistCategories = ['cancellation', 'other'];
         $statuses = [
             SupportTicket::STATUS_OPEN,
             SupportTicket::STATUS_UNDER_REVIEW,
@@ -34,8 +35,8 @@ class SupportTicketSeeder extends Seeder
         $artistLimit = max(1, intdiv($artists->count(), 2));
         $clientLimit = max(1, intdiv($clients->count(), 2));
 
-        $this->createArtistTickets($artists->take($artistLimit), $categories, $statuses, $resolutionTypes);
-        $this->createClientTickets($clients->take($clientLimit), $categories, $statuses, $resolutionTypes);
+        $this->createArtistTickets($artists->take($artistLimit), $artistCategories, $statuses, $resolutionTypes);
+        $this->createClientTickets($clients->take($clientLimit), $clientCategories, $statuses, $resolutionTypes);
     }
 
     private function createArtistTickets($artists, array $categories, array $statuses, array $resolutionTypes)

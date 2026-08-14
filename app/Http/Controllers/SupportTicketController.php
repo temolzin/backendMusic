@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\TicketLog;
 use App\Models\User;
+use Illuminate\Validation\Rule;
 
 class SupportTicketController extends Controller
 {
@@ -15,7 +16,7 @@ class SupportTicketController extends Controller
     {
         $request->validate([
             'artist_sale_id' => 'required|exists:artist_sales,id',
-            'category'       => 'required|in:no_show,delay,bad_service,cancellation,other',
+            'category'       => 'required|string',
             'description'    => 'required|string|min:10',
         ]);
 
@@ -28,6 +29,14 @@ class SupportTicketController extends Controller
         if (!$isCustomer && !$isArtist) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
+
+        $allowedCategories = $isArtist
+            ? ['cancellation', 'other']
+            : ['no_show', 'delay', 'bad_service', 'cancellation', 'other'];
+
+        $request->validate([
+            'category' => ['required', Rule::in($allowedCategories)],
+        ]);
 
         if (now()->lt(Carbon::parse($sale->event_date))) {
             return response()->json([
