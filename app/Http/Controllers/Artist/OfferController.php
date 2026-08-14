@@ -18,11 +18,16 @@ class OfferController extends Controller
             $artist = Artist::where('user_id', Auth::user()->id)->firstOrFail();
             $offers = Offer::where('artist_id', $artist->id)->orderBy('created_at', 'desc')->get();
 
-            $offers->each(function ($offer) {
+            $offers->each(function ($offer) use ($artist) {
                 $offer->has_pending_sale = ArtistSale::where('offer_id', $offer->id)
                     ->where('approval_status', ArtistSale::APPROVAL_STATUS_PENDING)
                     ->exists();
                 $offer->is_active = now()->between($offer->start_date, $offer->end_date);
+                $priceHour = (float) $artist->price_hour;
+                $discount = (float) $offer->discount_percentage / 100;
+                $offer->original_price = round($priceHour, 2);
+                $offer->discounted_price = round($priceHour * (1 - $discount), 2);
+                $offer->saved_amount = round($priceHour * $discount, 2);
             });
 
             return response()->json(['success' => true, 'offers' => $offers], 200);
