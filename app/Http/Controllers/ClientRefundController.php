@@ -27,6 +27,23 @@ class ClientRefundController extends Controller
         return response()->json($refunds, 200);
     }
 
+    public function pending()
+    {
+        $refunds = ClientRefund::with([
+            'cancellation.artistSale',
+            'customer',
+            'authorizedBy'
+        ])
+            ->where('status', ClientRefund::STATUS_PENDING)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $refunds
+        ], 200);
+    }
+
     public function processRefund(Request $request, $id)
     {
         $refund = ClientRefund::with(['cancellation.artistSale.artist', 'cancellation.artistSale.customer', 'customer'])->findOrFail($id);
