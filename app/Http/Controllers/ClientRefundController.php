@@ -27,7 +27,7 @@ class ClientRefundController extends Controller
         return response()->json($refunds, 200);
     }
 
-    public function pending()
+    public function getPendingRefunds()
     {
         $refunds = ClientRefund::with([
             'cancellation.artistSale',

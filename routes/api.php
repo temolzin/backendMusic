@@ -81,7 +81,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::put('/admin/artist-approvals/{id}/accept', [ArtistApprovalController::class, 'accept']);
     Route::put('/admin/artist-approvals/{id}/reject', [ArtistApprovalController::class, 'reject']);
     Route::get('/admin/client-refunds', [ClientRefundController::class, 'index']);
-    Route::get('/admin/client-refunds/pending', [ClientRefundController::class, 'pending']);
+    Route::get('/admin/client-refunds/pending', [ClientRefundController::class, 'getPendingRefunds']);
     Route::post('/admin/client-refunds/{id}/process', [ClientRefundController::class, 'processRefund']);
 
     //Route for artist
