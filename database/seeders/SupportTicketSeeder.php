@@ -26,9 +26,9 @@ class SupportTicketSeeder extends Seeder
             $query->where('slug', User::ROLE_CLIENT);
         })->orderBy('id')->get(['id']);
 
-        $usedSaleIds  = [];
-        $artistSeq    = 0;
-        $clientSeq    = 0;
+        $usedSaleIds = [];
+        $artistSeq = 0;
+        $clientSeq = 0;
 
         $artistLimit = max(1, intdiv($artists->count(), 2));
         $clientLimit = max(1, intdiv($clients->count(), 2));
@@ -49,7 +49,7 @@ class SupportTicketSeeder extends Seeder
                     $this->artistStatusFor($artistSeq),
                     $adminId,
                     $artistSeq,
-                    $this->artistDescriptions()[$category],
+                    $this->getArtistDescriptions()[$category],
                     'artist',
                     $artistSeq
                 );
@@ -70,7 +70,7 @@ class SupportTicketSeeder extends Seeder
                     $this->clientStatusFor($clientSeq),
                     $adminId,
                     $clientSeq,
-                    $this->clientDescriptions()[$category],
+                    $this->getClientDescriptions()[$category],
                     'client',
                     $clientSeq
                 );
@@ -107,7 +107,7 @@ class SupportTicketSeeder extends Seeder
                     SupportTicket::STATUS_OPEN,
                     $adminId,
                     $seq,
-                    $this->clientDescriptions()[$category],
+                    $this->getClientDescriptions()[$category],
                     'client',
                     $seq
                 );
@@ -150,24 +150,24 @@ class SupportTicketSeeder extends Seeder
         return $statuses[$seq % count($statuses)];
     }
 
-    private function artistDescriptions(): array
+    private function getArtistDescriptions(): array
     {
         return [
-            SupportTicket::CATEGORY_NO_SHOW    => 'El cliente no estuvo presente en el lugar y hora acordados del evento.',
+            SupportTicket::CATEGORY_NO_SHOW => 'El cliente no estuvo presente en el lugar y hora acordados del evento.',
             SupportTicket::CATEGORY_BAD_SERVICE => 'El cliente tuvo un comportamiento agresivo e irrespetuoso con el artista y su equipo.',
             SupportTicket::CATEGORY_CANCELLATION => 'El cliente canceló el evento de último minuto sin aviso previo suficiente.',
-            SupportTicket::CATEGORY_OTHER       => 'Situación adicional con el cliente que requiere revisión de soporte.',
+            SupportTicket::CATEGORY_OTHER => 'Situación adicional con el cliente que requiere revisión de soporte.',
         ];
     }
 
-    private function clientDescriptions(): array
+    private function getClientDescriptions(): array
     {
         return [
-            SupportTicket::CATEGORY_NO_SHOW    => 'El artista nunca se presentó al evento contratado y no respondió a los mensajes previos.',
-            SupportTicket::CATEGORY_DELAY      => 'El artista llegó con más de una hora de retraso al evento.',
+            SupportTicket::CATEGORY_NO_SHOW => 'El artista nunca se presentó al evento contratado y no respondió a los mensajes previos.',
+            SupportTicket::CATEGORY_DELAY => 'El artista llegó con más de una hora de retraso al evento.',
             SupportTicket::CATEGORY_BAD_SERVICE => 'El comportamiento del artista durante el evento fue inadecuado e irrespetuoso.',
             SupportTicket::CATEGORY_CANCELLATION => 'El artista canceló el evento de último minuto sin aviso previo suficiente.',
-            SupportTicket::CATEGORY_OTHER       => 'Situación adicional con el artista que requiere revisión de soporte.',
+            SupportTicket::CATEGORY_OTHER => 'Situación adicional con el artista que requiere revisión de soporte.',
         ];
     }
 
@@ -185,21 +185,21 @@ class SupportTicketSeeder extends Seeder
         $resolutionType = match ($status) {
             SupportTicket::STATUS_RESOLVED => SupportTicket::RESOLUTION_TYPES[$seqForDate % count(SupportTicket::RESOLUTION_TYPES)],
             SupportTicket::STATUS_REJECTED => 'no_action',
-            default                        => null,
+            default => null,
         };
 
-        $openedAt   = $direction === 'artist'
+        $openedAt = $direction === 'artist'
             ? Carbon::now()->subDays(20 - ($seqForDate % 14))->setTime(10, 0)->addMinutes($seqForDate * 13)
             : Carbon::now()->subDays(18 - ($seqForDate % 12))->setTime(14, 30)->addMinutes($seqForDate * 17);
         $reviewerId = $adminId ?: $reporterUserId;
 
         $ticket = new SupportTicket([
-            'artist_sale_id'   => $sale->id,
+            'artist_sale_id' => $sale->id,
             'reporter_user_id' => $reporterUserId,
-            'category'         => $category,
-            'description'      => $description,
-            'status'           => $status,
-            'resolution_type'  => $resolutionType,
+            'category' => $category,
+            'description' => $description,
+            'status' => $status,
+            'resolution_type' => $resolutionType,
         ]);
         $ticket->created_at = $openedAt;
         $ticket->save();
@@ -226,12 +226,12 @@ class SupportTicketSeeder extends Seeder
     private function creationLog(int $ticketId, int $userId, Carbon $at): array
     {
         return [
-            'support_ticket_id'  => $ticketId,
+            'support_ticket_id' => $ticketId,
             'changed_by_user_id' => $userId,
-            'status'             => SupportTicket::STATUS_OPEN,
-            'resolution_type'    => null,
-            'notes'              => 'Ticket creado.',
-            'created_at'         => $at->copy(),
+            'status' => SupportTicket::STATUS_OPEN,
+            'resolution_type' => null,
+            'notes' => 'Ticket creado.',
+            'created_at' => $at->copy(),
         ];
     }
 
@@ -242,12 +242,12 @@ class SupportTicketSeeder extends Seeder
             SupportTicket::STATUS_RESOLVED,
             SupportTicket::STATUS_REJECTED,
         ], true) ? [
-            'support_ticket_id'  => $ticketId,
+            'support_ticket_id' => $ticketId,
             'changed_by_user_id' => $userId,
-            'status'             => SupportTicket::STATUS_UNDER_REVIEW,
-            'resolution_type'    => null,
-            'notes'              => 'El equipo de soporte tomó el caso y comenzó la revisión.',
-            'created_at'         => $at->copy()->addDay(),
+            'status' => SupportTicket::STATUS_UNDER_REVIEW,
+            'resolution_type' => null,
+            'notes' => 'El equipo de soporte tomó el caso y comenzó la revisión.',
+            'created_at' => $at->copy()->addDay(),
         ] : null;
     }
 
@@ -260,14 +260,14 @@ class SupportTicketSeeder extends Seeder
         ];
 
         return in_array($status, [SupportTicket::STATUS_RESOLVED, SupportTicket::STATUS_REJECTED], true) ? [
-            'support_ticket_id'  => $ticketId,
+            'support_ticket_id' => $ticketId,
             'changed_by_user_id' => $userId,
-            'status'             => $status,
-            'resolution_type'    => $resolutionType,
-            'notes'              => $status === SupportTicket::STATUS_RESOLVED
+            'status' => $status,
+            'resolution_type' => $resolutionType,
+            'notes' => $status === SupportTicket::STATUS_RESOLVED
                 ? $resolutionNotes[$resolutionType]
                 : 'El reporte fue rechazado tras revisar las evidencias.',
-            'created_at'         => $at->copy()->addDays(2),
+            'created_at' => $at->copy()->addDays(2),
         ] : null;
     }
 }

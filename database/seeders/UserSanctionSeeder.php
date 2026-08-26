@@ -81,7 +81,7 @@ class UserSanctionSeeder extends Seeder
                 $query->where('user_id', $user->id);
             })->orderBy('event_date'),
             'cliente' => ArtistSale::where('customer_id', $user->id)->orderBy('event_date'),
-            default   => null,
+            default => null,
         };
 
         optional($saleQuery?->first(), function (ArtistSale $sale) use ($user, $reason) {
@@ -123,28 +123,28 @@ class UserSanctionSeeder extends Seeder
 
         $ticketLogs = [
             [
-                'support_ticket_id'  => $ticket->id,
+                'support_ticket_id' => $ticket->id,
                 'changed_by_user_id' => $adminUser->id,
-                'status'             => SupportTicket::STATUS_OPEN,
-                'resolution_type'    => null,
-                'notes'              => 'Ticket creado.',
-                'created_at'         => $openedAt->copy(),
+                'status' => SupportTicket::STATUS_OPEN,
+                'resolution_type' => null,
+                'notes' => 'Ticket creado.',
+                'created_at' => $openedAt->copy(),
             ],
             [
-                'support_ticket_id'  => $ticket->id,
+                'support_ticket_id' => $ticket->id,
                 'changed_by_user_id' => $adminUser->id,
-                'status'             => SupportTicket::STATUS_UNDER_REVIEW,
-                'resolution_type'    => null,
-                'notes'              => 'El equipo de soporte tomó el caso y comenzó la revisión.',
-                'created_at'         => $openedAt->copy()->addDay(),
+                'status' => SupportTicket::STATUS_UNDER_REVIEW,
+                'resolution_type' => null,
+                'notes' => 'El equipo de soporte tomó el caso y comenzó la revisión.',
+                'created_at' => $openedAt->copy()->addDay(),
             ],
             [
-                'support_ticket_id'  => $ticket->id,
+                'support_ticket_id' => $ticket->id,
                 'changed_by_user_id' => $adminUser->id,
-                'status'             => SupportTicket::STATUS_RESOLVED,
-                'resolution_type'    => 'partial_refund',
-                'notes'              => 'Se aplicó reembolso parcial al cliente y sanción al responsable.',
-                'created_at'         => $openedAt->copy()->addDays(2),
+                'status' => SupportTicket::STATUS_RESOLVED,
+                'resolution_type' => 'partial_refund',
+                'notes' => 'Se aplicó reembolso parcial al cliente y sanción al responsable.',
+                'created_at' => $openedAt->copy()->addDays(2),
             ],
         ];
 
