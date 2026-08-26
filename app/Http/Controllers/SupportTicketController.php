@@ -15,9 +15,9 @@ class SupportTicketController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'artist_sale_id' => 'required|exists:artist_sales,id',
+            'artist_sale_id' => 'required|integer|exists:artist_sales,id',
             'category'       => 'required|string',
-            'description'    => 'required|string|min:10',
+            'description'    => 'required|string|min:10|max:2000',
         ]);
 
         $userId = Auth::id();
@@ -31,8 +31,8 @@ class SupportTicketController extends Controller
         }
 
         $allowedCategories = $isArtist
-            ? ['cancellation', 'other']
-            : ['no_show', 'delay', 'bad_service', 'cancellation', 'other'];
+            ? SupportTicket::CATEGORIES_ARTIST
+            : SupportTicket::CATEGORIES_CUSTOMER;
 
         $request->validate([
             'category' => ['required', Rule::in($allowedCategories)],
@@ -84,7 +84,7 @@ class SupportTicketController extends Controller
     public function getTickets()
     {
         $tickets = SupportTicket::where('reporter_user_id', Auth::id())
-            ->with(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
+            ->with(['artistSale.artist', 'artistSale.customer', 'reporter.roles', 'media'])
             ->latest()
             ->get();
         return response()->json(['data' => $tickets]);
@@ -97,7 +97,7 @@ class SupportTicketController extends Controller
                 $q->where('user_id', $userId);
             })
             ->where('reporter_user_id', '!=', $userId)
-            ->with(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
+            ->with(['artistSale.artist', 'artistSale.customer', 'reporter.roles', 'media'])
             ->latest()
             ->get();
         return response()->json(['data' => $tickets]);
@@ -110,7 +110,7 @@ class SupportTicketController extends Controller
                 $q->where('customer_id', $userId);
             })
             ->where('reporter_user_id', '!=', $userId)
-            ->with(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
+            ->with(['artistSale.artist', 'artistSale.customer', 'reporter.roles', 'media'])
             ->latest()
             ->get();
         return response()->json(['data' => $tickets]);
@@ -118,7 +118,18 @@ class SupportTicketController extends Controller
 
     public function index(Request $request)
     {
-        $query = SupportTicket::with(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
+        $request->validate([
+            'status'        => ['nullable', Rule::in([
+                SupportTicket::STATUS_OPEN,
+                SupportTicket::STATUS_UNDER_REVIEW,
+                SupportTicket::STATUS_RESOLVED,
+                SupportTicket::STATUS_REJECTED,
+            ])],
+            'category'      => ['nullable', Rule::in(SupportTicket::CATEGORIES_CUSTOMER)],
+            'reporter_role' => ['nullable', Rule::in(['artista', 'cliente'])],
+        ]);
+
+        $query = SupportTicket::with(['artistSale.artist', 'artistSale.customer', 'reporter.roles', 'media'])
             ->latest();
 
         if ($request->status) {
@@ -127,6 +138,11 @@ class SupportTicketController extends Controller
         if ($request->category) {
             $query->where('category', $request->category);
         }
+        if ($request->reporter_role) {
+            $query->whereHas('reporter.roles', function ($q) use ($request) {
+                $q->where('slug', $request->reporter_role);
+            });
+        }
 
         return response()->json(['data' => $query->paginate(15)]);
     }
@@ -134,33 +150,43 @@ class SupportTicketController extends Controller
     public function show(SupportTicket $ticket)
     {
         return response()->json([
-            'data' => $ticket->load(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
+            'data' => $ticket->load(['artistSale.artist', 'artistSale.customer', 'reporter.roles', 'media'])
         ]);
     }
 
     public function updateStatus(Request $request, SupportTicket $ticket)
     {
+        $isClosing = in_array($request->status, [SupportTicket::STATUS_RESOLVED, SupportTicket::STATUS_REJECTED], true);
+
         $request->validate([
-            'status' => 'required|in:open,under_review,resolved,rejected',
-            'resolution_type' => 'nullable|in:full_refund,partial_refund,no_action',
+            'status'          => ['required', Rule::in([
+                SupportTicket::STATUS_OPEN,
+                SupportTicket::STATUS_UNDER_REVIEW,
+                SupportTicket::STATUS_RESOLVED,
+                SupportTicket::STATUS_REJECTED,
+            ])],
+            'resolution_type' => [$isClosing ? 'required' : 'nullable', Rule::in(SupportTicket::RESOLUTION_TYPES)],
             'notes'           => 'nullable|string|max:500',
         ]);
 
+        $previousStatus = $ticket->status;
+
         $ticket->update([
             'status' => $request->status,
-            'resolution_type' => $request->resolution_type,
+            'resolution_type' => $isClosing ? $request->resolution_type : null,
         ]);
 
         TicketLog::create([
             'support_ticket_id'  => $ticket->id,
             'changed_by_user_id' => Auth::id(),
             'status'             => $request->status,
-            'resolution_type'    => $request->resolution_type,
-            'notes'              => $request->notes,
+            'resolution_type'    => $ticket->resolution_type,
+            'notes'              => $request->notes
+                ?? ($previousStatus !== $request->status ? "Estado actualizado de {$previousStatus} a {$request->status}." : null),
         ]);
 
         return response()->json([
-            'data' => $ticket->load(['artistSale.artist', 'artistSale.customer', 'reporter', 'media'])
+            'data' => $ticket->load(['artistSale.artist', 'artistSale.customer', 'reporter.roles', 'media'])
         ]);
     }
 

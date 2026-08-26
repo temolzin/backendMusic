@@ -14,6 +14,29 @@ class SupportTicket extends Model implements HasMedia
     const STATUS_RESOLVED = 'resolved';
     const STATUS_REJECTED = 'rejected';
 
+    const CATEGORY_NO_SHOW = 'no_show';
+    const CATEGORY_DELAY = 'delay';
+    const CATEGORY_BAD_SERVICE = 'bad_service';
+    const CATEGORY_CANCELLATION = 'cancellation';
+    const CATEGORY_OTHER = 'other';
+
+    const CATEGORIES_CUSTOMER = [
+        self::CATEGORY_NO_SHOW,
+        self::CATEGORY_DELAY,
+        self::CATEGORY_BAD_SERVICE,
+        self::CATEGORY_CANCELLATION,
+        self::CATEGORY_OTHER,
+    ];
+
+    const CATEGORIES_ARTIST = [
+        self::CATEGORY_NO_SHOW,
+        self::CATEGORY_BAD_SERVICE,
+        self::CATEGORY_CANCELLATION,
+        self::CATEGORY_OTHER,
+    ];
+
+    const RESOLUTION_TYPES = ['full_refund', 'partial_refund', 'no_action'];
+
     protected $fillable = [
         'artist_sale_id',
         'reporter_user_id',

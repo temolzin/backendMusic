@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\ArtistSale;
 use App\Models\EventCancellation;
 use App\Models\SupportTicket;
+use App\Models\TicketLog;
 use App\Models\User;
 use App\Models\UserSanction;
 use Carbon\Carbon;
@@ -14,7 +15,7 @@ class UserSanctionSeeder extends Seeder
 {
     public function run()
     {
-        $sale = ArtistSale::first();
+        $sale = ArtistSale::whereDoesntHave('supportTickets')->first();
         $adminUser = User::first();
 
         $artistAccount = User::where('email', 'miguel@gmail.com')->first();
@@ -51,21 +52,10 @@ class UserSanctionSeeder extends Seeder
         foreach ($targets as $role => $user) {
             $pattern = $sanctionByRole[$role];
             $user->update(['account_status' => $pattern['type']]);
-            $sanctionableType = null;
-            $sanctionableId = null;
-
-            if ($pattern['source'] === 'ticket') {
-                $ticket = SupportTicket::create([
-                    'artist_sale_id' => $sale->id,
-                    'reporter_user_id' => $adminUser->id,
-                    'category' => 'bad_service',
-                    'description' => 'Reporte autogenerado para justificar sanción: ' . $pattern['reason'],
-                    'status' => SupportTicket::STATUS_RESOLVED,
-                    'resolution_type' => 'partial_refund',
-                ]);
-                $sanctionableType = SupportTicket::class;
-                $sanctionableId = $ticket->id;
-            }
+            [$sanctionableType, $sanctionableId] = match ($pattern['source']) {
+                'ticket' => $this->createSanctionTicket($sale, $adminUser, $pattern),
+                default  => [null, null],
+            };
             $endsAt = $pattern['days'] ? Carbon::now()->addDays($pattern['days']) : null;
             $creator = (string) $adminUser->id;
 
@@ -94,29 +84,82 @@ class UserSanctionSeeder extends Seeder
             default => null,
         };
 
-        $sale = $saleQuery?->first();
+        optional($saleQuery?->first(), function (ArtistSale $sale) use ($user, $reason) {
+            $penaltyPercentage = 30;
+            $sale->event_date = Carbon::now()->addDays(4)->toDateString();
+            $sale->event_status = ArtistSale::EVENT_STATUS_CANCELLED;
+            $sale->approval_status = ArtistSale::APPROVAL_STATUS_CANCELLED;
+            $sale->approval_responded_at = Carbon::now();
+            $sale->save();
 
-        if (!$sale) {
-            return;
-        }
+            $cancellation = new EventCancellation([
+                'artist_sale_id' => $sale->id,
+                'user_id' => $user->id,
+                'cancellation_reason' => 'Cancelación registrada para historial: ' . $reason,
+                'penalty_percentage' => $penaltyPercentage,
+                'penalty_amount' => round(floatval($sale->amount) * ($penaltyPercentage / 100), 2),
+                'refunded_at' => null,
+                'penalty_paid' => true,
+            ]);
+            $cancellation->created_at = Carbon::now()->addMinute();
+            $cancellation->save();
+        });
+    }
 
-        $penaltyPercentage = 30;
-        $sale->event_date = Carbon::now()->addDays(4)->toDateString();
-        $sale->event_status = ArtistSale::EVENT_STATUS_CANCELLED;
-        $sale->approval_status = ArtistSale::APPROVAL_STATUS_CANCELLED;
-        $sale->approval_responded_at = Carbon::now();
-        $sale->save();
+    private function createSanctionTicket(ArtistSale $sale, User $adminUser, array $pattern): array
+    {
+        $openedAt = Carbon::now()->subDays(3)->setTime(11, 0);
 
-        $cancellation = new EventCancellation([
+        $ticket = new SupportTicket([
             'artist_sale_id' => $sale->id,
-            'user_id' => $user->id,
-            'cancellation_reason' => 'Cancelación registrada para historial: ' . $reason,
-            'penalty_percentage' => $penaltyPercentage,
-            'penalty_amount' => round(floatval($sale->amount) * ($penaltyPercentage / 100), 2),
-            'refunded_at' => null,
-            'penalty_paid' => true,
+            'reporter_user_id' => $adminUser->id,
+            'category' => SupportTicket::CATEGORY_BAD_SERVICE,
+            'description' => 'Reporte autogenerado para justificar sanción: ' . $pattern['reason'],
+            'status' => SupportTicket::STATUS_RESOLVED,
+            'resolution_type' => 'partial_refund',
         ]);
-        $cancellation->created_at = Carbon::now()->addMinute();
-        $cancellation->save();
+        $ticket->created_at = $openedAt;
+        $ticket->save();
+
+        $ticketLogs = [
+            [
+                'support_ticket_id' => $ticket->id,
+                'changed_by_user_id' => $adminUser->id,
+                'status' => SupportTicket::STATUS_OPEN,
+                'resolution_type' => null,
+                'notes' => 'Ticket creado.',
+                'created_at' => $openedAt->copy(),
+            ],
+            [
+                'support_ticket_id' => $ticket->id,
+                'changed_by_user_id' => $adminUser->id,
+                'status' => SupportTicket::STATUS_UNDER_REVIEW,
+                'resolution_type' => null,
+                'notes' => 'El equipo de soporte tomó el caso y comenzó la revisión.',
+                'created_at' => $openedAt->copy()->addDay(),
+            ],
+            [
+                'support_ticket_id' => $ticket->id,
+                'changed_by_user_id' => $adminUser->id,
+                'status' => SupportTicket::STATUS_RESOLVED,
+                'resolution_type' => 'partial_refund',
+                'notes' => 'Se aplicó reembolso parcial al cliente y sanción al responsable.',
+                'created_at' => $openedAt->copy()->addDays(2),
+            ],
+        ];
+
+        collect($ticketLogs)->each(function (array $data) {
+            $createdAt = $data['created_at'];
+            unset($data['created_at']);
+
+            $log = new TicketLog($data);
+            $log->created_at = $createdAt;
+            $log->save();
+        });
+
+        $ticket->updated_at = $openedAt->copy()->addDays(2);
+        $ticket->save();
+
+        return [SupportTicket::class, $ticket->id];
     }
 }
