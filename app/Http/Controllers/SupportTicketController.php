@@ -119,13 +119,14 @@ class SupportTicketController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'status'   => ['nullable', Rule::in([
+            'status'        => ['nullable', Rule::in([
                 SupportTicket::STATUS_OPEN,
                 SupportTicket::STATUS_UNDER_REVIEW,
                 SupportTicket::STATUS_RESOLVED,
                 SupportTicket::STATUS_REJECTED,
             ])],
-            'category' => ['nullable', Rule::in(SupportTicket::CATEGORIES_CUSTOMER)],
+            'category'      => ['nullable', Rule::in(SupportTicket::CATEGORIES_CUSTOMER)],
+            'reporter_role' => ['nullable', Rule::in(['artista', 'cliente'])],
         ]);
 
         $query = SupportTicket::with(['artistSale.artist', 'artistSale.customer', 'reporter.roles', 'media'])
@@ -136,6 +137,11 @@ class SupportTicketController extends Controller
         }
         if ($request->category) {
             $query->where('category', $request->category);
+        }
+        if ($request->reporter_role) {
+            $query->whereHas('reporter.roles', function ($q) use ($request) {
+                $q->where('slug', $request->reporter_role);
+            });
         }
 
         return response()->json(['data' => $query->paginate(15)]);
