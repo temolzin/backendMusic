@@ -166,7 +166,7 @@ class SupportTicketController extends Controller
         $previousStatus = $ticket->status;
 
         $ticket->update([
-            'status'          => $request->status,
+            'status' => $request->status,
             'resolution_type' => $isClosing ? $request->resolution_type : null,
         ]);
 

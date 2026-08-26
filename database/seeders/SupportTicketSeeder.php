@@ -46,7 +46,7 @@ class SupportTicketSeeder extends Seeder
                     $found,
                     $artist->user_id,
                     $category,
-                    $this->artistStatusFor($artistSeq),
+                    $this->getArtistStatus($artistSeq),
                     $adminId,
                     $artistSeq,
                     $this->getArtistDescriptions()[$category],
@@ -67,7 +67,7 @@ class SupportTicketSeeder extends Seeder
                     $found,
                     $client->id,
                     $category,
-                    $this->clientStatusFor($clientSeq),
+                    $this->getClientStatus($clientSeq),
                     $adminId,
                     $clientSeq,
                     $this->getClientDescriptions()[$category],
@@ -128,7 +128,7 @@ class SupportTicketSeeder extends Seeder
             ->first();
     }
 
-    private function artistStatusFor(int $seq): string
+    private function getArtistStatus(int $seq): string
     {
         $statuses = [
             SupportTicket::STATUS_OPEN,
@@ -139,7 +139,7 @@ class SupportTicketSeeder extends Seeder
         return $statuses[$seq % count($statuses)];
     }
 
-    private function clientStatusFor(int $seq): string
+    private function getClientStatus(int $seq): string
     {
         $statuses = [
             SupportTicket::STATUS_UNDER_REVIEW,
