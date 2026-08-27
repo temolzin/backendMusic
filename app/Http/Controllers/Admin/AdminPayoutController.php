@@ -28,9 +28,8 @@ class AdminPayoutController extends Controller
     private function calculateAdjustedNetPayout(ArtistSale $sale, bool $applyOpenpayFee = true): float
     {
         $amount = floatval($sale->amount);
-        $openpayFee = $applyOpenpayFee ? floatval($sale->openpay_fee) : 0;
         $platformFee = $amount * 0.10;
-        $netArtistPayout = $amount - $openpayFee - $platformFee;
+        $netArtistPayout = $amount - $platformFee;
 
         $penalties = EventCancellation::select('event_cancellations.penalty_amount')
             ->join('artist_sales', 'event_cancellations.artist_sale_id', '=', 'artist_sales.id')
@@ -71,7 +70,7 @@ class AdminPayoutController extends Controller
             $amount = floatval($sale->amount);
             $openpayFee = floatval($sale->openpay_fee);
             $platformFee = $amount * 0.10;
-            $netArtistPayout = $amount - $openpayFee - $platformFee;
+            $netArtistPayout = $amount - $platformFee;
 
             $artistId = $sale->artist_id;
             $penalties = collect($artistPenalties->get($artistId, []));
