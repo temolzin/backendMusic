@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\User\UserApiCreateRequest;
+use App\Mail\AdminPasswordChangedNotification;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Artist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class UserApiController extends Controller
 {
@@ -152,28 +154,23 @@ class UserApiController extends Controller
             $name = $request->input("name");
             $email = $request->input("email");
             $password = $request->input("password");
-            
-            if ($password == null) {
-                DB::beginTransaction();
-                $user = User::find($id);
-                $user->name = $name;
-                $user->email = $email;
-                $user->save();
-                $user->roles()->sync($role->id);
+            $passwordChanged = $password !== null;
 
-                DB::commit();
-            } else {
-                DB::beginTransaction();
-                $user = User::find($id);
-                $user->name = $name;
-                $user->email = $email;
+            $user = User::find($id);
+            $user->name = $name;
+            $user->email = $email;
 
+            if ($passwordChanged) {
                 $user->password = bcrypt($password);
+            }
 
-                $user->save();
-                $user->roles()->sync($role->id);
+            DB::beginTransaction();
+            $user->save();
+            $user->roles()->sync($role->id);
+            DB::commit();
 
-                DB::commit();
+            if ($passwordChanged) {
+                Mail::to($user->email)->send(new AdminPasswordChangedNotification($user));
             }
 
             return response()->json([
