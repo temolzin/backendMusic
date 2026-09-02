@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class SystemComment extends Model
 {
+    public const FILTER_ALL = 'todos';
+    public const FILTER_GOOD = 'buenos';
+    public const FILTER_BAD = 'bajos';
+
     protected $fillable = [
         'user_id',
         'body',

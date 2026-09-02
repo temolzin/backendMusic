@@ -10,11 +10,11 @@ class SystemCommentController extends Controller
 {
     public function index(Request $request)
     {
-        $filter = $request->query('filter', 'todos');
+        $filter = $request->query('filter', SystemComment::FILTER_ALL);
 
         $comments = SystemComment::with('user')
-            ->when($filter === 'buenos', fn ($query) => $query->where('rating', '>=', 4))
-            ->when($filter === 'bajos', fn ($query) => $query->where('rating', '<=', 3))
+            ->when($filter === SystemComment::FILTER_GOOD, fn ($query) => $query->where('rating', '>=', 4))
+            ->when($filter === SystemComment::FILTER_BAD, fn ($query) => $query->where('rating', '<=', 3))
             ->latest()
             ->limit(50)
             ->get()
@@ -28,7 +28,7 @@ class SystemCommentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'body'   => 'required|string|min:5|max:1000',
+            'body' => 'required|string|min:5|max:1000',
             'rating' => 'required|integer|min:1|max:5',
         ]);
 
@@ -48,8 +48,8 @@ class SystemCommentController extends Controller
 
         $comment = SystemComment::create([
             'user_id' => $userId,
-            'body'    => $request->body,
-            'rating'  => $request->rating,
+            'body' => $request->body,
+            'rating' => $request->rating,
         ]);
 
         return response()->json([
@@ -77,13 +77,13 @@ class SystemCommentController extends Controller
         $user = $comment->user;
 
         return [
-            'id'         => $comment->id,
-            'body'       => $comment->body,
-            'rating'     => $comment->rating,
+            'id' => $comment->id,
+            'body' => $comment->body,
+            'rating' => $comment->rating,
             'created_at' => $comment->created_at,
-            'user'       => $user
+            'user' => $user
                 ? [
-                    'name'  => $user->name,
+                    'name' => $user->name,
                     'image' => $user->image_profile,
                 ]
                 : null,
