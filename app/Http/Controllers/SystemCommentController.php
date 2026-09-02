@@ -19,7 +19,7 @@ class SystemCommentController extends Controller
             ->limit(50)
             ->get()
             ->map(function (SystemComment $comment) {
-                return $this->present($comment);
+                return $this->buildCommentResponse($comment);
             });
 
         return response()->json(['data' => $comments]);
@@ -53,11 +53,11 @@ class SystemCommentController extends Controller
         ]);
 
         return response()->json([
-            'data' => $this->present($comment->load('user')),
+            'data' => $this->buildCommentResponse($comment->load('user')),
         ], 201);
     }
 
-    public function canComment(Request $request)
+    public function checkCanComment(Request $request)
     {
         $userId = $request->user()->id;
 
@@ -72,7 +72,7 @@ class SystemCommentController extends Controller
         return response()->json(['can' => $can]);
     }
 
-    private function present(SystemComment $comment)
+    private function buildCommentResponse(SystemComment $comment)
     {
         $user = $comment->user;
 

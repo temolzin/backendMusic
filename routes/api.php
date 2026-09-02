@@ -187,7 +187,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::get('/admin/support-tickets/{ticket}/logs', [SupportTicketController::class, 'getLogs']);
     Route::post('/admin/support-tickets/{ticket}/comment', [SupportTicketController::class, 'addComment']);
     Route::post('/system-comments', [SystemCommentController::class, 'store']);
-    Route::get('/system-comments/can-comment', [SystemCommentController::class, 'canComment']);
+    Route::get('/system-comments/can-comment', [SystemCommentController::class, 'checkCanComment']);
 });
 
 Route::post('/webhook/openpay', [WebhookController::class, 'handleOpenpay']);
