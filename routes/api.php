@@ -38,6 +38,7 @@ use App\Http\Middleware\CheckAccountStatus;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\ClientRefundController;
 use App\Http\Controllers\Admin\ArtistStatsController;
+use App\Http\Controllers\SystemCommentController;
 
 // Routes for login without sesion
 Route::post('/login', [AuthController::class, 'login']);
@@ -148,6 +149,7 @@ Route::get('/openpay-keys/public', [OpenpayKeysController::class, 'getPublicKeys
 Route::get('/google-maps-key', [GoogleMapsController::class, 'getKey']);
 //Route for General
 Route::get('/latest-artists', [ArtistsGeneralController::class, 'latestArtists']);
+Route::get('/system-comments', [SystemCommentController::class, 'index']);
 // Test route
 Route::resource('/product', ProductController::class);
 
@@ -184,6 +186,8 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::patch('/admin/support-tickets/{ticket}/status', [SupportTicketController::class, 'updateStatus']);
     Route::get('/admin/support-tickets/{ticket}/logs', [SupportTicketController::class, 'getLogs']);
     Route::post('/admin/support-tickets/{ticket}/comment', [SupportTicketController::class, 'addComment']);
+    Route::post('/system-comments', [SystemCommentController::class, 'store']);
+    Route::get('/system-comments/can-comment', [SystemCommentController::class, 'canComment']);
 });
 
 Route::post('/webhook/openpay', [WebhookController::class, 'handleOpenpay']);
