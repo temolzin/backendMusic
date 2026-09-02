@@ -42,5 +42,6 @@ class DatabaseSeeder extends Seeder
         $this->call(UserSanctionSeeder::class);
         $this->call(ShoppingCardDetailsSeeder::class);
         $this->call(ArtistCompletableEventsSeeder::class);
+        $this->call(SystemCommentSeeder::class);
     }
 }
