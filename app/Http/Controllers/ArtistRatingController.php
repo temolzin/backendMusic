@@ -12,7 +12,8 @@ class ArtistRatingController extends Controller
     public function rateArtist(Request $request, $saleId)
     {
         $request->validate([
-            'rating' => 'required|integer|min:0|max:5'
+            'rating' => 'required|integer|min:0|max:5',
+            'comment' => 'nullable|string|max:1000'
         ]);
 
         $artistSale = ArtistSale::where('id', $saleId)
@@ -30,7 +31,7 @@ class ArtistRatingController extends Controller
             0 => ArtistRating::where('artist_sale_id', $artistSale->id)->delete(),
             default => ArtistRating::updateOrCreate(
                 ['artist_sale_id' => $artistSale->id, 'artist_id' => $artistSale->artist_id],
-                ['rating' => $request->rating]
+                ['rating' => $request->rating, 'comment' => $request->comment]
             ),
         };
 
@@ -50,8 +51,37 @@ class ArtistRatingController extends Controller
         $rating = ArtistRating::where('artist_sale_id', $saleId)->first();
 
         return response()->json([
-            'rating' => $rating ? $rating->rating : 0
+            'rating' => $rating ? $rating->rating : 0,
+            'comment' => $rating ? $rating->comment : null
         ]);
+    }
+
+    public function listArtistRatings($artistId)
+    {
+        $ratings = ArtistRating::with('artistSale.customer')
+            ->where('artist_id', $artistId)
+            ->whereNotNull('comment')
+            ->where('comment', '!=', '')
+            ->latest()
+            ->get()
+            ->map(function (ArtistRating $rating) {
+                $customer = $rating->artistSale?->customer;
+
+                return [
+                    'id' => $rating->id,
+                    'rating' => $rating->rating,
+                    'comment' => $rating->comment,
+                    'created_at' => $rating->created_at,
+                    'user' => $customer
+                        ? [
+                            'name' => $customer->name,
+                            'image' => $customer->image_profile,
+                        ]
+                        : null,
+                ];
+            });
+
+        return response()->json(['data' => $ratings]);
     }
     
     public function averageRating()
