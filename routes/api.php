@@ -150,6 +150,7 @@ Route::get('/google-maps-key', [GoogleMapsController::class, 'getKey']);
 //Route for General
 Route::get('/latest-artists', [ArtistsGeneralController::class, 'latestArtists']);
 Route::get('/system-comments', [SystemCommentController::class, 'index']);
+Route::get('/artist/{artistId}/ratings', [ArtistRatingController::class, 'listArtistRatings']);
 // Test route
 Route::resource('/product', ProductController::class);
 
