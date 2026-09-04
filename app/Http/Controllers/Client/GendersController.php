@@ -34,7 +34,10 @@ class GendersController extends Controller
     public function artistsGenders(Request $request)
     {
         try {
-            $artistsGenders = MusicalGender::with('artists')->where('slug',$request->slug)->get();
+            $artistsGenders = MusicalGender::with(['artists' => function ($query) {
+                $query->withAvg('ratings', 'rating');
+            }])->where('slug', $request->slug)->get();
+
             return response()->json([
                 'success' => true,
                 'artistsGenders' => $artistsGenders,
@@ -50,7 +53,33 @@ class GendersController extends Controller
     public function artistGender(Request $request)
     {
         try {
-            $artistGender = Artist::with('musicalGenders')->with('manager')->with('galeryArtists')->where('slug',$request->slug)->first();
+            $artistGender = Artist::with([
+                'musicalGenders',
+                'manager',
+                'media',
+                'artistVideos',
+                'user:id,account_status',
+                'offers' => function ($query) {
+                    $query->where('start_date', '<=', now())
+                        ->where('end_date', '>=', now())
+                        ->orderBy('discount_percentage', 'desc')
+                        ->limit(1);
+                }
+            ])
+            ->withAvg('ratings', 'rating')
+            ->where('slug', $request->slug)
+            ->first();
+                
+            if ($artistGender) {
+                $artistGender->artistGallery = $artistGender->getMedia('artist_gallery')->map(function ($media) {
+                    return [
+                        'id' => $media->id,
+                        'file_name' => $media->file_name,
+                        'original_url' => $media->getUrl(),
+                    ];
+                })->values();
+            }
+
             return response()->json([
                 'success' => true,
                 'artistGender' => $artistGender,

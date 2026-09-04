@@ -1,262 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
+@php use Carbon\Carbon; @endphp
 <head>
-    <meta charset="utf-8">
-    <title>Cotizacion</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <link rel="stylesheet" href="style.css" media="all" />
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalles de la Cotización</title>
+    <style>
+        {{ file_get_contents(resource_path('css/app.css')) }}
+        .newsletter-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .newsletter-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid var(--gsm-border); color: var(--gsm-dark); font-size: 14px; }
+        .newsletter-table td { padding: 10px 12px; border-bottom: 1px solid var(--gsm-border); color: var(--gsm-text); font-size: 15px; }
+        .newsletter-table .total { font-weight: 800; color: var(--gsm-dark); border-top: 2px solid var(--gsm-dark); font-size: 17px; }
+        .newsletter-table .discount { color: #28a745; }
+        .newsletter-table .extra-km { color: var(--gsm-primary); }
+        .info-grid { display: table; width: 100%; }
+        .info-row { display: table-row; }
+        .info-label { display: table-cell; padding: 3px 0; font-weight: 700; color: var(--gsm-dark); white-space: nowrap; width: 120px; }
+        .info-value { display: table-cell; padding: 3px 0; color: var(--gsm-text); }
+    </style>
 </head>
-
 <body>
-    <header class="clearfix">
-        <div id="logo">
-            <img src="https://i.ibb.co/2vF8tz3/sgm.png">
-        </div>
-        <div id="company">
-            <h2 class="name">Musica SGM</h2>
-            <div>455 Foggy Heights, AZ 85004, US</div>
-            <div>(602) 519-0450</div>
-            <div><a href="mailto:company@example.com">MusicaSGM@gmail.com</a></div>
-        </div>
-        </div>
-    </header>
-    <main>
-        <div id="details" class="clearfix">
-            <div id="client">
-                <div class="to">
-                    <h2>Datos:</h2>
-                </div>
-                <div class="name">Cliente: {{ $quotation->full_name }}</div>
-                <div class="address">Ciudad: {{ $quotation->city }}</div>
-                <div class="address">Domicilio: {{ $quotation->address }}</div>
-                <div class="email"><a href="mailto:john@example.com">Email: {{ $quotation->email }}</a></div>
-            </div>
-            <div id="invoice">
-                <h1>Cotizacion</h1>
-                <div class="date">{{ $quotation->event_date }}</div>
-                <div class="date">{{ $quotation->quotationCreatedAt }}</div>
-            </div>
-        </div>
-        <div class="table">
-            <table class="items table ">
-                <thead>
+    <table class="newsletter-shell" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+            <td align="center" class="newsletter-shell__outer">
+                <table class="newsletter-card" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                     <tr>
-                        <th class="text-center">Artista</th>
-                        <th class="text-center">Fecha del Evento</th>
-                        <th class="text-center">Duración del Evento</th>
-                        <th class="text-center">Total</th>
+                        <td class="newsletter-hero">
+                            <img src="{{ $message->embed(public_path('logovibeer.png')) }}" alt="Vibeer" class="newsletter-logo">
+                            <h1 class="newsletter-title">Cotización</h1>
+                            <p class="newsletter-subtitle">Gracias por solicitar tu cotización en Vibeer.</p>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
                     <tr>
-                        <td class="text-center">{{ $quotation->artist->name }}</td>
-                        <td class="text-center">{{ $quotation->event_date }}</td>
-                        <td class="text-center">{{ $quotation->event_hours }} hora(s)</td>
-                        <td class="text-center">$ {{ number_format($quotation->price, 2, '.', ',') }}</td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan=""></td>
-                        <td colspan="2">SUBTOTAL</td>
-                        <td class="">$ {{ number_format($quotation->price, 2, '.', ',') }}</td>
-                    </tr>
+                        <td class="newsletter-content">
+                            <div class="newsletter-body">
+                                <div class="info-grid">
+                                    <div class="info-row">
+                                        <span class="info-label">Cliente</span>
+                                        <span class="info-value">{{ $quotation->full_name }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Email</span>
+                                        <span class="info-value">{{ $quotation->email }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Ciudad</span>
+                                        <span class="info-value">{{ $quotation->city }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Dirección</span>
+                                        <span class="info-value">{{ $quotation->address }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Evento</span>
+                                        <span class="info-value">{{ Carbon::parse($quotation->event_date)->format('d/m/Y') }} &middot; {{ $quotation->event_hours }} hora(s)</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Artista</span>
+                                        <span class="info-value">{{ $quotation->artist->name }}</span>
+                                    </div>
+                                </div>
 
-                    <tr>
-                        <td colspan=""></td>
-                        <td colspan="2">TOTAL</td>
-                        <td class="">$ {{ number_format($quotation->price, 2, '.', ',') }}</td>
+                                @php
+                                    $showDiscount = $quotation->discount_percentage && $quotation->discount_percentage > 0 && $quotation->discount_amount && $quotation->discount_amount > 0;
+                                    $showExtraKm = $quotation->extra_km_distance && $quotation->extra_km_cost && $quotation->extra_km_cost > 0;
+                                @endphp
+
+                                <table class="newsletter-table" cellspacing="0" cellpadding="0" border="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Descripción</th>
+                                            <th style="text-align: right;">Importe</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Precio base ({{ $quotation->event_hours }} h &times; ${{ number_format($quotation->artist->price_hour, 2, '.', ',') }}/h)</td>
+                                            <td style="text-align: right;">$ {{ number_format($quotation->base_price ?? $quotation->price, 2, '.', ',') }}</td>
+                                        </tr>
+                                        @if($showDiscount)
+                                        <tr>
+                                            <td>Descuento ({{ number_format($quotation->discount_percentage, 0) }}%)</td>
+                                            <td class="discount" style="text-align: right;">- $ {{ number_format($quotation->discount_amount, 2, '.', ',') }}</td>
+                                        </tr>
+                                        @endif
+                                        @if($showExtraKm)
+                                        <tr>
+                                            <td>Km extra ({{ number_format($quotation->extra_km_distance, 2) }} km)</td>
+                                            <td class="extra-km" style="text-align: right;">+ $ {{ number_format($quotation->extra_km_cost, 2, '.', ',') }}</td>
+                                        </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+
+                                <table class="newsletter-table" cellspacing="0" cellpadding="0" border="0">
+                                    <tr>
+                                        <td class="total" style="text-align: left;">Total</td>
+                                        <td class="total" style="text-align: right;">$ {{ number_format($quotation->price, 2, '.', ',') }}</td>
+                                    </tr>
+                                </table>
+
+                                <p style="margin-top: 24px;">Saludos.</p>
+                            </div>
+                        </td>
                     </tr>
-                </tfoot>
-            </table>
-        </div>
-        <br>
-        <div id="thanks">Gracias por solicitar tu Cotizacion.</div>
-        <div id="notices">
-            <div>Musica GSM</div>
-            <div class="notice">Saludos.</div>
-        </div>
-    </main>
-    <footer>
-        Invoice was created on a computer and is valid without the signature and seal.
-    </footer>
+                    <tr>
+                        <td class="newsletter-footer">
+                            <p>Recibiste este correo porque solicitaste una cotización en Vibeer.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
-
-<style>
-    .clearfix:after {
-        content: "";
-        display: table;
-        clear: both;
-    }
-
-    a {
-        color: #0087C3;
-        text-decoration: none;
-    }
-
-    body {
-        position: relative;
-        width: 21cm;
-        height: 29.7cm;
-        margin: 0 auto;
-        color: #555555;
-        background: #FFFFFF;
-        font-family: sans-serif;
-        font-size: 16px;
-
-    }
-
-    header {
-        padding: 10px 0;
-        margin-bottom: 20px;
-        border-bottom: 1px solid #AAAAAA;
-    }
-
-    #logo {
-        float: left;
-        margin-top: 8px;
-    }
-
-    #logo img {
-        height: 70px;
-    }
-
-    #company {
-        float: right;
-        text-align: right;
-    }
-
-    #details {
-        margin-bottom: 50px;
-    }
-
-    #client {
-        padding-left: 6px;
-        border-left: 6px solid #0087C3;
-        float: left;
-    }
-
-    #client .to {
-        color: #777777;
-    }
-
-    h2.name {
-        font-size: 1.4em;
-        font-weight: normal;
-        margin: 0;
-    }
-
-    #invoice {
-        float: right;
-        text-align: right;
-    }
-
-    #invoice h1 {
-        color: #0087C3;
-        font-size: 2.4em;
-        line-height: 1em;
-        font-weight: normal;
-        margin: 0 0 10px 0;
-    }
-
-    #invoice .date {
-        font-size: 1.1em;
-        color: #777777;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        border: 1px solid #ccc;
-    }
-
-    td {
-        padding: 10px;
-
-    }
-
-    th {
-        background-color: #ddd;
-        font-weight: bold;
-    }
-
-    .items {
-        width: 800px;
-        margin: 0 auto;
-    }
-
-    .items th {
-        font-weight: bold;
-        background-color: #007bff;
-        color: white;
-    }
-
-    .items td {
-        text-align: center;
-
-    }
-
-    .items td.text-right {
-        text-align: right;
-    }
-
-    .items thead th {
-        background-color: #007bff;
-        color: white;
-    }
-
-    .bg-primary {
-        background-color: #007bff;
-    }
-
-    table tfoot td {
-
-        background: #FFFFFF;
-        border-bottom: none;
-        font-size: 1.2em;
-        white-space: nowrap;
-        border-top: 1px solid #AAAAAA;
-    }
-
-    table tfoot tr:first-child td {
-        border-top: none;
-    }
-
-    table tfoot tr:last-child td {
-        color: #007bff;
-        font-size: 1.4em;
-        border-top: 3px solid black;
-
-    }
-
-    table tfoot tr td:first-child {
-        border: none;
-    }
-
-    #thanks {
-        font-size: 2em;
-        margin-bottom: 50px;
-    }
-
-    #notices {
-        padding-left: 6px;
-        border-left: 6px solid #0087C3;
-    }
-
-    #notices .notice {
-        font-size: 1.2em;
-    }
-
-    footer {
-        color: #777777;
-        width: 100%;
-        height: 30px;
-        position: absolute;
-        bottom: 0;
-        border-top: 1px solid #AAAAAA;
-        padding: 8px 0;
-        text-align: center;
-    }
-</style>

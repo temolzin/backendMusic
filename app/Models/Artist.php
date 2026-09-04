@@ -4,10 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Offer;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Artist extends Model
+class Artist extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
+
     protected $fillable = [
         'user_id',
         'name',
@@ -16,10 +20,28 @@ class Artist extends Model
         'history',
         'zone',
         'price_hour',
-        'image',
         'extra_kilometre',
-        'points'
+        'coverage_radius',
+        'points',
+        'social_media'
     ];
+
+    protected $casts = [
+        'social_media' => 'array',
+    ];
+
+    protected $appends = ['image'];
+
+    public function getImageAttribute()
+    {
+        return $this->getFirstMediaUrl('artist_image');
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('artist_gallery');
+        $this->addMediaCollection('artist_image')->singleFile();
+    }
 
     public function user()
     {
@@ -41,17 +63,33 @@ class Artist extends Model
         return $this->hasMany(ShoppingCardDetail::class);
     }
 
-    public function galeryArtists()
-    {
-        return $this->hasMany(GaleryArtist::class);
-    }
-
     public function favouriteArtists()
     {
-       return $this->hasMany(FavouriteArtists::class);
+        return $this->hasMany(FavouriteArtists::class);
     }
+
     public function quotations()
     {
         return $this->hasMany(Quotations::class);
+    }
+
+    public function ratings()
+    {
+        return $this->hasMany(ArtistRating::class);
+    }
+
+    public function offers()
+    {
+        return $this->hasMany(Offer::class);
+    }
+
+    public function payoutMethod()
+    {
+        return $this->hasOne(ArtistPayoutMethod::class, 'artist_id');
+    }
+
+    public function artistVideos()
+    {
+        return $this->hasMany(ArtistVideo::class);
     }
 }

@@ -100,7 +100,11 @@ class SocialAuthController extends Controller
 
     public function redirectToFacebookProvider()
     {
-        $url = Socialite::driver('facebook')->stateless()->redirect()->getTargetUrl();
+        $url = Socialite::driver('facebook')
+            ->stateless()
+            ->scopes(['email', 'public_profile'])
+            ->redirect()
+            ->getTargetUrl();
         return  response()->json([
             'success' => true,
             'url' => $url,
