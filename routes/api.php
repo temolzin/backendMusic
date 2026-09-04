@@ -154,6 +154,7 @@ Route::get('/system-comments', [SystemCommentController::class, 'index']);
 Route::resource('/product', ProductController::class);
 
 Route::get('/artist/getArtist', [ArtistController::class, 'getArtist']);
+Route::get('/artist/{artistId}/ratings', [ArtistRatingController::class, 'listArtistRatings']);
 
 Route::post('/users-subscribe/send', [UsersSubscribeController::class, 'sendEmailToSubscribers'])
     ->middleware(['auth:api', 'can:send-newsletters']);
