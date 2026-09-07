@@ -22,6 +22,12 @@ class ArtistsGeneralController extends Controller
             ->take(3)
             ->get();
 
+            if (!auth()->check()) {
+                $artists->each(function ($artist) {
+                    $artist->makeHidden(['price_hour', 'extra_kilometre']);
+                });
+            }
+
             return response()->json([
                 'success' => true,
                 'latestArtists' => $artists,
