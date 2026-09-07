@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class OptionalAuth
+class ResolveAuthUser
 {
     public function handle(Request $request, Closure $next)
     {
