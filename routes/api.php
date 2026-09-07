@@ -35,6 +35,7 @@ use App\Http\Controllers\Admin\ArtistApprovalController;
 use App\Http\Controllers\Artist\ApprovalController;
 use App\Http\Controllers\Admin\UserSanctionController;
 use App\Http\Middleware\CheckAccountStatus;
+use App\Http\Middleware\OptionalAuth;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\ClientRefundController;
 use App\Http\Controllers\Admin\ArtistStatsController;
@@ -148,12 +149,13 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
 Route::get('/openpay-keys/public', [OpenpayKeysController::class, 'getPublicKeys']);
 Route::get('/google-maps-key', [GoogleMapsController::class, 'getKey']);
 //Route for General
-Route::get('/latest-artists', [ArtistsGeneralController::class, 'latestArtists'])->middleware(\App\Http\Middleware\OptionalAuth::class);
+Route::middleware(OptionalAuth::class)->group(function () {
+    Route::get('/latest-artists', [ArtistsGeneralController::class, 'latestArtists']);
+    Route::get('/artist/getArtist', [ArtistController::class, 'getArtist']);
+});
 Route::get('/system-comments', [SystemCommentController::class, 'index']);
 // Test route
 Route::resource('/product', ProductController::class);
-
-Route::get('/artist/getArtist', [ArtistController::class, 'getArtist'])->middleware(\App\Http\Middleware\OptionalAuth::class);
 Route::get('/artist/{artistId}/ratings', [ArtistRatingController::class, 'listArtistRatings']);
 
 Route::post('/users-subscribe/send', [UsersSubscribeController::class, 'sendEmailToSubscribers'])

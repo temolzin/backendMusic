@@ -4,18 +4,20 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class OptionalAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        try {
-            $user = Auth::guard('api')->setRequest($request)->user();
-            if ($user) {
-                Auth::setUser($user);
+        if ($request->bearerToken()) {
+            try {
+                if ($user = JWTAuth::parseToken()->authenticate()) {
+                    auth()->setUser($user);
+                }
+            } catch (JWTException $exception) {
             }
-        } catch (\Exception $e) {
         }
 
         return $next($request);
