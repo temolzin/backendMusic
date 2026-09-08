@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Artist;
 use App\Models\ArtistSale;
 use App\Models\ArtistRating;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,6 +25,13 @@ class ArtistRatingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Solo puedes calificar eventos que ya han finalizado.'
+            ], 403);
+        }
+
+        if ($this->hasRatingDeadlinePassed($artistSale)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ya no puedes calificar a este artista, el tiempo para calificar ha terminado.'
             ], 403);
         }
 
@@ -50,9 +58,12 @@ class ArtistRatingController extends Controller
     {
         $rating = ArtistRating::where('artist_sale_id', $saleId)->first();
 
+        $sale = ArtistSale::where('id', $saleId)->where('customer_id', auth()->id())->first();
+
         return response()->json([
             'rating' => $rating ? $rating->rating : 0,
-            'comment' => $rating ? $rating->comment : null
+            'comment' => $rating ? $rating->comment : null,
+            'deadline_passed' => $sale ? $this->hasRatingDeadlinePassed($sale) : false,
         ]);
     }
 
@@ -109,5 +120,23 @@ class ArtistRatingController extends Controller
                 'message' => $e->getMessage()
             ], 401);
         }
+    }
+
+    private function hasRatingDeadlinePassed(ArtistSale $artistSale)
+    {
+        if (!$artistSale->event_date || !$artistSale->event_hour) {
+            return false;
+        }
+
+        $eventDate = $artistSale->event_date instanceof Carbon
+            ? $artistSale->event_date->format('Y-m-d')
+            : $artistSale->event_date;
+        $eventHour = $artistSale->event_hour instanceof Carbon
+            ? $artistSale->event_hour->format('H:i:s')
+            : $artistSale->event_hour;
+        $eventEnd = Carbon::parse($eventDate . ' ' . $eventHour)
+            ->addHours((int) ($artistSale->event_hours ?? 0));
+
+        return Carbon::now()->greaterThan($eventEnd->copy()->addHours(24));
     }
 }
