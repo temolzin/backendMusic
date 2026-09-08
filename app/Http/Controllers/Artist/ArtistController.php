@@ -573,21 +573,33 @@ class ArtistController extends Controller
     public function getArtist()
     {
         try {
-            $artistWithMusicalGender = Artist::with([
+            $isAuthenticated = auth()->check();
+
+            $query = Artist::with([
                 'musicalGenders',
                 'manager',
                 'user:id,account_status',
-                'offers' => function ($query) {
-                    $query->where('start_date', '<=', now())
-                    ->where('end_date', '>=', now());
-                }
             ])
                 ->whereHas('user', function ($q) {
                     $q->whereIn('account_status', ['active']);
                 })
                 ->withAvg("ratings","rating")
-                ->orderBy('id', 'asc')
-                ->get();
+                ->orderBy('id', 'asc');
+
+            if ($isAuthenticated) {
+                $query->with(['offers' => function ($query) {
+                    $query->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now());
+                }]);
+            }
+
+            $artistWithMusicalGender = $query->get();
+
+            if (!$isAuthenticated) {
+                $artistWithMusicalGender->each(function ($artist) {
+                    $artist->makeHidden(['price_hour', 'extra_kilometre']);
+                });
+            }
 
             return response()->json([
                 'success' => true,
