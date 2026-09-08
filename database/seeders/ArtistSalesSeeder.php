@@ -23,7 +23,6 @@ class ArtistSalesSeeder extends Seeder
             return;
         }
 
-        $eventHours = ['08:00', '10:00', '14:00', '16:00', '18:00', '20:00'];
         $amounts = [6000, 9000, 12000];
         $createdAtOffsets = [-150, -120, -90, -75, -60, -30, -20, -10];
         $paymentMethods = ['card', 'cash'];
@@ -51,7 +50,8 @@ class ArtistSalesSeeder extends Seeder
                     ? round(($amount * 0.029) * 1.16, 2)
                     : 0.00;
 
-                $eventDate = $this->buildEventDate($eventStatus, $artistSaleIndex);
+                $eventHoursCount = rand(1, 3);
+                $eventStart = $this->buildEventStart($eventStatus, $artistSaleIndex, $customerIndex, $eventHoursCount);
                 $createdAt = Carbon::now()->addDays($createdAtOffsets[($customerIndex + $j) % count($createdAtOffsets)]);
 
                 $approvalStatus = $eventStatus === ArtistSale::EVENT_STATUS_PENDING
@@ -85,11 +85,11 @@ class ArtistSalesSeeder extends Seeder
                     'customer_city' => 'Ciudad de México',
                     'customer_state' => 'CDMX',
                     'customer_zip_code' => '28001',
-                    'event_date' => $eventDate->format('Y-m-d'),
-                    'event_hour' => $eventHours[array_rand($eventHours)],
-                    'event_hours' => rand(2, 5),
+                    'event_date' => $eventStart->format('Y-m-d'),
+                    'event_hour' => $eventStart->format('H:i'),
+                    'event_hours' => $eventHoursCount,
                     'payment_method' => $paymentMethod,
-                    'event_status' => $this->resolveEventStatus($eventDate),
+                    'event_status' => $this->resolveEventStatus($eventStart),
                     'status' => $eventStatus === ArtistSale::EVENT_STATUS_PENDING
                         ? ArtistSale::PAYMENT_STATUS_PENDING
                         : ArtistSale::PAYMENT_STATUS_COMPLETED,
@@ -115,12 +115,16 @@ class ArtistSalesSeeder extends Seeder
         }
     }
 
-    private function buildEventDate(string $eventStatus, int $artistSaleIndex): Carbon
+    private function buildEventStart(string $eventStatus, int $artistSaleIndex, int $customerIndex, int $eventHours): Carbon
     {
         $baseDate = Carbon::now()->startOfDay();
 
         if ($eventStatus === ArtistSale::EVENT_STATUS_COMPLETED) {
-            return $baseDate->copy()->subDays(7 + ($artistSaleIndex * 3));
+            $eventEnd = $customerIndex % 2 === 0
+                ? Carbon::now()->subHours(3)
+                : Carbon::now()->subHours(48);
+
+            return $eventEnd->copy()->subHours($eventHours);
         }
 
         if ($eventStatus === ArtistSale::EVENT_STATUS_PENDING) {
@@ -130,15 +134,15 @@ class ArtistSalesSeeder extends Seeder
         return $baseDate->copy()->subDays(45 + ($artistSaleIndex * 3));
     }
 
-    private function resolveEventStatus(Carbon $eventDate): string
+    private function resolveEventStatus(Carbon $eventStart): string
     {
         $today = Carbon::now()->startOfDay();
 
-        if ($eventDate->greaterThan($today)) {
+        if ($eventStart->greaterThan($today)) {
             return ArtistSale::EVENT_STATUS_PENDING;
         }
 
-        if ($eventDate->lessThan($today->copy()->subDays(30))) {
+        if ($eventStart->lessThan($today->copy()->subDays(30))) {
             return ArtistSale::EVENT_STATUS_EXPIRED;
         }
 
