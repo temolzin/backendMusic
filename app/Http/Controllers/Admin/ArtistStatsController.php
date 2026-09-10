@@ -16,9 +16,9 @@ class ArtistStatsController extends Controller
     private function getMonthName(int $month): string
     {
         $months = [
-            1 => 'Enero',    2 => 'Febrero',   3 => 'Marzo',
-            4 => 'Abril',    5 => 'Mayo',       6 => 'Junio',
-            7 => 'Julio',    8 => 'Agosto',     9 => 'Septiembre',
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo',
+            4 => 'Abril', 5 => 'Mayo', 6 => 'Junio',
+            7 => 'Julio', 8 => 'Agosto', 9 => 'Septiembre',
             10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
         ];
         return $months[$month] ?? 'Mes ' . $month;
@@ -40,8 +40,8 @@ class ArtistStatsController extends Controller
         if ($previous == 0) {
             return '+' . number_format($current, 0) . ' ' . $suffix;
         }
-        $change  = (($current - $previous) / $previous) * 100;
-        $sign    = $change >= 0 ? '+' : '';
+        $change = (($current - $previous) / $previous) * 100;
+        $sign = $change >= 0 ? '+' : '';
         $rounded = number_format(abs($change), 1);
         return $sign . ($change < 0 ? '-' : '') . $rounded . '%';
     }
@@ -158,7 +158,7 @@ class ArtistStatsController extends Controller
                 ->map(function ($artist) {
                     return [
                         'id' => $artist->id,
-                        'name'  => $artist->name ?? optional($artist->user)->name ?? 'Artista',
+                        'name' => $artist->name ?? optional($artist->user)->name ?? 'Artista',
                         'image' => $artist->image ?? '',
                     ];
                 });
@@ -231,8 +231,8 @@ class ArtistStatsController extends Controller
             $previousRating = ArtistRating::where('artist_id', $artistId)
                 ->whereBetween('created_at', [$previousStart, $previousEnd])
                 ->avg('rating') ?? 0;
-            $averageRating  = ArtistRating::where('artist_id', $artistId)->avg('rating') ?? 0;
-            $currentSales  = ArtistSale::where('artist_id', $artistId)
+            $averageRating = ArtistRating::where('artist_id', $artistId)->avg('rating') ?? 0;
+            $currentSales = ArtistSale::where('artist_id', $artistId)
                 ->where('event_status', ArtistSale::EVENT_STATUS_COMPLETED)
                 ->whereBetween('created_at', [$currentStart, $currentEnd])
                 ->get();
@@ -301,7 +301,7 @@ class ArtistStatsController extends Controller
                         'rating_trend' => $this->calculateRatingTrend((float) $currentRating, (float) $previousRating),
                         'income_trend' => $this->calculateIncomeTrend((float) $currentIncome, (float) $previousIncome),
                         'events_trend' => $this->calculateTrend((float) $currentEvents, (float) $previousEvents, 'nuevos'),
-                        'hires_trend'  => $this->calculateTrend((float) $currentContracts, (float) $previousContracts, 'nuevas'),
+                        'hires_trend' => $this->calculateTrend((float) $currentContracts, (float) $previousContracts, 'nuevas'),
                         'sanctions_trend' => $currentSanctions . ' nuevas',
                     ],
                     'chart' => $chartData,
