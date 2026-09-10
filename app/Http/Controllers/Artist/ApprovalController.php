@@ -111,35 +111,35 @@ class ApprovalController extends Controller
 
             if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CASH) {
                 $customerData = [
-                    'name'             => $sale->customer_first_name,
-                    'last_name'        => $sale->customer_last_name,
-                    'email'            => $sale->customer_email,
+                    'name' => $sale->customer_first_name,
+                    'last_name' => $sale->customer_last_name,
+                    'email' => $sale->customer_email,
                     'requires_account' => false,
-                    'address'          => [
-                        'line1'        => $sale->customer_address ?? 'Sin dirección',
-                        'city'         => $sale->customer_city ?? 'Ciudad',
-                        'state'        => $sale->customer_state ?? 'Estado',
-                        'postal_code'  => $sale->customer_zip_code ?? '00000',
+                    'address' => [
+                        'line1' => $sale->customer_address ?? 'Sin dirección',
+                        'city' => $sale->customer_city ?? 'Ciudad',
+                        'state' => $sale->customer_state ?? 'Estado',
+                        'postal_code' => $sale->customer_zip_code ?? '00000',
                         'country_code' => 'MX',
                     ],
                 ];
 
                 $chargeRequest = [
-                    'method'      => 'store',
-                    'amount'      => (float) $sale->amount,
-                    'currency'    => 'MXN',
+                    'method' => 'store',
+                    'amount' => (float) $sale->amount,
+                    'currency' => 'MXN',
                     'description' => 'Reserva artista - Pago en efectivo',
-                    'customer'    => $customerData,
-                    'due_date'    => $eventDate = Carbon::parse($sale->event_date)->endOfDay()->format('Y-m-d\TH:i:s'),
+                    'customer' => $customerData,
+                    'due_date' => $eventDate = Carbon::parse($sale->event_date)->endOfDay()->format('Y-m-d\TH:i:s'),
                 ];
 
                 $charge = $openpay->charges->create($chargeRequest);
                 $sale->openpay_transaction_id = $charge->id;
                 $sale->openpay_fee = $this->resolveOpenpayFee($charge);
                 $cashData = [
-                    'cash_reference'   => $charge->payment_method->reference ?? null,
+                    'cash_reference' => $charge->payment_method->reference ?? null,
                     'cash_barcode_url' => $charge->payment_method->barcode_url ?? null,
-                    'cash_due_date'    => $charge->due_date ?? Carbon::now()->addHours(24),
+                    'cash_due_date' => $charge->due_date ?? Carbon::now()->addHours(24),
                 ];
             }
 
