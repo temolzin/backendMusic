@@ -73,19 +73,11 @@ class ArtistStatsController extends Controller
         return $sign . ($change < 0 ? '-' : '') . $rounded . '%';
     }
 
-    private function resolveOpenpayFee(float $amount, float $storedFee): float
-    {
-        if ($storedFee > 0) {
-            return $storedFee;
-        }
-        return round((($amount * 0.029) + 2.50) * 1.16, 2);
-    }
-
     private function calculateNetIncome($sales): float
     {
         return (float) $sales->sum(function ($sale) {
             $amount = floatval($sale->amount);
-            $openpayFee = $this->resolveOpenpayFee($amount, floatval($sale->openpay_fee));
+            $openpayFee = floatval($sale->openpay_fee);
             $platformFee = $amount * 0.10;
             return max(0, $amount - $openpayFee - $platformFee);
         });
@@ -103,14 +95,14 @@ class ArtistStatsController extends Controller
             }
             $sixWeeksAgo = Carbon::now()->startOfWeek()->subWeeks(5);
             $salesLastWeeks = ArtistSale::where('artist_id', $artistId)
-                ->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED)
+                ->where('event_status', ArtistSale::EVENT_STATUS_COMPLETED)
                 ->where('created_at', '>=', $sixWeeksAgo)
                 ->get();
             foreach ($salesLastWeeks as $sale) {
                 $weekKey = Carbon::parse($sale->created_at)->format('Y-W');
                 if (isset($incomeByWeek[$weekKey])) {
                     $amount = floatval($sale->amount);
-                    $openpayFee = $this->resolveOpenpayFee($amount, floatval($sale->openpay_fee));
+                    $openpayFee = floatval($sale->openpay_fee);
                     $platformFee = $amount * 0.10;
                     $net = max(0, $amount - $openpayFee - $platformFee);
                     $incomeByWeek[$weekKey] += $net;
@@ -133,14 +125,14 @@ class ArtistStatsController extends Controller
         }
         $sixMonthsAgo = Carbon::now()->startOfMonth()->subMonths(5);
         $salesLast6Months = ArtistSale::where('artist_id', $artistId)
-            ->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED)
+            ->where('event_status', ArtistSale::EVENT_STATUS_COMPLETED)
             ->where('created_at', '>=', $sixMonthsAgo)
             ->get();
         foreach ($salesLast6Months as $sale) {
             $monthNum = (int) Carbon::parse($sale->created_at)->format('n');
             if (isset($incomeByMonth[$monthNum])) {
                 $amount = floatval($sale->amount);
-                $openpayFee = $this->resolveOpenpayFee($amount, floatval($sale->openpay_fee));
+                $openpayFee = floatval($sale->openpay_fee);
                 $platformFee = $amount * 0.10;
                 $net = max(0, $amount - $openpayFee - $platformFee);
                 $incomeByMonth[$monthNum] += $net;
@@ -241,15 +233,15 @@ class ArtistStatsController extends Controller
                 ->avg('rating') ?? 0;
             $averageRating = ArtistRating::where('artist_id', $artistId)->avg('rating') ?? 0;
             $currentSales = ArtistSale::where('artist_id', $artistId)
-                ->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED)
+                ->where('event_status', ArtistSale::EVENT_STATUS_COMPLETED)
                 ->whereBetween('created_at', [$currentStart, $currentEnd])
                 ->get();
             $previousSales = ArtistSale::where('artist_id', $artistId)
-                ->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED)
+                ->where('event_status', ArtistSale::EVENT_STATUS_COMPLETED)
                 ->whereBetween('created_at', [$previousStart, $previousEnd])
                 ->get();
             $allSales = ArtistSale::where('artist_id', $artistId)->get();
-            $totalIncome = $this->calculateNetIncome($allSales->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED));
+            $totalIncome = $this->calculateNetIncome($allSales->where('event_status', ArtistSale::EVENT_STATUS_COMPLETED));
             $completedEvents = $allSales->where('event_status', ArtistSale::EVENT_STATUS_COMPLETED)->count();
             $totalContracts = $allSales->count();
             $currentIncome = $this->calculateNetIncome($currentSales);

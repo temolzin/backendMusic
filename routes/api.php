@@ -39,7 +39,7 @@ use App\Http\Middleware\ResolveAuthUser;
 use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\ClientRefundController;
 use App\Http\Controllers\Admin\ArtistStatsController;
-use App\Http\Controllers\Admin\ReportsController;
+use App\Http\Controllers\Admin\EarningsReportController;
 use App\Http\Controllers\SystemCommentController;
 
 // Routes for login without sesion
@@ -70,7 +70,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::get('/admin/dashboard-overview', [DashboardStatsController::class, 'index']);
     Route::get('/admin/artists/list', [ArtistStatsController::class, 'getArtistsList']);
     Route::get('/admin/artist-analytics/{artistId}', [ArtistStatsController::class, 'getArtistStats']);
-    Route::get('/admin/reports/earnings', [ReportsController::class, 'getEarnings']);
+    Route::get('/admin/reports/earnings', [EarningsReportController::class, 'getEarnings']);
     Route::get('/admin/payouts/pending', [AdminPayoutController::class, 'pendingPayouts']);
     Route::get('/admin/payouts/history', [AdminPayoutController::class, 'payoutHistory']);
     Route::post('/admin/payouts/{saleId}/release', [AdminPayoutController::class, 'releasePayout']);
@@ -90,7 +90,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
 
     //Route for artist
     Route::get('/artist/my-analytics', [ArtistStatsController::class, 'getMyArtistStats']);
-    Route::get('/artist/reports/earnings', [ReportsController::class, 'getMyEarnings']);
+    Route::get('/artist/reports/earnings', [EarningsReportController::class, 'getMyEarnings']);
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
     Route::get('/artist-new/gallery', [ArtistController::class, 'artistGalleryIndex']);
     Route::get('/artist-new/videos', [ArtistController::class, 'artistVideosIndex']);

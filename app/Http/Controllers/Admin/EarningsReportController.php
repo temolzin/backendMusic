@@ -8,7 +8,7 @@ use App\Models\Artist;
 use App\Models\ArtistSale;
 use Illuminate\Http\Request;
 
-class ReportsController extends Controller
+class EarningsReportController extends Controller
 {
     private const PLATFORM_COMMISSION = 0.10;
 
@@ -21,14 +21,6 @@ class ReportsController extends Controller
             10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
         ];
         return $months[$month] ?? 'Mes ' . $month;
-    }
-
-    private function resolveOpenpayFee(float $amount, float $storedFee): float
-    {
-        if ($storedFee > 0) {
-            return $storedFee;
-        }
-        return round((($amount * 0.029) + 2.50) * 1.16, 2);
     }
 
     private function calculateNetIncome(float $amount, float $openpayFee): float
@@ -129,7 +121,7 @@ class ReportsController extends Controller
                 continue;
             }
             $amount = floatval($sale->amount);
-            $openpayFee = $this->resolveOpenpayFee($amount, floatval($sale->openpay_fee));
+            $openpayFee = floatval($sale->openpay_fee);
             $buckets[$key]['net_sales'] += $this->calculateNetIncome($amount, $openpayFee);
             $buckets[$key]['platform_earnings'] += round($amount * self::PLATFORM_COMMISSION, 2);
             $buckets[$key]['events']++;
@@ -167,7 +159,7 @@ class ReportsController extends Controller
                 $net = $group->sum(function ($sale) {
                     return $this->calculateNetIncome(
                         floatval($sale->amount),
-                        $this->resolveOpenpayFee(floatval($sale->amount), floatval($sale->openpay_fee))
+                        floatval($sale->openpay_fee)
                     );
                 });
                 $platform = $group->sum(function ($sale) {
@@ -189,7 +181,7 @@ class ReportsController extends Controller
         foreach ($completedSales as $sale) {
             $net = $this->calculateNetIncome(
                 floatval($sale->amount),
-                $this->resolveOpenpayFee(floatval($sale->amount), floatval($sale->openpay_fee))
+                floatval($sale->openpay_fee)
             );
             $genres = optional($sale->artist)->musicalGenders ?? collect();
             if ($genres->isEmpty()) {
