@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
-use App\Models\Artist;
 use App\Models\ArtistSale;
 use Illuminate\Http\Request;
 
@@ -82,7 +81,7 @@ class EarningsReportController extends Controller
         return $period === 'week' ? 'Y-W' : ($period === 'year' ? 'Y' : 'Y-m');
     }
 
-    private function buildReportData(string $period, ?int $artistId = null, ?string $from = null, ?string $to = null): array
+    private function buildReportData(string $period, ?string $from = null, ?string $to = null): array
     {
         $fromDate = $from ? Carbon::parse($from)->startOfDay() : null;
         $toDate = $to ? Carbon::parse($to)->endOfDay() : null;
@@ -102,18 +101,11 @@ class EarningsReportController extends Controller
             ->where('created_at', '>=', $fromDate)
             ->where('created_at', '<=', $toDate);
 
-        if ($artistId) {
-            $query->where('artist_id', $artistId);
-        }
-
         $completedSales = $query->get();
 
-        $contractsQuery = ArtistSale::where('created_at', '>=', $fromDate)
-            ->where('created_at', '<=', $toDate);
-        if ($artistId) {
-            $contractsQuery->where('artist_id', $artistId);
-        }
-        $contractsCount = $contractsQuery->count();
+        $contractsCount = ArtistSale::where('created_at', '>=', $fromDate)
+            ->where('created_at', '<=', $toDate)
+            ->count();
 
         foreach ($completedSales as $sale) {
             $key = Carbon::parse($sale->created_at)->format($keyFormat);
@@ -236,44 +228,7 @@ class EarningsReportController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $this->buildReportData($period, null, $from, $to),
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    public function getMyEarnings(Request $request)
-    {
-        try {
-            $user = $request->user();
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthenticated',
-                ], 401);
-            }
-
-            $artist = Artist::where('user_id', $user->id)->first();
-            if (!$artist) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Artist profile not found for this user',
-                ], 404);
-            }
-
-            $period = in_array($request->query('period', 'month'), ['week', 'month', 'year'])
-                ? $request->query('period')
-                : 'month';
-            $from = $request->query('from');
-            $to = $request->query('to');
-
-            return response()->json([
-                'success' => true,
-                'data' => $this->buildReportData($period, $artist->id, $from, $to),
+                'data' => $this->buildReportData($period, $from, $to),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

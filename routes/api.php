@@ -90,7 +90,6 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
 
     //Route for artist
     Route::get('/artist/my-analytics', [ArtistStatsController::class, 'getMyArtistStats']);
-    Route::get('/artist/reports/earnings', [EarningsReportController::class, 'getMyEarnings']);
     Route::post('/artist-new/up-date/{id}', [ArtistController::class, 'updateDetails']);
     Route::get('/artist-new/gallery', [ArtistController::class, 'artistGalleryIndex']);
     Route::get('/artist-new/videos', [ArtistController::class, 'artistVideosIndex']);
