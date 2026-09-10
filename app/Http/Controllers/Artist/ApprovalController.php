@@ -103,9 +103,10 @@ class ApprovalController extends Controller
 
             if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CARD && $sale->openpay_transaction_id) {
                 $charge = $openpay->charges->get($sale->openpay_transaction_id);
-                $charge->capture([
+                $charge = $charge->capture([
                     'amount' => (float) $sale->amount,
                 ]);
+                $sale->openpay_fee = $this->resolveOpenpayFee($charge);
             }
 
             if ($sale->payment_method === ArtistSale::PAYMENT_METHOD_CASH) {
