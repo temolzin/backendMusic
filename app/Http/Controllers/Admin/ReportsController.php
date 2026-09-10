@@ -23,7 +23,7 @@ class ReportsController extends Controller
         return $months[$month] ?? 'Mes ' . $month;
     }
 
-    private function effectiveOpenpayFee(float $amount, float $storedFee): float
+    private function resolveOpenpayFee(float $amount, float $storedFee): float
     {
         if ($storedFee > 0) {
             return $storedFee;
@@ -61,7 +61,7 @@ class ReportsController extends Controller
 
         $guard = 0;
         while ($cursor->lte($to) && $guard < 600) {
-            $key = $cursor->format($this->bucketKeyFormat($period));
+            $key = $cursor->format($this->resolveBucketKeyFormat($period));
             if (!isset($buckets[$key])) {
                 $label = $period === 'week'
                     ? 'Semana ' . intval($cursor->format('W'))
@@ -75,20 +75,17 @@ class ReportsController extends Controller
                     'events' => 0,
                 ];
             }
-            if ($period === 'week') {
-                $cursor->addWeek();
-            } elseif ($period === 'year') {
-                $cursor->addYear();
-            } else {
-                $cursor->addMonth();
-            }
+            $stepMethod = $period === 'week'
+                ? 'addWeek'
+                : ($period === 'year' ? 'addYear' : 'addMonth');
+            $cursor->{$stepMethod}();
             $guard++;
         }
 
         return $buckets;
     }
 
-    private function bucketKeyFormat(string $period): string
+    private function resolveBucketKeyFormat(string $period): string
     {
         return $period === 'week' ? 'Y-W' : ($period === 'year' ? 'Y' : 'Y-m');
     }
@@ -98,18 +95,15 @@ class ReportsController extends Controller
         $fromDate = $from ? Carbon::parse($from)->startOfDay() : null;
         $toDate = $to ? Carbon::parse($to)->endOfDay() : null;
 
-        if ($fromDate && $toDate && $fromDate->lte($toDate)) {
-            $buckets = $this->buildBucketsInRange($period, $fromDate, $toDate);
-        } else {
-            $periodStart = $period === 'week'
+        if (!$fromDate || !$toDate || $fromDate->gt($toDate)) {
+            $fromDate = $period === 'week'
                 ? Carbon::now()->startOfWeek()->subWeeks(5)
                 : ($period === 'year' ? Carbon::now()->startOfYear()->subYears(4) : Carbon::now()->startOfMonth()->subMonths(5));
-            $fromDate = $periodStart;
             $toDate = Carbon::now();
-            $buckets = $this->buildBucketsInRange($period, $fromDate, $toDate);
         }
+        $buckets = $this->buildBucketsInRange($period, $fromDate, $toDate);
 
-        $keyFormat = $this->bucketKeyFormat($period);
+        $keyFormat = $this->resolveBucketKeyFormat($period);
 
         $query = ArtistSale::with(['artist.musicalGenders'])
             ->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED)
@@ -135,7 +129,7 @@ class ReportsController extends Controller
                 continue;
             }
             $amount = floatval($sale->amount);
-            $openpayFee = $this->effectiveOpenpayFee($amount, floatval($sale->openpay_fee));
+            $openpayFee = $this->resolveOpenpayFee($amount, floatval($sale->openpay_fee));
             $buckets[$key]['net_sales'] += $this->calculateNetIncome($amount, $openpayFee);
             $buckets[$key]['platform_earnings'] += round($amount * self::PLATFORM_COMMISSION, 2);
             $buckets[$key]['events']++;
@@ -173,7 +167,7 @@ class ReportsController extends Controller
                 $net = $group->sum(function ($sale) {
                     return $this->calculateNetIncome(
                         floatval($sale->amount),
-                        $this->effectiveOpenpayFee(floatval($sale->amount), floatval($sale->openpay_fee))
+                        $this->resolveOpenpayFee(floatval($sale->amount), floatval($sale->openpay_fee))
                     );
                 });
                 $platform = $group->sum(function ($sale) {
@@ -195,7 +189,7 @@ class ReportsController extends Controller
         foreach ($completedSales as $sale) {
             $net = $this->calculateNetIncome(
                 floatval($sale->amount),
-                $this->effectiveOpenpayFee(floatval($sale->amount), floatval($sale->openpay_fee))
+                $this->resolveOpenpayFee(floatval($sale->amount), floatval($sale->openpay_fee))
             );
             $genres = optional($sale->artist)->musicalGenders ?? collect();
             if ($genres->isEmpty()) {
@@ -239,7 +233,7 @@ class ReportsController extends Controller
         ];
     }
 
-    public function earnings(Request $request)
+    public function getEarnings(Request $request)
     {
         try {
             $period = in_array($request->query('period', 'month'), ['week', 'month', 'year'])
@@ -260,7 +254,7 @@ class ReportsController extends Controller
         }
     }
 
-    public function myEarnings(Request $request)
+    public function getMyEarnings(Request $request)
     {
         try {
             $user = $request->user();

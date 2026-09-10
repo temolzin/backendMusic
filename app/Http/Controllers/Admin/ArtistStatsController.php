@@ -73,7 +73,7 @@ class ArtistStatsController extends Controller
         return $sign . ($change < 0 ? '-' : '') . $rounded . '%';
     }
 
-    private function effectiveOpenpayFee(float $amount, float $storedFee): float
+    private function resolveOpenpayFee(float $amount, float $storedFee): float
     {
         if ($storedFee > 0) {
             return $storedFee;
@@ -85,7 +85,7 @@ class ArtistStatsController extends Controller
     {
         return (float) $sales->sum(function ($sale) {
             $amount = floatval($sale->amount);
-            $openpayFee = $this->effectiveOpenpayFee($amount, floatval($sale->openpay_fee));
+            $openpayFee = $this->resolveOpenpayFee($amount, floatval($sale->openpay_fee));
             $platformFee = $amount * 0.10;
             return max(0, $amount - $openpayFee - $platformFee);
         });
@@ -110,7 +110,7 @@ class ArtistStatsController extends Controller
                 $weekKey = Carbon::parse($sale->created_at)->format('Y-W');
                 if (isset($incomeByWeek[$weekKey])) {
                     $amount = floatval($sale->amount);
-                    $openpayFee = $this->effectiveOpenpayFee($amount, floatval($sale->openpay_fee));
+                    $openpayFee = $this->resolveOpenpayFee($amount, floatval($sale->openpay_fee));
                     $platformFee = $amount * 0.10;
                     $net = max(0, $amount - $openpayFee - $platformFee);
                     $incomeByWeek[$weekKey] += $net;
@@ -140,7 +140,7 @@ class ArtistStatsController extends Controller
             $monthNum = (int) Carbon::parse($sale->created_at)->format('n');
             if (isset($incomeByMonth[$monthNum])) {
                 $amount = floatval($sale->amount);
-                $openpayFee = $this->effectiveOpenpayFee($amount, floatval($sale->openpay_fee));
+                $openpayFee = $this->resolveOpenpayFee($amount, floatval($sale->openpay_fee));
                 $platformFee = $amount * 0.10;
                 $net = max(0, $amount - $openpayFee - $platformFee);
                 $incomeByMonth[$monthNum] += $net;
