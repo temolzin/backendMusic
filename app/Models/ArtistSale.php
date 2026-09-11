@@ -28,6 +28,8 @@ class ArtistSale extends Model
     const PAYMENT_METHOD_CARD = 'card';
     const PAYMENT_METHOD_CASH = 'cash';
 
+    protected $appends = ['event_type'];
+
     protected $fillable = [
         'artist_id',
         'offer_id',
@@ -45,6 +47,8 @@ class ArtistSale extends Model
         'event_date',
         'event_hour',
         'event_hours',
+        'event_type_id',
+        'event_type_detail',
         'event_status',
         'openpay_transaction_id',
         'payment_method',
@@ -103,5 +107,19 @@ class ArtistSale extends Model
     public function eventCancellation()
     {
         return $this->hasOne(EventCancellation::class);
+    }
+
+    public function eventType()
+    {
+        return $this->belongsTo(EventType::class, 'event_type_id');
+    }
+
+    public function getEventTypeAttribute()
+    {
+        if ($this->relationLoaded('eventType')) {
+            return $this->getRelation('eventType');
+        }
+
+        return $this->eventType()->first();
     }
 }

@@ -33,7 +33,7 @@ class ApprovalController extends Controller
                 ->where('approval_status', ArtistSale::APPROVAL_STATUS_PENDING)
                 ->whereNotNull('approval_deadline')
                 ->where('approval_deadline', '>', Carbon::now())
-                ->with('customer')
+                ->with('customer', 'eventType')
                 ->oldest()
                 ->get()
                 ->map(function ($sale) {
@@ -62,7 +62,7 @@ class ApprovalController extends Controller
 
             $history = ArtistSale::where('artist_id', $artist->id)
                 ->whereIn('approval_status', [ArtistSale::APPROVAL_STATUS_ACCEPTED, ArtistSale::APPROVAL_STATUS_REJECTED, ArtistSale::APPROVAL_STATUS_EXPIRED, ArtistSale::APPROVAL_STATUS_CANCELLED])
-                ->with('customer')
+                ->with('customer', 'eventType')
                 ->orderByDesc('approval_responded_at')
                 ->get();
 
