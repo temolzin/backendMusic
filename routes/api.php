@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\MusicalsGenders;
 use App\Http\Controllers\Admin\MusicalsGendersController;
+use App\Http\Controllers\Admin\EventTypesController;
 use App\Http\Controllers\Artist\ArtistController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\QuotationsController;
@@ -67,6 +68,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::resource('/admin/roles', RolesApiController::class);
     Route::resource('/admin/permissions', PermissionsApiController::class);
     Route::resource('/admin/musical-genders', MusicalsGendersController::class);
+    Route::resource('/admin/event-types', EventTypesController::class);
     Route::get('/admin/dashboard-overview', [DashboardStatsController::class, 'index']);
     Route::get('/admin/artists/list', [ArtistStatsController::class, 'getArtistsList']);
     Route::get('/admin/artist-analytics/{artistId}', [ArtistStatsController::class, 'getArtistStats']);
@@ -156,6 +158,7 @@ Route::middleware(ResolveAuthUser::class)->group(function () {
     Route::get('/artist/getArtist', [ArtistController::class, 'getArtist']);
 });
 Route::get('/system-comments', [SystemCommentController::class, 'index']);
+Route::get('/event-types', [EventTypesController::class, 'index']);
 // Test route
 Route::resource('/product', ProductController::class);
 Route::get('/artist/{artistId}/ratings', [ArtistRatingController::class, 'listArtistRatings']);

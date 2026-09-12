@@ -227,6 +227,12 @@
                     <td class="label">Duraci&oacute;n</td>
                     <td class="value">{{ $sale->event_hours }} hora(s)</td>
                 </tr>
+                @if($sale->eventType)
+                <tr>
+                    <td class="label">Tipo de evento</td>
+                    <td class="value">{{ $sale->eventType->name }}@if($sale->event_type_detail)<span class="card-detail">{{ $sale->event_type_detail }}</span>@endif</td>
+                </tr>
+                @endif
                 <tr>
                     <td class="label">Pago</td>
                     <td class="value">

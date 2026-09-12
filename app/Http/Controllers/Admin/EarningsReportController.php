@@ -96,7 +96,7 @@ class EarningsReportController extends Controller
 
         $keyFormat = $this->resolveBucketKeyFormat($period);
 
-        $query = ArtistSale::with(['artist.musicalGenders'])
+        $query = ArtistSale::with(['artist.musicalGenders', 'eventType'])
             ->where('status', ArtistSale::PAYMENT_STATUS_COMPLETED)
             ->where('created_at', '>=', $fromDate)
             ->where('created_at', '<=', $toDate);
@@ -187,6 +187,17 @@ class EarningsReportController extends Controller
         }
         arsort($genreMap);
 
+        $eventTypeMap = [];
+        foreach ($completedSales as $sale) {
+            $net = $this->calculateNetIncome(
+                floatval($sale->amount),
+                floatval($sale->openpay_fee)
+            );
+            $eventTypeName = optional($sale->eventType)->name ?? 'Sin tipo';
+            $eventTypeMap[$eventTypeName] = ($eventTypeMap[$eventTypeName] ?? 0) + $net;
+        }
+        arsort($eventTypeMap);
+
         return [
             'period' => $period,
             'kpis' => [
@@ -208,6 +219,12 @@ class EarningsReportController extends Controller
             ],
             'top_artists' => $topArtists,
             'genres' => collect($genreMap)
+                ->take(6)
+                ->map(function ($net, $name) {
+                    return ['name' => $name, 'net_sales' => round($net, 2)];
+                })
+                ->values(),
+            'event_types' => collect($eventTypeMap)
                 ->take(6)
                 ->map(function ($net, $name) {
                     return ['name' => $name, 'net_sales' => round($net, 2)];
