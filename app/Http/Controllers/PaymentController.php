@@ -35,6 +35,7 @@ use App\Mail\ArtistSaleRequest;
 use App\Mail\EventCancelledNotification;
 use App\Mail\EventCompletedNotification;
 use App\Models\ClientRefund;
+use App\Models\EventType;
 
 class PaymentController extends Controller
 {
@@ -68,6 +69,13 @@ class PaymentController extends Controller
                 return response()->json([
                     'error' => 'Usuario no autenticado o no se proporcionó un ID de cliente válido'
                 ], 401);
+            }
+
+            $eventType = $this->resolveEventType($request);
+            if (!$eventType) {
+                return response()->json([
+                    'error' => 'Debes seleccionar un tipo de evento válido'
+                ], 422);
             }
 
             $clientAmountCents = (int) $request->input("amount");
@@ -277,6 +285,8 @@ class PaymentController extends Controller
                     $sale->event_date = $item['event_date'];
                     $sale->event_hour = $item['event_hour'];
                     $sale->event_hours = $item['hours'] ?? null;
+                    $sale->event_type_id = $eventType->id;
+                    $sale->event_type_detail = $request->input('event_type_detail') ?? $request->input('order_details.event_type_detail');
                     $sale->event_status = ArtistSale::EVENT_STATUS_PENDING;
                     $sale->status = ArtistSale::PAYMENT_STATUS_AUTHORIZED;
                     $sale->payment_method = ArtistSale::PAYMENT_METHOD_CARD;
@@ -473,6 +483,7 @@ class PaymentController extends Controller
                     $query->whereNull('approval_status')
                         ->orWhere('approval_status', '!=', ArtistSale::APPROVAL_STATUS_PENDING);
                 })
+                ->with('eventType')
                 ->get();
 
             $sales = $sales->map(function ($sale) {
@@ -771,6 +782,13 @@ class PaymentController extends Controller
                 ], 401);
             }
 
+            $eventType = $this->resolveEventType($request);
+            if (!$eventType) {
+                return response()->json([
+                    'error' => 'Debes seleccionar un tipo de evento válido'
+                ], 422);
+            }
+
             $clientAmountCents = (int) $request->input('amount');
             $artistList        = $request->input('artistList', []);
 
@@ -908,6 +926,8 @@ class PaymentController extends Controller
                     $sale->event_date             = $item['event_date'];
                     $sale->event_hour             = $item['event_hour'];
                     $sale->event_hours            = $item['hours'] ?? null;
+                    $sale->event_type_id = $eventType->id;
+                    $sale->event_type_detail = $request->input('event_type_detail') ?? $request->input('order_details.event_type_detail');
                     $sale->payment_method = ArtistSale::PAYMENT_METHOD_CASH;
                     $sale->store = $store;
                     $sale->latitude = $latitude;
@@ -1530,5 +1550,24 @@ class PaymentController extends Controller
                 'message' => 'No se pudo generar el recibo: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function resolveEventType(Request $request)
+    {
+        $eventTypeId = $request->input('event_type_id') ?? $request->input('order_details.event_type_id');
+        $eventTypeDetail = $request->input('event_type_detail') ?? $request->input('order_details.event_type_detail');
+
+        $eventType = $eventTypeId ? EventType::find($eventTypeId) : null;
+        if (!$eventType) {
+            return null;
+        }
+
+        if ($eventType->slug === 'otros') {
+            if (mb_strlen(trim($eventTypeDetail ?? '')) < 3) {
+                return null;
+            }
+        }
+
+        return $eventType;
     }
 }

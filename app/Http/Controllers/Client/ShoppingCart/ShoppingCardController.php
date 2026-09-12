@@ -267,7 +267,7 @@ class ShoppingCardController extends Controller
             $user_id = $auth_user->id;
 
             $purchases = ArtistSale::where('customer_id', $user_id)
-                ->with('artist', 'artist.manager', 'customer', 'cashReference')
+                ->with('artist', 'artist.manager', 'customer', 'cashReference', 'eventType')
                 ->orderBy('created_at', 'desc')
                 ->get();
 

@@ -45,6 +45,12 @@
                                         <span class="info-value">{{ Carbon::parse($sale->event_date)->locale('es')->isoFormat('dddd D [de] MMMM [de] YYYY') }}</span>
                                     </div>
                                     <div class="info-row">
+                                        <span class="info-label">Tipo de evento</span>
+                                        <span class="info-value">
+                                            {{ $sale->eventType ? $sale->eventType->name : 'No especificado' }}{{ $sale->event_type_detail ? ' - ' . $sale->event_type_detail : '' }}
+                                        </span>
+                                    </div>
+                                    <div class="info-row">
                                         <span class="info-label">Horario</span>
                                         <span class="info-value">{{ $sale->event_hour }} &middot; {{ $sale->event_hours }} hora(s)</span>
                                     </div>
