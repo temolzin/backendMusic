@@ -23,8 +23,8 @@ class EventTypesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ], 401);
+'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -57,8 +57,8 @@ class EventTypesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ], 401);
+'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -91,8 +91,8 @@ class EventTypesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ], 401);
+'message' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -109,8 +109,8 @@ class EventTypesController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ], 401);
+'message' => $e->getMessage()
+            ], 500);
         }
     }
 }
