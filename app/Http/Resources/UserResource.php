@@ -18,15 +18,19 @@ class UserResource extends JsonResource
         $roles = $userRoles->pluck('slug');
         $rolesPermissions = $userRoles->pluck('permissions')->flatten(1)->pluck('slug');
         $userPermissions = $rolesPermissions->merge($this->permissions->pluck('slug'));
+        $emailHash = md5(strtolower(trim($this->email)));
+        $defaultGravatar = "https://secure.gravatar.com/avatar/{$emailHash}?s=800&d=retro";
 
         return [
-            //'id' => $this->id,
+            'id'          => $this->id,
             'name'        => $this->name,
             'email'       => $this->email,
             'created_at'  => $this->created_at->format('d-m-Y'),
             'role'        => $roles,
             "permissions" => $userPermissions,
-            "image"       => $this->image_profile,
+            "image"       => $this->getFirstMediaUrl('profile_images') ?: $defaultGravatar,
+            "dark_mode"   => $this->dark_mode,
+            'account_status' => $this->account_status
         ];
     }
 }

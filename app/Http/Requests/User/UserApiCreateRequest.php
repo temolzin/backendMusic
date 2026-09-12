@@ -40,4 +40,10 @@ class UserApiCreateRequest extends FormRequest
             'role_id' => 'rol del usuario'
         ];
     }
+    public function messages(): array
+    {
+        return [
+            'email.unique' => 'El correo del usuario ya se encuentra registrado.',
+        ];
+    }
 }

@@ -11,4 +11,5 @@ class UsersSubscribe extends Model
 
     protected $table = 'users_subscribe';
     protected $fillable = ['email'];
+
 }

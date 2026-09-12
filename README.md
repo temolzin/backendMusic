@@ -1,76 +1,155 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+## Welcome to the Vibeer Repository 🎵
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Vibeer
+A platform for hiring musical artists that helps artists promote their services and allows clients to book them easily, with secure payments through OpenPay.
 
-## About Sistema Gestión de Música
+## Preview
+![Login](https://img.shields.io/badge/Preview-Login-blue)
+![Dashboard](https://img.shields.io/badge/Preview-Dashboard-green)
 
-Es un sistema híbrido que pueda ser usado en aplicación web como en una aplicación para teléfonos inteligentes Android, su finalidad es una aplicación que de publicidad a grupos musicales y puedan ser contratados por cualquier persona a través del sistema, obteniendo ganancias por cada contratación.
+### Prerequisites 📋
+To run this project, you will need:
 
-## Agregar la variable FRONTEND_APP la url que se le asigna al Front end por defecto (http://localhost:8080)
+- PHP 8.1+ server
+- PostgreSQL 14
+- [Composer](https://getcomposer.org/) (dependency manager)
+- [kool](https://kool.dev/) (for Docker) or run locally
 
-## Configurar las credenciales de el login de Google en https://console.cloud.google.com/apis/dashboard con las siguientes URI, activando Google+ como API y configurando las credenciales Secret, ClientID y pasando la pantalla de consentimiento, además, de agregar las credenciales obtenidas al .env
+> **Windows users**: kool runs Linux-based Docker containers, so it requires WSL with a Linux distribution installed, plus Docker Desktop with WSL2 backend.
 
-URI:
-http://localhost:8080/authorize/google/callback
+### Docker Installation (kool) 🐳🔧
 
-.env
-GOOGLE_OAUTH_ID=YOU_OAUTH_ID
-GOOGLE_OAUTH_KEY=YOU_OAUTH_KEY
-GOOGLE_REDIRECT_URL=http://localhost:8080/authorize/google/callback
+1. Clone the repository:
+    ```bash
+    git clone <repo-url> backendMusic
+    ```
 
-## Configurar las credenciales de el login de Facebook en https://developers.facebook.com/apps/creation/ con el siguientes URI, configurando las credenciales Secret, ClientID y pasando la pantalla de consentimiento, además, de agregar las credenciales obtenidas al .env
+2. Enter the project folder:
+    ```bash
+    cd backendMusic
+    ```
 
-URI:
-http://localhost:8080
+3. Copy the environment file:
+    ```bash
+    cp .env.example .env
+    ```
 
-#.env
-FACEBOOK_CLIENT_ID=YOU_CLIENT_ID
-FACEBOOK_CLIENT_SECRET=YOU_CLIENT_SECRET
-FACEBOOK_REDIRECT_URL=http://localhost:8080/authorize/facebook/callback
+4. Run the full setup — this starts containers, installs deps, generates keys, migrates and seeds:
+    ```bash
+    kool run setup
+    ```
 
-## Configurar las credenciales SMTP para el servicio de newsletter(envío de correos) a los usuarios suscritos
-## Todas te las otorga cualquier servidor SMTP 
+### Local Installation 💻🔧
 
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.mailtrap.io
-MAIL_PORT=2525
-MAIL_USERNAME=your_mailtrap_username
-MAIL_PASSWORD=your_mailtrap_password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_NAME="Nombre del remitente"
-MAIL_FROM_ADDRESS="example@email.com"
+1. Clone the repository:
+    ```bash
+    git clone <repo-url> backendMusic
+    ```
 
-## Configurar OpenPay para el modulo de transacciones
+2. Enter the project folder:
+    ```bash
+    cd backendMusic
+    ```
 
-Agregar al .env.example las credenciales que obtienes en OpenPay al registrar y scrollear:
+3. Install PHP dependencies:
+    ```bash
+    composer install
+    ```
 
-OPENPAY_ID=TU_OPENPAY_ID
-OPENPAY_SECRET=TU_OPENPAY_SECRET(la que comienza con sk)
-OPENPAY_PRODUCTION_MODE=false(Depende si es para pruebas o producción)
+4. Copy `.env.example` and rename it to `.env`:
+    ```bash
+    cp .env.example .env
+    ```
 
-## - curl -fsSL https://kool.dev/install | bash
+5. Generate the application key:
+    ```bash
+    php artisan key:generate
+    ```
 
-Para ejecutar correctamente el proyecto correctamente se necesita tener instalado kool, el cual se instala con el comando.
+6. Generate the JWT secret:
+    ```bash
+    php artisan jwt:secret
+    ```
 
-Este comando solo sirve en linux, por lo que para usarse en windows necesitamos instalar Windows Subsistem Linux(WSL) e instalar una versión de Linux, además tenemos que tener Docker instalado en nuestro subsistema de linux y docker compose.
+7. Create a database in PostgreSQL with the same name as in your `.env` file.
 
-## kool run setup
+8. Run migrations and seeders:
+    ```bash
+    php artisan migrate:fresh --seed
+    ```
 
-Despues debemos ejecutar los siguientes comandos los cuales nos configurarán las credenciales e instalará las dependencias que necesita la aplicación.
+9. For **Windows users**: create the storage link manually:
+    ```bash
+    # Run PowerShell as administrator
+    mklink /J public\storage ..\storage\app\public
+    ```
 
-## kool run db-reset
+10. Start the development server:
+    ```bash
+    php artisan serve
+    ```
 
-Para finalizar necesitamos ejecutar las migraciones con el siguiente comando, el cual podemos ejecutar cuantas veces querramos resetear la base de datos.
+    Open the URL shown in the console (usually http://127.0.0.1:8000).
 
-## kool start
+### Environment Configuration 🔐
 
-Enciende el contenedor
+Configure these variables in your `.env` file:
 
-## kool stop
+- **Google Maps API** (required for distance calculation):
+    ```
+    GOOGLE_MAPS_API_KEY=YOUR_API_KEY
+    ```
+    Enable Distance Matrix API and Maps JavaScript API in Google Cloud Console.
 
-Apaga el contenedor
+- **Google OAuth** (login with Google):
+    ```
+    GOOGLE_OAUTH_ID=YOUR_ID
+    GOOGLE_OAUTH_KEY=YOUR_KEY
+    ```
+    Redirect URI: `http://localhost:8080/authorize/google/callback`
+
+- **Facebook OAuth** (login with Facebook):
+    ```
+    FACEBOOK_CLIENT_ID=YOUR_ID
+    FACEBOOK_CLIENT_SECRET=YOUR_SECRET
+    FACEBOOK_REDIRECT_URL=http://localhost:8080/authorize/facebook/callback
+    ```
+
+- **SMTP Mail** (for emails):
+    ```
+    MAIL_MAILER=smtp
+    MAIL_HOST=sandbox.smtp.mailtrap.io
+    MAIL_PORT=2525
+    MAIL_USERNAME=your_user
+    MAIL_PASSWORD=your_password
+    MAIL_ENCRYPTION=tls
+    MAIL_FROM_ADDRESS=no-reply@vibeer.com
+    MAIL_FROM_NAME="Vibeer"
+    ```
+
+- **OpenPay** (payment gateway): Configured from the admin panel (stored in database), not in `.env`.
+
+### Additional Commands
+
+- **Reset Database**:
+    ```bash
+    kool run artisan migrate:fresh --seed   # Docker
+    php artisan migrate:fresh --seed        # Local
+    ```
+- **Run Queue Worker** (for background jobs):
+    ```bash
+    kool run artisan queue:work   # Docker
+    php artisan queue:work        # Local
+    ```
+- **Clear Cache**:
+    ```bash
+    kool run artisan cache:clear   # Docker
+    php artisan cache:clear        # Local
+    ```
+- **Interactive Console**:
+    ```bash
+    kool run artisan tinker   # Docker
+    php artisan tinker        # Local
+    ```
+
+© Vibeer

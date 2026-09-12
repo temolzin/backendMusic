@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class CreateShoppingsCardsTable extends Migration
 {
@@ -35,6 +36,6 @@ class CreateShoppingsCardsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('shoppings_cards');
+        DB::statement('DROP TABLE IF EXISTS shoppings_cards CASCADE');
     }
 }

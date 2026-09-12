@@ -5,15 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class GaleryArtist extends Model
+class EventType extends Model
 {
     use HasFactory;
+
     protected $fillable = [
-        'artist_id',
-        'image',
+        'name',
+        'slug',
     ];
-    public function artists()
-    {
-        return $this->belongsTo(Artist::class);
-    }
 }
