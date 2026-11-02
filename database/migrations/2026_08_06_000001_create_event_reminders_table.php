@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('artist_sale_id')->constrained('artist_sales')->onDelete('cascade');
             $table->string('lapse');
-            $table->timestamp('sent_at');
+            $table->dateTime('sent_at');
             $table->timestamps();
             $table->unique(['artist_sale_id', 'lapse']);
         });
