@@ -15,8 +15,8 @@ return new class extends Migration
             $table->nullableMorphs('sanctionable');
             $table->string('type');
             $table->text('reason');
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at')->nullable();
+            $table->dateTime('starts_at');
+            $table->dateTime('ends_at')->nullable();
             $table->string('created_by');
             $table->timestamps();
         });
