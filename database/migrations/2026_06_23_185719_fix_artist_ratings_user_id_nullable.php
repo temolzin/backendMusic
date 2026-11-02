@@ -9,14 +9,14 @@ return new class extends Migration
     public function up()
     {
         if (Schema::hasColumn('artist_ratings', 'user_id')) {
-            DB::statement('ALTER TABLE artist_ratings ALTER COLUMN user_id DROP NOT NULL');
+            DB::statement('ALTER TABLE artist_ratings MODIFY user_id BIGINT UNSIGNED NULL');
         }
     }
-
+    
     public function down()
     {
         Schema::disableForeignKeyConstraints();
-        DB::statement('TRUNCATE TABLE artist_ratings CASCADE');
+        DB::table('artist_ratings')->truncate();
         Schema::enableForeignKeyConstraints();
     }
 };
