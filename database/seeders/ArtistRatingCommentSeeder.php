@@ -7,6 +7,7 @@ use App\Models\ArtistRating;
 use App\Models\ArtistSale;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ArtistRatingCommentSeeder extends Seeder
 {
@@ -14,7 +15,9 @@ class ArtistRatingCommentSeeder extends Seeder
 
     public function run()
     {
-        DB::statement('TRUNCATE TABLE artist_ratings RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('artist_ratings')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         $artists = Artist::all();
 

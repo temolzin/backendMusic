@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::table('artist_ratings', function (Blueprint $table) {
             $table->dropForeign(['user_id']);
+            $table->dropUnique(['user_id', 'artist_id']);
             $table->dropColumn('user_id');
 
             $table->foreignId('artist_sale_id')
@@ -39,6 +40,7 @@ return new class extends Migration
             $table->dropColumn('artist_sale_id');
 
             $table->foreignId('user_id')->after('id')->constrained('users')->onDelete('cascade');
+            $table->unique(['user_id', 'artist_id']);
         });
     }
 };

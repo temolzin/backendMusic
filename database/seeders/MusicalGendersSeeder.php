@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\MusicalGender;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class MusicalGendersSeeder extends Seeder
 {
@@ -15,7 +16,9 @@ class MusicalGendersSeeder extends Seeder
      */
     public function run()
     {
-        DB::statement('TRUNCATE TABLE musical_genders RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('musical_genders')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         $gender = MusicalGender::create([
             'name' => 'Mariachi',

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class UserSeeder extends Seeder
 {
@@ -15,7 +16,9 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        DB::statement('TRUNCATE TABLE users RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('users')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         $user = User::create([
             'name' => 'Miguel Ánguel Parra Moreno',

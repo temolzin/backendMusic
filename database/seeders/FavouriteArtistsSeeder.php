@@ -5,12 +5,15 @@ namespace Database\Seeders;
 use App\Models\FavouriteArtists;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class FavouriteArtistsSeeder extends Seeder
 {
     public function run()
     {
-        DB::statement('TRUNCATE TABLE favourite_artists RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('favourite_artists')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         $customerIds = [17, 18, 19, 20, 21];
         $artistIds   = range(1, 15);

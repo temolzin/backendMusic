@@ -6,6 +6,7 @@ use App\Models\Artist;
 use App\Models\Manager;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ArtistSeeder extends Seeder
 {
@@ -16,7 +17,11 @@ class ArtistSeeder extends Seeder
      */
     public function run()
     {
-        DB::statement('TRUNCATE TABLE artist_musical_gender, managers, artists RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('artist_musical_gender')->truncate();
+        DB::table('managers')->truncate();
+        DB::table('artists')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         //Artista No.1
         $artist = Artist::create([
