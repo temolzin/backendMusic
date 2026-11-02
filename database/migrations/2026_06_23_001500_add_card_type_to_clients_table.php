@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 class AddCardTypeToClientsTable extends Migration
 {
@@ -16,6 +15,10 @@ class AddCardTypeToClientsTable extends Migration
 
     public function down()
     {
-        DB::statement('ALTER TABLE clients DROP COLUMN card_type CASCADE');
+        if (Schema::hasColumn('clients', 'card_type')) {
+            Schema::table('clients', function (Blueprint $table) {
+                $table->dropColumn('card_type');
+            });
+        }
     }
 }

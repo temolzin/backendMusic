@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     public function up(): void
@@ -13,7 +12,7 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained('users');
             $table->foreignId('artist_id')->nullable()->constrained('artists');
             $table->enum('request_type', ['creation', 'update']);
-            $table->jsonb('proposed_data');
+            $table->json('proposed_data');
             $table->enum('approval_status', ['pending_approval', 'accepted', 'rejected'])
                 ->default('pending_approval');
             $table->text('rejection_reason')->nullable();
@@ -25,6 +24,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        DB::statement('DROP TABLE IF EXISTS artist_profile_requests CASCADE');
+        Schema::dropIfExists('artist_profile_requests');
     }
 };

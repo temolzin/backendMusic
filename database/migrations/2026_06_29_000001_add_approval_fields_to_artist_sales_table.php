@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     public function up(): void
@@ -20,12 +19,19 @@ return new class extends Migration {
 
     public function down(): void
     {
-        DB::statement('
-            ALTER TABLE artist_sales 
-            DROP COLUMN approval_status CASCADE,
-            DROP COLUMN approval_deadline CASCADE,
-            DROP COLUMN approval_responded_at CASCADE,
-            DROP COLUMN openpay_customer_id CASCADE
-        ');
+        $columns = array_values(array_filter([
+            'approval_status',
+            'approval_deadline',
+            'approval_responded_at',
+            'openpay_customer_id',
+        ], function ($column) {
+            return Schema::hasColumn('artist_sales', $column);
+        }));
+
+        if (!empty($columns)) {
+            Schema::table('artist_sales', function (Blueprint $table) use ($columns) {
+                $table->dropColumn($columns);
+            });
+        }
     }
 };

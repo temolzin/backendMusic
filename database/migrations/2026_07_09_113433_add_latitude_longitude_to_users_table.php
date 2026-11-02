@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class AddLatitudeLongitudeToUsersTable extends Migration
@@ -17,7 +16,14 @@ class AddLatitudeLongitudeToUsersTable extends Migration
 
     public function down()
     {
-        DB::statement('ALTER TABLE users DROP COLUMN IF EXISTS latitude CASCADE');
-        DB::statement('ALTER TABLE users DROP COLUMN IF EXISTS longitude CASCADE');
+        $columns = array_values(array_filter(['latitude', 'longitude'], function ($column) {
+            return Schema::hasColumn('users', $column);
+        }));
+
+        if (!empty($columns)) {
+            Schema::table('users', function (Blueprint $table) use ($columns) {
+                $table->dropColumn($columns);
+            });
+        }
     }
 }

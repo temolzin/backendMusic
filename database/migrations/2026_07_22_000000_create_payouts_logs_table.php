@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
@@ -31,6 +30,6 @@ class CreatePayoutsLogsTable extends Migration
      */
     public function down()
     {
-        DB::statement('DROP TABLE IF EXISTS payouts_logs CASCADE');
+        Schema::dropIfExists('payouts_logs');
     }
 }
