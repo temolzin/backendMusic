@@ -20,8 +20,8 @@ class CreateFavouriteArtistsTable extends Migration
             $table->timestamps();
         });
         Schema::table('favourite_artists', function (Blueprint $table) {
-            $table->foreign('artist_id')->references('id')->on('artists')->onDelete('set null');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('artist_id')->references('id')->on('artists')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
