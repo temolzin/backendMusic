@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 class CreateArtistsTable extends Migration
 {
@@ -42,6 +41,6 @@ class CreateArtistsTable extends Migration
      */
     public function down()
     {
-        DB::statement('DROP TABLE IF EXISTS artists CASCADE');
+        Schema::dropIfExists('artists');
     }
 }

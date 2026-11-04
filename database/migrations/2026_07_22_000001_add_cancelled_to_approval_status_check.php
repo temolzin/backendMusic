@@ -6,21 +6,15 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration {
     public function up(): void
     {
-        DB::statement('ALTER TABLE artist_sales DROP CONSTRAINT IF EXISTS artist_sales_approval_status_check');
-        DB::statement("
-            ALTER TABLE artist_sales
-            ADD CONSTRAINT artist_sales_approval_status_check
-            CHECK (approval_status IN ('pending_approval', 'accepted', 'rejected', 'expired', 'cancelled'))
-        ");
+        DB::statement("ALTER TABLE artist_sales MODIFY approval_status ENUM('pending_approval', 'accepted', 'rejected', 'expired', 'cancelled') NOT NULL DEFAULT 'accepted'");
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE artist_sales DROP CONSTRAINT IF EXISTS artist_sales_approval_status_check');
-        DB::statement("
-            ALTER TABLE artist_sales
-            ADD CONSTRAINT artist_sales_approval_status_check
-            CHECK (approval_status IN ('pending_approval', 'accepted', 'rejected', 'expired'))
-        ");
+        DB::table('artist_sales')
+            ->where('approval_status', 'cancelled')
+            ->update(['approval_status' => 'rejected']);
+
+        DB::statement("ALTER TABLE artist_sales MODIFY approval_status ENUM('pending_approval', 'accepted', 'rejected', 'expired') NOT NULL DEFAULT 'accepted'");
     }
 };

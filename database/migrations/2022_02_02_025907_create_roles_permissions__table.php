@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 class CreateRolesPermissionsTable extends Migration
 {
@@ -32,6 +31,6 @@ class CreateRolesPermissionsTable extends Migration
      */
     public function down()
     {
-        DB::statement('DROP TABLE IF EXISTS roles_permissions CASCADE');
+        Schema::dropIfExists('roles_permissions');
     }
 }

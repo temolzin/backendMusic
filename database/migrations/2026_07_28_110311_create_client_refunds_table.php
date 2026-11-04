@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 use App\Models\ClientRefund;
 
 class CreateClientRefundsTable extends Migration
@@ -17,7 +16,7 @@ class CreateClientRefundsTable extends Migration
     {
         Schema::create('client_refunds', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('event_cancellation_id')->constrained('event_cancellations')->onDele('cascade');
+            $table->foreignId('event_cancellation_id')->constrained('event_cancellations')->onDelete('cascade');
             $table->foreignId('customer_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('authorized_by')->nullable()->constrained('users')->onDelete('set null');
             $table->decimal('refund_percentage', 5, 2);
@@ -35,6 +34,6 @@ class CreateClientRefundsTable extends Migration
      */
     public function down()
     {
-        DB::statement('DROP TABLE IF EXISTS client_refunds CASCADE;');
+        Schema::dropIfExists('client_refunds');
     }
 }

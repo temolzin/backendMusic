@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -16,6 +15,10 @@ return new class extends Migration
 
     public function down()
     {
-        DB::statement('ALTER TABLE musical_genders DROP COLUMN image CASCADE');
+        if (Schema::hasColumn('musical_genders', 'image')) {
+            Schema::table('musical_genders', function (Blueprint $table) {
+                $table->dropColumn('image');
+            });
+        }
     }
 };

@@ -6,12 +6,15 @@ use App\Models\ArtistSale;
 use App\Models\SystemComment;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class SystemCommentSeeder extends Seeder
 {
     public function run()
     {
-        DB::statement('TRUNCATE TABLE system_comments RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('system_comments')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         $customerIds = ArtistSale::whereIn('status', [
             ArtistSale::PAYMENT_STATUS_AUTHORIZED,

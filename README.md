@@ -11,13 +11,13 @@ A platform for hiring musical artists that helps artists promote their services 
 To run this project, you will need:
 
 - PHP 8.1+ server
-- PostgreSQL 14
+- MySQL 8.0
 - [Composer](https://getcomposer.org/) (dependency manager)
-- [kool](https://kool.dev/) (for Docker) or run locally
+- Docker Desktop with Docker Compose, or run locally
 
-> **Windows users**: kool runs Linux-based Docker containers, so it requires WSL with a Linux distribution installed, plus Docker Desktop with WSL2 backend.
+> **Windows users**: Docker Desktop should use the WSL2 backend.
 
-### Docker Installation (kool) 🐳🔧
+### Docker Installation 🐳🔧
 
 1. Clone the repository:
     ```bash
@@ -34,9 +34,31 @@ To run this project, you will need:
     cp .env.example .env
     ```
 
-4. Run the full setup — this starts containers, installs deps, generates keys, migrates and seeds:
+4. Start the containers:
     ```bash
-    kool run setup
+    docker compose up -d --build
+    ```
+
+5. Install PHP dependencies and generate application secrets:
+    ```bash
+    docker compose exec backend composer install
+    docker compose exec backend php artisan key:generate
+    docker compose exec backend php artisan jwt:secret
+    ```
+
+6. Run the migrations:
+    ```bash
+    docker compose exec backend php artisan migrate
+    ```
+
+7. To load optional demo data into a fresh development database:
+    ```bash
+    docker compose exec backend php artisan db:seed
+    ```
+
+   If the legacy local image files are available under `storage/app/public/1` through `storage/app/public/58`, associate them with the demo records using:
+    ```bash
+    docker compose exec backend php artisan db:seed --class="Database\Seeders\RestoreLocalDemoMediaSeeder"
     ```
 
 ### Jenkins Deployment 🚀
@@ -83,12 +105,14 @@ Before using the pipeline:
     php artisan jwt:secret
     ```
 
-7. Create a database in PostgreSQL with the same name as in your `.env` file.
+7. Create a MySQL database and user matching the values in your `.env` file. With Docker Compose, MySQL initializes these automatically.
 
-8. Run migrations and seeders:
+8. Run migrations:
     ```bash
-    php artisan migrate:fresh --seed
+    php artisan migrate
     ```
+
+   To load demo data into a fresh development database, run `php artisan db:seed`. Seeders replace some demo records, so do not run them against production data.
 
 9. For **Windows users**: create the storage link manually:
     ```bash

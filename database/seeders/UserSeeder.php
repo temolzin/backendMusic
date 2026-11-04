@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class UserSeeder extends Seeder
 {
@@ -15,7 +16,9 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        DB::statement('TRUNCATE TABLE users RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('users')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         $user = User::create([
             'name' => 'Miguel Ánguel Parra Moreno',
@@ -23,7 +26,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(1);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('angel@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Juan Alberto Guzmán Gómez',
@@ -31,7 +33,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('juanalbertoguzman87@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Yatziry Guadalupe Gómez Gómez',
@@ -39,7 +40,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('yatziry@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Karla Morales Gonzales',
@@ -47,7 +47,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('karla@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Harol Antonio Hidalgo Gutierrez',
@@ -55,7 +54,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('antonio@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Danna Herrera Peña',
@@ -63,7 +61,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('danna@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Angelica Morales Hernández',
@@ -71,7 +68,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('angelica@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Issac Villalobos Molina',
@@ -79,7 +75,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('issac@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Fatima Leon García',
@@ -87,7 +82,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('fatima@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Monserath López Alarcón',
@@ -95,7 +89,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('monse@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Luis Gómez Gómez',
@@ -103,7 +96,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('luis@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Iván Hernández Sanchez',
@@ -111,7 +103,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('ivan@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Guadalupe Enciso Martínez',
@@ -119,7 +110,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('lupe@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Miguel Francisco Gómez',
@@ -127,7 +117,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('miguel@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Guillermo Cruz Castillo',
@@ -135,7 +124,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('memo@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Cecilia Loera Cid',
@@ -143,7 +131,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(2);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('cecilia@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Alexis Hernandez López',
@@ -151,7 +138,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(3);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('alexis@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Fernando Mendoza Cruz',
@@ -159,7 +145,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(3);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('fernando@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Carlos Ramirez Lopez',
@@ -167,7 +152,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(3);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('carlosramirez@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Valeria Torres Silva',
@@ -175,7 +159,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(3);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('valeriatorres@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
 
         $user = User::create([
             'name' => 'Diego Hernandez Ruiz',
@@ -183,6 +166,5 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
         ]);
         $user->roles()->sync(3);
-        $user->addMediaFromUrl('https://secure.gravatar.com/avatar/' . md5(strtolower(trim('diegohernandez@gmail.com'))) . '?s=800&d=retro')->toMediaCollection('profile_images');
     }
 }

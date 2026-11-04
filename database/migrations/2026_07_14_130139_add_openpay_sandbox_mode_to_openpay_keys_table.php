@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -16,8 +15,10 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::table('openpay_keys', function (Blueprint $table) {
-            DB::statement('ALTER TABLE openpay_keys DROP COLUMN IF EXISTS openpay_sandbox_mode CASCADE');
-        });
+        if (Schema::hasColumn('openpay_keys', 'openpay_sandbox_mode')) {
+            Schema::table('openpay_keys', function (Blueprint $table) {
+                $table->dropColumn('openpay_sandbox_mode');
+            });
+        }
     }
 };

@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -14,10 +13,20 @@ return new class extends Migration
      */
     public function up()
     {
-        DB::statement('ALTER TABLE artists DROP COLUMN IF EXISTS image CASCADE');
-        DB::statement('ALTER TABLE managers DROP COLUMN IF EXISTS image CASCADE');
-        DB::statement('ALTER TABLE musical_genders DROP COLUMN IF EXISTS image CASCADE');
-        DB::statement('ALTER TABLE users DROP COLUMN IF EXISTS image_profile CASCADE');
+        $imageColumns = [
+            'artists' => 'image',
+            'managers' => 'image',
+            'musical_genders' => 'image',
+            'users' => 'image_profile',
+        ];
+
+        foreach ($imageColumns as $tableName => $column) {
+            if (Schema::hasColumn($tableName, $column)) {
+                Schema::table($tableName, function (Blueprint $table) use ($column) {
+                    $table->dropColumn($column);
+                });
+            }
+        }
     }
 
     /**
