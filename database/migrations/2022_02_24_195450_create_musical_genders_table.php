@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 class CreateMusicalGendersTable extends Migration
 {
@@ -31,6 +30,6 @@ class CreateMusicalGendersTable extends Migration
      */
     public function down()
     {
-        DB::statement('DROP TABLE IF EXISTS musical_genders CASCADE');
+        Schema::dropIfExists('musical_genders');
     }
 }

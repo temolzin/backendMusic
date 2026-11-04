@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 class RemoveUserIdFromUsersSubscribeTable extends Migration
 {
@@ -27,6 +26,6 @@ class RemoveUserIdFromUsersSubscribeTable extends Migration
      */
     public function down()
     {
-        DB::statement('DROP TABLE IF EXISTS users_subscribe CASCADE');
+        Schema::dropIfExists('users_subscribe');
     }
 }

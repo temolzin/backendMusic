@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 class CreateUsersRolesTable extends Migration
 {
@@ -32,6 +31,6 @@ class CreateUsersRolesTable extends Migration
      */
     public function down()
     {
-        DB::statement('DROP TABLE IF EXISTS users_roles CASCADE');
+        Schema::dropIfExists('users_roles');
     }
 }
