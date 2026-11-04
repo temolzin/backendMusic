@@ -39,6 +39,18 @@ To run this project, you will need:
     kool run setup
     ```
 
+### Jenkins Deployment 🚀
+
+The `Jenkinsfile` at the repository root builds and deploys this Laravel application to `/var/www/html`. It installs Composer dependencies, compiles the Laravel Mix assets, and copies the application while preserving the server's `.env` and `storage` directory. It does not run database migrations.
+
+Before using the pipeline:
+
+- Configure `/var/www/html/.env` on the web server and make sure the directory exists.
+- Configure Nginx or Apache to use `/var/www/html/public` as the document root; `/var/www/html` is the Laravel application root, not the public document root.
+- Install the matching PHP runtime and required extensions for both CLI and PHP-FPM/Apache, plus Composer, Node.js, and npm on the Jenkins agent.
+- Ensure the web server runs as `www-data`, and grant the Jenkins agent's OS user passwordless `sudo` access only to the deployment commands used in the `Jenkinsfile`.
+- Keep Jenkins on the same host as the web server, or use an agent on that host. This pipeline deploys to the local filesystem; it does not connect to a remote server.
+
 ### Local Installation 💻🔧
 
 1. Clone the repository:
