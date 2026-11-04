@@ -1,16 +1,21 @@
-version: '3'
 services:
 
-  postgres:
-    image: postgres:14
+  mysql:
+    image: mysql:8.0
     environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_DATABASE}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5432:${DB_PORT}"
-    env_file:
-      - .env
+      - "${DB_PORT:-3307}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     networks:
       - network-music
 
@@ -22,8 +27,13 @@ services:
     working_dir: /var/www/
     volumes:
         - ./:/var/www
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
     depends_on:
-      - postgres
+      mysql:
+        condition: service_healthy
     networks:
       - network-music
 
@@ -49,3 +59,6 @@ services:
 networks:
   network-music:
     driver: bridge
+
+volumes:
+  mysql-data:
