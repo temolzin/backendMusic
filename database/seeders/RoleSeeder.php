@@ -6,6 +6,7 @@ use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class RoleSeeder extends Seeder
 {
@@ -16,7 +17,12 @@ class RoleSeeder extends Seeder
      */
     public function run()
     {
-        DB::statement('TRUNCATE TABLE roles_permissions, users_roles, permissions, roles RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('roles_permissions')->truncate();
+        DB::table('users_roles')->truncate();
+        DB::table('permissions')->truncate();
+        DB::table('roles')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         Role::create(["name" => "Administrador", "slug" => "administrador", "description" => "Tiene permisos totales"]);
         Role::create(["name" => "Artista", "slug" => "artista", "description" => "Solo tiene permiso de artista"]);

@@ -10,12 +10,16 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class SupportTicketSeeder extends Seeder
 {
     public function run()
     {
-        DB::statement('TRUNCATE TABLE ticket_logs, support_tickets RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('ticket_logs')->truncate();
+        DB::table('support_tickets')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         $adminId = User::whereHas('roles', function ($query) {
             $query->where('slug', User::ROLE_ADMIN);

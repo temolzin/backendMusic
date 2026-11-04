@@ -5,15 +5,18 @@ namespace Database\Seeders;
 use App\Models\Offer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
 class OfferSeeder extends Seeder
 {
     public function run()
     {
-        DB::statement("UPDATE artist_sales SET offer_id = NULL WHERE offer_id IS NOT NULL;");
-        DB::statement('DELETE FROM offers;');
-        DB::statement("ALTER SEQUENCE offers_id_seq RESTART WITH 1;");
+        DB::table('artist_sales')->whereNotNull('offer_id')->update(['offer_id' => null]);
+
+        Schema::disableForeignKeyConstraints();
+        DB::table('offers')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         $artistIds = DB::table('artists')->orderBy('id')->limit(7)->pluck('id')->all();
 

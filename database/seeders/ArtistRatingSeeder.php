@@ -6,12 +6,15 @@ use App\Models\ArtistRating;
 use App\Models\ArtistSale;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ArtistRatingSeeder extends Seeder
 {
     public function run()
     {
-        DB::statement('TRUNCATE TABLE artist_ratings RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('artist_ratings')->truncate();
+        Schema::enableForeignKeyConstraints();
         $sales = ArtistSale::all();
 
         if ($sales->isEmpty()) {

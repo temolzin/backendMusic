@@ -6,6 +6,7 @@ use App\Models\Card;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class CardSeeder extends Seeder
 {
@@ -16,7 +17,9 @@ class CardSeeder extends Seeder
      */
     public function run()
     {
-        DB::statement('TRUNCATE TABLE cards RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('cards')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         $users = User::whereHas('roles', function ($query) {
             $query->where('slug', User::ROLE_CLIENT);

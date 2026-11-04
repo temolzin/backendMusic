@@ -6,12 +6,15 @@ use App\Models\Artist;
 use App\Models\ArtistPayoutMethod;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ArtistPayoutMethodSeeder extends Seeder
 {
     public function run()
     {
-        DB::statement('TRUNCATE TABLE artist_payout_methods RESTART IDENTITY CASCADE;');
+        Schema::disableForeignKeyConstraints();
+        DB::table('artist_payout_methods')->truncate();
+        Schema::enableForeignKeyConstraints();
 
         $banks = [
             'BBVA México',
