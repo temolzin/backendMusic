@@ -7,6 +7,8 @@ use App\Models\FavouriteArtists;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Models\Artist;
+use Carbon\Carbon;
 
 class FavouriteArtistsController extends Controller
 {
@@ -19,7 +21,11 @@ class FavouriteArtistsController extends Controller
     public function index()
     {
         try {
-            $favouriteArtists = FavouriteArtists::with('artist')->where('user_id', Auth::user()->id)->get();
+            $now = Carbon::now('America/Mexico_City')->format('Y-m-d H:i:s');
+            $favouriteArtists = FavouriteArtists::with(['artist', 'artist.offers' => function ($query) use ($now) {
+                $query->where('start_date', '<=', $now)
+                    ->where('end_date', '>=', $now);
+            }])->where('user_id', Auth::user()->id)->get();
             return response()->json([
                 'success' => true,
                 'client' => $favouriteArtists,
@@ -90,6 +96,23 @@ class FavouriteArtistsController extends Controller
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 401);
+        }
+    }
+    
+    public function countByArtist()
+    {
+        try {
+            $artist = Artist::where('user_id', Auth::user()->id)->first();
+            $count = FavouriteArtists::where('artist_id', $artist->id)->count();
+            return response()->json([
+                'success' => true,
+                'count' => $count,
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()

@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\User\UserApiCreateRequest;
+use App\Mail\AdminPasswordChangedNotification;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Artist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class UserApiController extends Controller
 {
@@ -79,9 +82,10 @@ class UserApiController extends Controller
             $user->name = $name;
             $user->email = $email;
             $user->password = bcrypt($password);
-            $user->image_profile = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
             $user->save();
             $user->roles()->attach($role->id);
+            $absoluteImageUrl = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
+            $user->addMediaFromUrl($absoluteImageUrl)->toMediaCollection('profile_images');
             DB::commit();
 
             return response()->json([
@@ -150,28 +154,23 @@ class UserApiController extends Controller
             $name = $request->input("name");
             $email = $request->input("email");
             $password = $request->input("password");
-            
-            if ($password == null) {
-                DB::beginTransaction();
-                $user = User::find($id);
-                $user->name = $name;
-                $user->email = $email;
-                $user->save();
-                $user->roles()->sync($role->id);
+            $passwordChanged = $password !== null;
 
-                DB::commit();
-            } else {
-                DB::beginTransaction();
-                $user = User::find($id);
-                $user->name = $name;
-                $user->email = $email;
+            $user = User::find($id);
+            $user->name = $name;
+            $user->email = $email;
 
+            if ($passwordChanged) {
                 $user->password = bcrypt($password);
+            }
 
-                $user->save();
-                $user->roles()->sync($role->id);
+            DB::beginTransaction();
+            $user->save();
+            $user->roles()->sync($role->id);
+            DB::commit();
 
-                DB::commit();
+            if ($passwordChanged) {
+                Mail::to($user->email)->send(new AdminPasswordChangedNotification($user));
             }
 
             return response()->json([
@@ -198,6 +197,15 @@ class UserApiController extends Controller
         try {
             DB::beginTransaction();
             $user = User::where('id', $id)->first();
+            $artist = Artist::where('user_id', $id)->first();
+            if ($artist) {
+                DB::table('managers')->where('artist_id', $artist->id)->delete();
+                DB::table('historys_shoppings')->where('artist_id', $artist->id)->delete();
+                DB::table('shoppings_cards_details')->where('artist_id', $artist->id)->delete();
+                DB::table('artist_musical_gender')->where('artist_id', $artist->id)->delete();
+                DB::table('quotations')->where('artist_id', $artist->id)->delete();
+                DB::table('artists')->where('id', $artist->id)->delete();
+            }
             $user->delete();
 
             DB::commit();

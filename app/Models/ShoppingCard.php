@@ -9,6 +9,11 @@ class ShoppingCard extends Model
 {
     use HasFactory;
     protected $table = "shoppings_cards";
+
+    const STATUS_INACTIVE = 0;
+    const STATUS_ACTIVE = 1;
+    const STATUS_PAID = 2;
+
     protected $fillable = [
         'user_id',
         'status',
@@ -19,7 +24,7 @@ class ShoppingCard extends Model
 
     public function shoppingCardDetail()
     {
-        return $this->hasMany(shoppingCardDetail::class);
+        return $this->hasMany(ShoppingCardDetail::class);
     }
 
     public function user()

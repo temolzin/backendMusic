@@ -30,4 +30,11 @@ class UserRegisterRequest extends FormRequest
 
         ];
     }
+
+    public function messages()
+    {
+        return [
+            'email.unique' => 'Este correo ya existe.',
+        ];
+    }
 }

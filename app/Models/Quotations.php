@@ -18,7 +18,15 @@ class Quotations extends Model
         'phone',
         'email',
         'full_name',
-        'price'
+        'price',
+        'base_price',
+        'discount_percentage',
+        'discount_amount',
+        'latitude',
+        'longitude',
+        'google_place_id',
+        'extra_km_distance',
+        'extra_km_cost'
     ];
 
     public function artist()

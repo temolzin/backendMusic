@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\MusicalGender;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class MusicalGendersSeeder extends Seeder
 {
@@ -14,48 +16,51 @@ class MusicalGendersSeeder extends Seeder
      */
     public function run()
     {
-        MusicalGender::create([
+        Schema::disableForeignKeyConstraints();
+        DB::table('musical_genders')->truncate();
+        Schema::enableForeignKeyConstraints();
+
+        $gender = MusicalGender::create([
             'name' => 'Mariachi',
             'slug' => 'mariachi',
             'description' => 'Los mariachis surgieron en el siglo XVI, en Cocula, Jalisco fue donde se vio el primer grupo de mariachis que tocaban el violín y guitarra adoptando su propio sonido y estilo.',
-            'color'=> 'primary'
+            'color'=> 'primary',
         ]);
-        MusicalGender::create([
+        $gender = MusicalGender::create([
             'name' => 'Corridos',
             'slug' => 'corridos',
             'description' => 'Los corridos se caracterizan por narrar una historia o hecho sobre lo que acontece a México, este género surgió durante la Revolución Mexicana.',
-            'color'=> 'orange'
+            'color'=> 'orange',
         ]);
-        MusicalGender::create([
+        $gender = MusicalGender::create([
             'name' => 'Ranchera',
             'slug' => 'ranchera',
             'description' => 'Género considerado entre los predilectos de México, se debe a que es el conjunto de la cultura del folclor mexicano.',
-            'color'=> 'secondary'
+            'color'=> 'secondary',
         ]);
-        MusicalGender::create([
+        $gender = MusicalGender::create([
             'name' => 'Banda Sinaloense',
             'slug' => 'banda-sinaloense',
             'description' => 'Conocida también cómo “Tambora Sinaloense” es un sonido que surgió en el año de 1920 en el estado de Sinaloa.',
-            'color'=> 'red'
+            'color'=> 'red',
         ]);
-        MusicalGender::create([
+        $gender = MusicalGender::create([
             'name' => 'Huapango Huasteco',
             'slug' => 'huapango-huasteco',
             'description' => 'El estilo norteño es un género de la cultura popular mexicana y que hizo la introducción del acordeón.',
-            'color'=> 'green'
+            'color'=> 'green',
         ]);
-        MusicalGender::create([
+        $gender = MusicalGender::create([
             'name' => 'Huapango Norteño',
             'slug' => 'huapango-norteño',
             'description' => 'El estilo norteño es un género de la cultura popular mexicana y que hizo la introducción del acordeón.',
-            'color'=> 'yellow'
+            'color'=> 'yellow',
         ]);
-        MusicalGender::create([
+        $gender = MusicalGender::create([
             'name' => 'Chilena',
             'slug' => 'chilena',
             'description' => 'Es un género musical que se hizo muy popular en una zona llamada Costa Chica, localizada entre los estados de Oaxaca y Guerrero, al sur de México.',
-            'color'=> 'orange'
+            'color'=> 'orange',
         ]);
-
     }
 }

@@ -16,3 +16,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/password/reset/{token}', function ($token) {
+    $frontend = env('FRONTEND_URL', 'http://localhost:8080');
+    $url = rtrim($frontend, '/') . '/reset-password?token=' . urlencode($token);
+
+    if (request()->filled('email')) {
+        $url .= '&email=' . urlencode(request()->query('email'));
+    }
+
+    return redirect($url);
+})->name('password.reset');

@@ -16,7 +16,17 @@ class ArtistsGeneralController extends Controller
     public function latestArtists()
     {
         try {
-            $artists = Artist::orderBy('id', 'DESC')->with('musicalGenders')->take(3)->get();
+            $artists = Artist::orderBy('id', 'DESC')
+            ->with('musicalGenders')
+            ->withAvg('ratings', 'rating')
+            ->take(3)
+            ->get();
+
+            if (!auth()->check()) {
+                $artists->each(function ($artist) {
+                    $artist->makeHidden(['price_hour', 'extra_kilometre']);
+                });
+            }
 
             return response()->json([
                 'success' => true,

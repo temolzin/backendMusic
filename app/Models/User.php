@@ -8,13 +8,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Notifications\ResetPasswordQueuedNotification;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JWTSubject, MustVerifyEmail
+class User extends Authenticatable implements JWTSubject, MustVerifyEmail, HasMedia
 {
 
-    use HasApiTokens, HasFactory, Notifiable, HasPermissions;
+    use HasApiTokens, HasFactory, Notifiable, HasPermissions, InteractsWithMedia;
+
+    public const ROLE_ADMIN = 'administrador';
+    public const ROLE_ARTIST = 'artista';
+    public const ROLE_CLIENT = 'cliente';
 
     /**
      * The attributes that are mass assignable.
@@ -25,7 +32,15 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'name',
         'email',
         'password',
-        'image_profile'
+        'dark_mode',
+        'address',
+        'city',
+        'state',
+        'zip_code',
+        'country',
+        'latitude',
+        'longitude',
+        'account_status',
     ];
 
     /**
@@ -46,6 +61,24 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    protected $appends = ['image_profile', 'role'];
+
+    public function getImageProfileAttribute()
+    {
+        return $this->getFirstMediaUrl('profile_images');
+    }
+
+    public function getRoleAttribute()
+    {
+        return $this->roles->pluck('slug')->toArray();
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('profile_images')
+            ->singleFile();
+    }
 
     // JWT
     public function getJWTIdentifier()
@@ -85,9 +118,9 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
        return $this->hasOne(Artist::class);
     }
 
-    public function clients()
+    public function cards()
     {
-       return $this->hasMany(Client::class);
+       return $this->hasMany(Card::class);
     }
 
     public function historyShoppings()
@@ -103,6 +136,16 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     public function favouriteArtists()
     {
        return $this->hasMany(FavouriteArtists::class);
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordQueuedNotification($token));
+    }
+
+    public function sanctions()
+    {
+        return $this->hasMany(UserSanction::class);
     }
 
 }
