@@ -10,7 +10,9 @@ use App\Models\Artist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class UserApiController extends Controller
 {
@@ -67,37 +69,44 @@ class UserApiController extends Controller
     public function store(UserApiCreateRequest $request)
     {
         try {
-
-            $name = $request->input("name");
-            $email = $request->input("email");
-            $password = $request->input("password");
-            $role_id = $request->input("role_id");
-            $hash =  md5(strtolower(trim($email)));
-
-            $role = Role::where('id', $role_id)->first();
-
+            $validated = $request->validated();
+            $email = $validated['email'];
 
             DB::beginTransaction();
             $user = new User();
-            $user->name = $name;
+            $user->name = $validated['name'];
             $user->email = $email;
-            $user->password = bcrypt($password);
+            $user->password = bcrypt($validated['password']);
             $user->save();
-            $user->roles()->attach($role->id);
-            $absoluteImageUrl = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
-            $user->addMediaFromUrl($absoluteImageUrl)->toMediaCollection('profile_images');
+            $user->roles()->attach($validated['role_id']);
             DB::commit();
+
+            try {
+                $hash = md5(strtolower(trim($email)));
+                $absoluteImageUrl = 'https://secure.gravatar.com/avatar/' . $hash . '?s=800&d=retro';
+                $user->addMediaFromUrl($absoluteImageUrl)->toMediaCollection('profile_images');
+            } catch (Throwable $e) {
+                Log::warning('Unable to download the new user Gravatar.', [
+                    'user_id' => $user->id,
+                    'exception' => $e,
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
                 'user' => $user,
             ], 200);
-        } catch (\Exception $e) {
-            DB::rollback();
+        } catch (Throwable $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
+            report($e);
+
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
-            ], 401);
+                'message' => 'No fue posible crear el usuario.'
+            ], 500);
         }
     }
 
