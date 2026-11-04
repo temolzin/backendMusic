@@ -570,7 +570,7 @@ class ArtistController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getArtist()
+   public function getArtist()
     {
         try {
             $isAuthenticated = auth()->check();
@@ -583,7 +583,7 @@ class ArtistController extends Controller
                 ->whereHas('user', function ($q) {
                     $q->whereIn('account_status', ['active']);
                 })
-                ->withAvg("ratings","rating")
+                ->withAvg("ratings", "rating")
                 ->orderBy('id', 'asc');
 
             if ($isAuthenticated) {
@@ -593,18 +593,41 @@ class ArtistController extends Controller
                 }]);
             }
 
-            $artistWithMusicalGender = $query->get();
+            $artists = $query->get();
 
-            if (!$isAuthenticated) {
-                $artistWithMusicalGender->each(function ($artist) {
-                    $artist->makeHidden(['price_hour', 'extra_kilometre']);
-                });
-            }
+            $formattedArtists = $artists->map(function ($artist) use ($isAuthenticated) {
+                $data = [
+                    'id' => $artist->id,
+                    'user_id' => $artist->user_id,
+                    'name' => $artist->name,
+                    'slug' => $artist->slug,
+                    'members' => $artist->members,
+                    'history' => $artist->history,
+                    'zone' => $artist->zone,
+                    'coverage_radius' => $artist->coverage_radius,
+                    'points' => $artist->points,
+                    'social_media' => $artist->social_media,
+                    'image' => $artist->getFirstMediaUrl('artist_image'), // Manejo seguro del multimedia
+                    'ratings_avg_rating' => $artist->ratings_avg_rating,
+                    'musical_genders' => $artist->musicalGenders,
+                    'manager' => $artist->manager,
+                    'user' => $artist->user,
+                ];
+
+                if ($isAuthenticated) {
+                    $data['price_hour'] = $artist->price_hour;
+                    $data['extra_kilometre'] = $artist->extra_kilometre;
+                    $data['offers'] = $artist->offers;
+                }
+
+                return $data;
+            });
 
             return response()->json([
                 'success' => true,
-                'artists' => $artistWithMusicalGender,
+                'artists' => $formattedArtists,
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
