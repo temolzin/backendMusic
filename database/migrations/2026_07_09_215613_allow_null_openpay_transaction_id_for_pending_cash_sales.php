@@ -7,7 +7,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('ALTER TABLE artist_sales ALTER COLUMN openpay_transaction_id DROP NOT NULL');
+        DB::statement('ALTER TABLE artist_sales MODIFY openpay_transaction_id VARCHAR(255) NULL');;
     }
 
     public function down(): void
@@ -16,6 +16,6 @@ return new class extends Migration
             ->whereNull('openpay_transaction_id')
             ->update(['openpay_transaction_id' => 'rollback-default-value']); 
 
-        DB::statement('ALTER TABLE artist_sales ALTER COLUMN openpay_transaction_id SET NOT NULL');
+        DB::statement('ALTER TABLE artist_sales MODIFY openpay_transaction_id VARCHAR(255) NOT NULL');
     }
 };
