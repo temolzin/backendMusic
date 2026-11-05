@@ -43,19 +43,18 @@ class RestoreLocalDemoMediaSeeder extends Seeder
         }
 
         $sourceMediaId = $legacyMediaId;
-        $directory = storage_path("app/public/{$sourceMediaId}");
-        $files = $this->getOriginalFiles($directory);
+        $directory = database_path('seeders/media');
+        $files = $this->getSeedMediaFiles($sourceMediaId);
 
         if (count($files) !== 1 || filesize($files[0]) === 0) {
             if ($legacyMediaId === 1) {
                 $sourceMediaId = 2;
-                $directory = storage_path("app/public/{$sourceMediaId}");
-                $files = $this->getOriginalFiles($directory);
+                $files = $this->getSeedMediaFiles($sourceMediaId);
             }
         }
 
         if (count($files) !== 1 || filesize($files[0]) === 0) {
-            throw new RuntimeException("Expected one local media file in [{$directory}].");
+            throw new RuntimeException("Expected one seeded media file for legacy media [{$legacyMediaId}] in [{$directory}].");
         }
 
         $stagingDirectory = storage_path('app/media-restore-staging');
@@ -79,11 +78,15 @@ class RestoreLocalDemoMediaSeeder extends Seeder
         }
     }
 
-    private function getOriginalFiles(string $directory): array
+    /**
+     * Seed media is kept under database/seeders/media so deployments do not
+     * depend on the ignored runtime storage directory.
+     */
+    private function getSeedMediaFiles(int $legacyMediaId): array
     {
         return array_values(array_filter(
-            glob($directory . DIRECTORY_SEPARATOR . '*') ?: [],
-            static fn (string $file): bool => is_file($file) && !preg_match('/^\d+-/', basename($file))
+            glob(database_path("seeders/media/{$legacyMediaId}-*")) ?: [],
+            static fn (string $file): bool => is_file($file) && filesize($file) > 0
         ));
     }
 }
