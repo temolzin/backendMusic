@@ -43,7 +43,7 @@ class RestoreLocalDemoMediaSeeder extends Seeder
         }
 
         $sourceMediaId = $legacyMediaId;
-        $directory = database_path('seeders/media');
+        $directory = database_path('seeders/images');
         $files = $this->getSeedMediaFiles($sourceMediaId);
 
         if (count($files) !== 1 || filesize($files[0]) === 0) {
@@ -79,13 +79,13 @@ class RestoreLocalDemoMediaSeeder extends Seeder
     }
 
     /**
-     * Seed media is kept under database/seeders/media so deployments do not
+     * Seed images are kept under database/seeders/images so deployments do not
      * depend on the ignored runtime storage directory.
      */
     private function getSeedMediaFiles(int $legacyMediaId): array
     {
         return array_values(array_filter(
-            glob(database_path("seeders/media/{$legacyMediaId}-*")) ?: [],
+            glob(database_path("seeders/images/{$legacyMediaId}-*")) ?: [],
             static fn (string $file): bool => is_file($file) && filesize($file) > 0
         ));
     }
