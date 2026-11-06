@@ -217,39 +217,18 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $customerData = array(
-                'name' => $name,
-                'last_name' => $last_name,
-                'email' => $email,
-                'requires_account' => false,
-                'phone_number' => $phone,
-                'address' => array(
-                    'line1' => $address,
-                    'state' => $state,
-                    'city' => $city,
-                    'postal_code' => $zip_code,
-                    'country_code' => 'MX'
-                )
-            );
-
             $createdCharges = [];
             $openpayCustomerId = null;
             $deviceSessionId = $request->input("deviceSessionId") ?? Str::uuid()->toString();
 
             try {
-                $openpayCustomer = $openpay->customers->add($customerData);
-
-                $card = $openpayCustomer->cards->add([
-                    'token_id' => $token,
-                    'device_session_id' => $deviceSessionId,
-                ]);
-
-                $openpayCustomerId = $openpayCustomer->id;
-
                 foreach ($itemsForSales as $item) {
-                    $charge = $openpayCustomer->charges->create([
+                    // OpenPay accepts the one-time card token directly as source_id.
+                    // Avoid creating a customer/card first: if a later API call fails,
+                    // that flow leaves an orphan customer and no ArtistSale locally.
+                    $charge = $openpay->charges->create([
                         'method' => 'card',
-                        'source_id' => $card->id,
+                        'source_id' => $token,
                         'amount' => round((float) $item['amount'], 2),
                         'currency' => 'MXN',
                         'description' => 'Cargo de reserva - Artista #' . $item['artist_id'],
