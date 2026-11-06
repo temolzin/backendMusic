@@ -46,6 +46,16 @@ class PaymentController extends Controller
 
         try {
             $keys = OpenpayKey::first();
+            if (!$keys || !$keys->openpay_id || !$keys->openpay_secret || !$keys->openpay_public_key) {
+                Log::error('OpenPay no está configurado completamente');
+                return response()->json([
+                    'error' => [
+                        'category' => 'CONFIGURATION_ERROR',
+                        'error_code' => 'OPENPAY_NOT_CONFIGURED',
+                        'description' => 'OpenPay no está configurado correctamente.',
+                    ],
+                ], 503);
+            }
             $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
             Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
 

@@ -12,6 +12,12 @@ class OpenpayKeysController extends Controller
     {
         try {
             $keys = OpenpayKey::first();
+            if (!$keys) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OpenPay no está configurado.',
+                ], 503);
+            }
             return response()->json([
                 'success' => true,
                 'data'    => $keys,
@@ -25,6 +31,12 @@ class OpenpayKeysController extends Controller
     {
         try {
             $keys = OpenpayKey::first();
+            if (!$keys) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OpenPay no está configurado.',
+                ], 503);
+            }
             return response()->json([
                 'success' => true,
                 'data' => [
