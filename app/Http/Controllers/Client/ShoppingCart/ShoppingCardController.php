@@ -174,10 +174,14 @@ class ShoppingCardController extends Controller
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
+            \Log::error('Error agregando artículo al carrito', [
+                'user_id' => Auth::id(),
+                'exception' => $e->getMessage(),
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -245,10 +249,14 @@ class ShoppingCardController extends Controller
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
+            \Log::error('Error contando artículos del carrito', [
+                'user_id' => Auth::id(),
+                'exception' => $e->getMessage(),
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
