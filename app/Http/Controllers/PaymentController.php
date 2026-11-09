@@ -236,6 +236,7 @@ class PaymentController extends Controller
             $openpayCustomerId = null;
             $deviceSessionId = $request->input("deviceSessionId") ?? Str::uuid()->toString();
 
+            $unknownConnectionCharges = [];
             try {
                 $openpayCustomer = $openpay->customers->add($customerData);
 
@@ -246,31 +247,81 @@ class PaymentController extends Controller
 
                 $openpayCustomerId = $openpayCustomer->id;
 
-                foreach ($itemsForSales as $item) {
-                    $charge = $openpayCustomer->charges->create([
-                        'method' => 'card',
-                        'source_id' => $card->id,
-                        'amount' => round((float) $item['amount'], 2),
-                        'currency' => 'MXN',
-                        'description' => 'Cargo de reserva - Artista #' . $item['artist_id'],
-                        'capture' => false,
-                        'device_session_id' => $deviceSessionId,
-                    ]);
+                foreach ($itemsForSales as $index => $item) {
+                    $orderId = substr(hash('sha256', $token . '|' . $item['artist_id'] . '|' . $index . '|' . $item['event_date'] . '|' . $item['event_hour']), 0, 45);
+                    try {
+                        $charge = $openpayCustomer->charges->create([
+                            'method' => 'card',
+                            'source_id' => $card->id,
+                            'amount' => round((float) $item['amount'], 2),
+                            'currency' => 'MXN',
+                            'description' => 'Cargo de reserva - Artista #' . $item['artist_id'],
+                            'order_id' => $orderId,
+                            'capture' => false,
+                            'device_session_id' => $deviceSessionId,
+                        ]);
 
-                    $createdCharges[] = $charge;
+                        $createdCharges[] = $charge;
+                    } catch (OpenpayApiConnectionError $e) {
+                        Log::warning('OpenPay connection error during charge creation, attempting recovery', [
+                            'artist_id' => $item['artist_id'],
+                            'order_id' => $orderId,
+                            'error' => $e->getMessage(),
+                        ]);
+
+                        $recovered = $this->recoverChargesByOrderId($openpay, $orderId);
+                        if (is_array($recovered) && count($recovered) > 0) {
+                            $charge = $recovered[0];
+                            $createdCharges[] = $charge;
+                            Log::info('OpenPay charge recovered after connection error', [
+                                'artist_id' => $item['artist_id'],
+                                'order_id' => $orderId,
+                                'transaction_id' => $charge->id ?? null,
+                                'status' => $charge->status ?? null,
+                            ]);
+                        } elseif ($recovered === null) {
+                            $unknownConnectionCharges[] = [
+                                'artist_id' => $item['artist_id'],
+                                'order_id' => $orderId,
+                            ];
+                        } else {
+                            throw $e;
+                        }
+                    }
                 }
             } catch (\Exception $e) {
                 foreach ($createdCharges as $createdCharge) {
                     try {
                         $openpay->charges->get($createdCharge->id)->refund(['description' => 'Reembolso por fallo en cargo múltiple']);
                     } catch (\Exception $refundErr) {
-                        Log::warning('No se pudo reembolsar cargo ' . $createdCharge->id . ': ' . $refundErr->getMessage());
+                        Log::warning('No se pudo reembolsar cargo ' . ($createdCharge->id ?? 'unknown') . ': ' . $refundErr->getMessage());
                     }
                 }
                 foreach ($acquiredLocks as $acquiredLock) {
                     $acquiredLock->release();
                 }
                 throw $e;
+            }
+
+            if (!empty($unknownConnectionCharges)) {
+                foreach ($createdCharges as $createdCharge) {
+                    try {
+                        $openpay->charges->get($createdCharge->id)->refund(['description' => 'Reembolso por estado de pago desconocido']);
+                    } catch (\Exception $refundErr) {
+                        Log::warning('No se pudo reembolsar cargo por estado desconocido ' . ($createdCharge->id ?? 'unknown') . ': ' . $refundErr->getMessage());
+                    }
+                }
+                foreach ($acquiredLocks as $acquiredLock) {
+                    $acquiredLock->release();
+                }
+                return response()->json([
+                    'error' => [
+                        'category' => 'PAYMENT_PROCESSING',
+                        'error_code' => 'PAYMENT_STATUS_UNKNOWN',
+                        'description' => 'No pudimos confirmar el resultado de tu pago con OpenPay. Si el cargo fue autorizado, aparecerá automáticamente en tus solicitudes cuando se verifique.',
+                    ],
+                    'unknown_charges' => $unknownConnectionCharges,
+                ], 202);
             }
 
             DB::beginTransaction();
@@ -545,8 +596,9 @@ class PaymentController extends Controller
                 'city' => $lastOrder->customer_city,
                 'state' => $lastOrder->customer_state,
                 'zip_code' => $lastOrder->customer_zip_code,
-                'latitude' => $user->latitude,
-                'longitude' => $user->longitude,
+                'latitude' => $lastOrder->latitude ?? $user->latitude,
+                'longitude' => $lastOrder->longitude ?? $user->longitude,
+                'google_place_id' => $lastOrder->google_place_id,
             ];
 
             return response()->json([
@@ -1579,5 +1631,46 @@ class PaymentController extends Controller
         }
 
         return $eventType;
+    }
+
+    private function recoverChargesByOrderId($openpay, string $orderId): ?array
+    {
+        try {
+            $params = [
+                'order_id' => $orderId,
+                'limit' => 1,
+                'offset' => 0,
+            ];
+
+            if (!isset($openpay->charges) || !is_object($openpay->charges) || !method_exists($openpay->charges, 'getList')) {
+                Log::warning('OpenPay recovery lookup unavailable: charges->getList missing', [
+                    'order_id' => $orderId,
+                ]);
+                return null;
+            }
+
+            $charges = $openpay->charges->getList($params);
+
+            if (is_array($charges)) {
+                return $charges;
+            }
+            if (is_object($charges) && method_exists($charges, 'toArray')) {
+                return $charges->toArray();
+            }
+            if (is_object($charges)) {
+                $items = [];
+                foreach ($charges as $item) {
+                    $items[] = $item;
+                }
+                return $items;
+            }
+            return [];
+        } catch (\Exception $e) {
+            Log::warning('OpenPay recovery lookup failed', [
+                'order_id' => $orderId,
+                'error' => $e->getMessage(),
+            ]);
+            return null;
+        }
     }
 }
