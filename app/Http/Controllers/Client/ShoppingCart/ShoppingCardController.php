@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\ShoppingCard;
 use App\Models\ShoppingCardDetail;
 use App\Models\ArtistSale;
+use App\Models\Artist;
+use App\Models\Offer;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -115,9 +118,18 @@ class ShoppingCardController extends Controller
             //array de los sevicios seleccionados
             $service_id = $request->input("service_id");
             $name = $request->input("name");
-            $price = $request->input("price");
             $service_id = intval($service_id);
             $hours = max(1, (int) $request->input('hours', 1));
+
+            $artist = Artist::findOrFail($service_id);
+            $activeOffer = Offer::where('artist_id', $artist->id)
+                ->where('start_date', '<=', Carbon::now())
+                ->where('end_date', '>=', Carbon::now())
+                ->orderBy('discount_percentage', 'desc')
+                ->first();
+            $price = $activeOffer
+                ? (float) $artist->price_hour * (1 - $activeOffer->discount_percentage / 100)
+                : (float) $artist->price_hour;
 
             DB::beginTransaction();
 
@@ -134,6 +146,7 @@ class ShoppingCardController extends Controller
 
                 if ($update_item) {
                     $update_item->hours = (int) $update_item->hours + $hours;
+                    $update_item->price = $price;
                     $update_item->save();
                 } else {
                     ShoppingCardDetail::create([
