@@ -217,20 +217,20 @@ class PaymentController extends Controller
                 ], 400);
             }
 
-            $customerData = array(
+            $customerData = [
                 'name' => $name,
                 'last_name' => $last_name,
                 'email' => $email,
                 'requires_account' => false,
                 'phone_number' => $phone,
-                'address' => array(
+                'address' => [
                     'line1' => $address,
                     'state' => $state,
                     'city' => $city,
                     'postal_code' => $zip_code,
-                    'country_code' => 'MX'
-                )
-            );
+                    'country_code' => 'MX',
+                ],
+            ];
 
             $createdCharges = [];
             $openpayCustomerId = null;
@@ -238,12 +238,10 @@ class PaymentController extends Controller
 
             try {
                 $openpayCustomer = $openpay->customers->add($customerData);
-
                 $card = $openpayCustomer->cards->add([
                     'token_id' => $token,
                     'device_session_id' => $deviceSessionId,
                 ]);
-
                 $openpayCustomerId = $openpayCustomer->id;
 
                 foreach ($itemsForSales as $item) {
