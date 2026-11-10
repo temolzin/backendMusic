@@ -15,11 +15,12 @@ class ArtistSalesSeeder extends Seeder
         $this->call(ArtistPayoutMethodSeeder::class);
 
         $artistIds = DB::table('artists')->orderBy('id')->pluck('id')->all();
+        $eventTypeIds = DB::table('event_types')->orderBy('id')->pluck('id')->all();
         $customers = User::whereHas('roles', function ($q) {
             $q->where('slug', User::ROLE_CLIENT);
         })->get()->values();
 
-        if (empty($artistIds) || $customers->isEmpty()) {
+        if (empty($artistIds) || empty($eventTypeIds) || $customers->isEmpty()) {
             return;
         }
 
@@ -42,6 +43,7 @@ class ArtistSalesSeeder extends Seeder
                 $eventStatus = $eventStatusCycle[$j];
                 $artistSaleIndex = $artistEventCounts[$artistId] ?? 0;
                 $artistEventCounts[$artistId] = $artistSaleIndex + 1;
+                $eventTypeId = $eventTypeIds[($customerIndex + $j) % count($eventTypeIds)];
 
                 $paymentMethod = $paymentMethods[($customerIndex + $j) % count($paymentMethods)];
 
@@ -85,6 +87,8 @@ class ArtistSalesSeeder extends Seeder
                     'customer_city' => 'Ciudad de México',
                     'customer_state' => 'CDMX',
                     'customer_zip_code' => '28001',
+                    'event_type_id' => $eventTypeId,
+                    'event_type_detail' => $eventTypeId === end($eventTypeIds) ? 'Evento de demostración' : null,
                     'event_date' => $eventStart->format('Y-m-d'),
                     'event_hour' => $eventStart->format('H:i'),
                     'event_hours' => $eventHoursCount,
@@ -120,11 +124,10 @@ class ArtistSalesSeeder extends Seeder
         $baseDate = Carbon::now()->startOfDay();
 
         if ($eventStatus === ArtistSale::EVENT_STATUS_COMPLETED) {
-            $eventEnd = $customerIndex % 2 === 0
-                ? Carbon::now()->subHours(3)
-                : Carbon::now()->subHours(48);
-
-            return $eventEnd->copy()->subHours($eventHours);
+            return Carbon::now()
+                ->subDays(2 + $customerIndex + $artistSaleIndex)
+                ->setTime(19, 0)
+                ->subHours($eventHours);
         }
 
         if ($eventStatus === ArtistSale::EVENT_STATUS_PENDING) {
