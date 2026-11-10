@@ -109,6 +109,10 @@ class UserSanctionSeeder extends Seeder
     private function createSanctionTicket(ArtistSale $sale, User $adminUser, string $role, array $pattern): array
     {
         $openedAt = Carbon::now()->subDays(3)->setTime(11, 0);
+        $resolutionType = $role === 'cliente' ? 'no_action' : 'partial_refund';
+        $resolutionNotes = $role === 'cliente'
+            ? 'Se resolvió el reporte sin reembolso y se aplicó la sanción correspondiente al cliente.'
+            : 'Se aplicó reembolso parcial al cliente y sanción al artista responsable.';
         $reporterUserId = $role === 'artista'
             ? $sale->customer_id
             : optional($sale->artist)->user_id;
@@ -123,7 +127,7 @@ class UserSanctionSeeder extends Seeder
             'category' => SupportTicket::CATEGORY_BAD_SERVICE,
             'description' => 'Reporte autogenerado para justificar sanción: ' . $pattern['reason'],
             'status' => SupportTicket::STATUS_RESOLVED,
-            'resolution_type' => 'partial_refund',
+            'resolution_type' => $resolutionType,
         ]);
         $ticket->created_at = $openedAt;
         $ticket->save();
@@ -149,8 +153,8 @@ class UserSanctionSeeder extends Seeder
                 'support_ticket_id' => $ticket->id,
                 'changed_by_user_id' => $adminUser->id,
                 'status' => SupportTicket::STATUS_RESOLVED,
-                'resolution_type' => 'partial_refund',
-                'notes' => 'Se aplicó reembolso parcial al cliente y sanción al responsable.',
+                'resolution_type' => $resolutionType,
+                'notes' => $resolutionNotes,
                 'created_at' => $openedAt->copy()->addDays(2),
             ],
         ];
