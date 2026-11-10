@@ -53,7 +53,7 @@ class UserSanctionSeeder extends Seeder
             $pattern = $sanctionByRole[$role];
             $user->update(['account_status' => $pattern['type']]);
             [$sanctionableType, $sanctionableId] = match ($pattern['source']) {
-                'ticket' => $this->createSanctionTicket($sale, $adminUser, $pattern),
+                'ticket' => $this->createSanctionTicket($sale, $adminUser, $role, $pattern),
                 default  => [null, null],
             };
             $endsAt = $pattern['days'] ? Carbon::now()->addDays($pattern['days']) : null;
@@ -106,13 +106,20 @@ class UserSanctionSeeder extends Seeder
         });
     }
 
-    private function createSanctionTicket(ArtistSale $sale, User $adminUser, array $pattern): array
+    private function createSanctionTicket(ArtistSale $sale, User $adminUser, string $role, array $pattern): array
     {
         $openedAt = Carbon::now()->subDays(3)->setTime(11, 0);
+        $reporterUserId = $role === 'artista'
+            ? $sale->customer_id
+            : optional($sale->artist)->user_id;
+
+        if (!$reporterUserId) {
+            return [null, null];
+        }
 
         $ticket = new SupportTicket([
             'artist_sale_id' => $sale->id,
-            'reporter_user_id' => $adminUser->id,
+            'reporter_user_id' => $reporterUserId,
             'category' => SupportTicket::CATEGORY_BAD_SERVICE,
             'description' => 'Reporte autogenerado para justificar sanción: ' . $pattern['reason'],
             'status' => SupportTicket::STATUS_RESOLVED,
