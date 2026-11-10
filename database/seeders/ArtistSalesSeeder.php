@@ -25,7 +25,6 @@ class ArtistSalesSeeder extends Seeder
         }
 
         $amounts = [6000, 9000, 12000];
-        $createdAtOffsets = [-150, -120, -90, -75, -60, -30, -20, -10];
         $paymentMethods = ['card', 'cash'];
         $artistEventCounts = [];
         $eventStatusCycle = [
@@ -54,7 +53,9 @@ class ArtistSalesSeeder extends Seeder
 
                 $eventHoursCount = rand(1, 3);
                 $eventStart = $this->buildEventStart($eventStatus, $artistSaleIndex, $customerIndex, $eventHoursCount);
-                $createdAt = Carbon::now()->addDays($createdAtOffsets[($customerIndex + $j) % count($createdAtOffsets)]);
+                $createdAt = $eventStatus === ArtistSale::EVENT_STATUS_PENDING
+                    ? Carbon::now()->subDays(1 + $customerIndex)
+                    : $eventStart->copy()->subDays(2);
 
                 $approvalStatus = $eventStatus === ArtistSale::EVENT_STATUS_PENDING
                     ? ArtistSale::APPROVAL_STATUS_PENDING

@@ -14,12 +14,13 @@ class ArtistCompletableEventsSeeder extends Seeder
     public function run()
     {
         $artistIds = DB::table('artists')->orderBy('id')->pluck('id')->all();
+        $eventTypeIds = DB::table('event_types')->orderBy('id')->pluck('id')->all();
 
         $customers = User::whereHas('roles', function ($q) {
             $q->where('slug', User::ROLE_CLIENT);
         })->orderBy('id')->get()->values();
 
-        if (empty($artistIds) || $customers->isEmpty()) {
+        if (empty($artistIds) || empty($eventTypeIds) || $customers->isEmpty()) {
             return;
         }
 
@@ -35,12 +36,13 @@ class ArtistCompletableEventsSeeder extends Seeder
             for ($eventIndex = 0; $eventIndex < 2; $eventIndex++) {
                 $customer = $customers[$customerCursor % $customers->count()];
                 $customerCursor++;
+                $eventTypeId = $eventTypeIds[($artistIndex + $eventIndex) % count($eventTypeIds)];
 
                 $paymentMethod = $paymentMethods[($artistIndex + $eventIndex) % count($paymentMethods)];
                 $eventHours = 1;
-                $hoursAgoEnded = $eventIndex === 0 ? 3 : 8;
-                $eventEnd = Carbon::now()->subHours($hoursAgoEnded);
-                $eventStart = (clone $eventEnd)->subHours($eventHours);
+                $eventStart = Carbon::now()
+                    ->addDays(2 + $artistIndex + $eventIndex)
+                    ->setTime(18, 0);
 
                 $eventDate = $eventStart->format('Y-m-d');
                 $eventHour = $eventStart->format('H:i:s');
@@ -66,6 +68,8 @@ class ArtistCompletableEventsSeeder extends Seeder
                     'customer_city' => 'Ciudad de México',
                     'customer_state' => 'CDMX',
                     'customer_zip_code' => '28001',
+                    'event_type_id' => $eventTypeId,
+                    'event_type_detail' => $eventTypeId === end($eventTypeIds) ? 'Evento de demostración' : null,
                     'event_date' => $eventDate,
                     'event_hour' => $eventHour,
                     'event_hours' => $eventHours,
