@@ -22,8 +22,8 @@ class UserSanctionSeeder extends Seeder
         $clientAccount = User::where('email', 'carlosramirez@gmail.com')->first();
 
         $targets = [
-            'artista' => $artistAccount,
-            'cliente' => $clientAccount,
+            User::ROLE_ARTIST => $artistAccount,
+            User::ROLE_CLIENT => $clientAccount,
         ];
 
         $targets = array_filter($targets);
@@ -33,14 +33,14 @@ class UserSanctionSeeder extends Seeder
         }
 
         $sanctionByRole = [
-            'artista' => [
+            User::ROLE_ARTIST => [
                 'type' => 'restricted',
                 'days' => 7,
                 'reason' => 'Uso de lenguaje inapropiado en el chat del evento.',
                 'source' => 'ticket',
                 'created_by' => 'admin',
             ],
-            'cliente' => [
+            User::ROLE_CLIENT => [
                 'type' => 'restricted',
                 'days' => null,
                 'reason' => 'Intento de engaño al cliente fuera de la plataforma.',
@@ -77,10 +77,10 @@ class UserSanctionSeeder extends Seeder
     private function createCancellationHistory(User $user, string $role, string $reason)
     {
         $saleQuery = match ($role) {
-            'artista' => ArtistSale::whereHas('artist', function ($query) use ($user) {
+            User::ROLE_ARTIST => ArtistSale::whereHas('artist', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })->orderBy('event_date'),
-            'cliente' => ArtistSale::where('customer_id', $user->id)->orderBy('event_date'),
+            User::ROLE_CLIENT => ArtistSale::where('customer_id', $user->id)->orderBy('event_date'),
             default => null,
         };
 
@@ -109,7 +109,11 @@ class UserSanctionSeeder extends Seeder
     private function createSanctionTicket(ArtistSale $sale, User $adminUser, string $role, array $pattern): array
     {
         $openedAt = Carbon::now()->subDays(3)->setTime(11, 0);
-        $reporterUserId = $role === 'artista'
+        $resolutionType = $role === User::ROLE_CLIENT ? 'no_action' : 'partial_refund';
+        $resolutionNotes = $role === User::ROLE_CLIENT
+            ? 'Se resolvió el reporte sin reembolso y se aplicó la sanción correspondiente al cliente.'
+            : 'Se aplicó reembolso parcial al cliente y sanción al artista responsable.';
+        $reporterUserId = $role === User::ROLE_ARTIST
             ? $sale->customer_id
             : optional($sale->artist)->user_id;
 
@@ -123,7 +127,7 @@ class UserSanctionSeeder extends Seeder
             'category' => SupportTicket::CATEGORY_BAD_SERVICE,
             'description' => 'Reporte autogenerado para justificar sanción: ' . $pattern['reason'],
             'status' => SupportTicket::STATUS_RESOLVED,
-            'resolution_type' => 'partial_refund',
+            'resolution_type' => $resolutionType,
         ]);
         $ticket->created_at = $openedAt;
         $ticket->save();
@@ -149,8 +153,8 @@ class UserSanctionSeeder extends Seeder
                 'support_ticket_id' => $ticket->id,
                 'changed_by_user_id' => $adminUser->id,
                 'status' => SupportTicket::STATUS_RESOLVED,
-                'resolution_type' => 'partial_refund',
-                'notes' => 'Se aplicó reembolso parcial al cliente y sanción al responsable.',
+                'resolution_type' => $resolutionType,
+                'notes' => $resolutionNotes,
                 'created_at' => $openedAt->copy()->addDays(2),
             ],
         ];
