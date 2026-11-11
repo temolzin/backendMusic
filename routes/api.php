@@ -60,6 +60,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::put('/user/change-password', [UsersController::class, 'updatePassword']);
     Route::post('/user/change-image-profile', [UsersController::class, 'updateImageProfile']);
     Route::put('/user/dark-mode', [UsersController::class, 'updateDarkMode']);
+    Route::get('/musical-genders', [GendersController::class, 'index']);
 
     //Route for admin
     Route::group(["middleware" => ['role:administrador']], function () {
