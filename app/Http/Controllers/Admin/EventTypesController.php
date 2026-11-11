@@ -11,10 +11,12 @@ use Illuminate\Support\Str;
 
 class EventTypesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $eventTypes = EventType::orderByRaw("CASE WHEN slug = 'otros' THEN 1 ELSE 0 END")->orderBy('name', 'Asc')->get();
+            $eventTypes = $request->is('api/admin/*')
+                ? EventType::orderByDesc('id')->get()
+                : EventType::orderByRaw("CASE WHEN slug = 'otros' THEN 1 ELSE 0 END")->orderBy('name', 'Asc')->get();
 
             return response()->json([
                 'success' => true,
