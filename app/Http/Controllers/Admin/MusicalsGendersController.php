@@ -29,7 +29,7 @@ class MusicalsGendersController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -96,7 +96,7 @@ class MusicalsGendersController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -175,7 +175,7 @@ class MusicalsGendersController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -201,7 +201,7 @@ class MusicalsGendersController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 }

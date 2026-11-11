@@ -7,12 +7,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login']]);
+        $this->middleware('auth:api', ['except' => ['login', 'refresh']]);
     }
 
     /**
@@ -75,7 +78,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -85,9 +88,32 @@ class AuthController extends Controller
      * @param  null  
      * @return \Illuminate\Http\Response
      */
-    public function refresh()
+    public function refresh(Request $request)
     {
-        return $this->respondWithToken(auth()->refresh());
+        $token = $request->bearerToken();
+
+        if (! $token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token no proporcionado',
+            ], 401);
+        }
+
+        try {
+            $newToken = JWTAuth::setToken($token)->refresh();
+
+            return $this->respondWithToken($newToken);
+        } catch (TokenExpiredException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La sesión expiró, inicia sesión de nuevo',
+            ], 401);
+        } catch (JWTException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No fue posible renovar la sesión',
+            ], 401);
+        }
     }
 
     /**

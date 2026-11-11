@@ -65,7 +65,7 @@ class UsersController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -88,7 +88,7 @@ class UsersController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -109,12 +109,12 @@ class UsersController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Error por campos vacíos',
-                ], 401);
+                ], 422);
             }
 
             $valiEmail = User::where('email', $email)->Where('id', '!=', Auth::user()->id)->first();
             if (!empty($valiEmail['email'])) {
-                return response()->json(['message' => 'El correo electrónico ya esta en uso'], 401);
+                return response()->json(['message' => 'El correo electrónico ya esta en uso'], 422);
             }
 
             DB::beginTransaction();
@@ -133,7 +133,7 @@ class UsersController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -155,21 +155,21 @@ class UsersController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Error por campos vacíos',
-                ], 401);
+                ], 422);
             }
 
             if ($newPassword != $confirmPassword) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Las contraseñas no coinciden',
-                ], 401);
+                ], 422);
             }
 
             if (!Hash::check($currentPassword, Auth::user()->password)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'La contraseña actual no coincide',
-                ], 401);
+                ], 422);
             }
 
             DB::beginTransaction();
@@ -187,7 +187,7 @@ class UsersController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -223,7 +223,7 @@ class UsersController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 

@@ -42,7 +42,7 @@ class ArtistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -144,7 +144,7 @@ class ArtistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
     /**
@@ -172,7 +172,7 @@ class ArtistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -220,7 +220,7 @@ class ArtistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -363,7 +363,7 @@ class ArtistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -387,7 +387,7 @@ class ArtistController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => "Máximo de imágenes almacenadas"
-                ], 401);
+                ], 422);
             }
 
             $files = $request->file('sub_files_paths');
@@ -427,7 +427,7 @@ class ArtistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
     /**
@@ -451,7 +451,7 @@ class ArtistController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => "Máximo de imágenes almacenadas"
-                ], 401);
+                ], 422);
             }
 
             $files = $request->file('sub_files_paths');
@@ -491,7 +491,7 @@ class ArtistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -561,7 +561,7 @@ class ArtistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 

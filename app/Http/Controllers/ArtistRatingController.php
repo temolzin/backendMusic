@@ -101,9 +101,10 @@ class ArtistRatingController extends Controller
             $artist = Artist::where('user_id', Auth::user()->id)->first();
             if(!$artist){
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Artista no encontrado'
-                ], 404);
+                    'success' => true,
+                    'average' => 0,
+                    'total' => 0,
+                ], 200);
             }
 
             $avg = ArtistRating::where('artist_id', $artist->id)->avg('rating');
@@ -118,7 +119,7 @@ class ArtistRatingController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 

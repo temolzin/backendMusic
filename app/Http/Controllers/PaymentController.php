@@ -78,7 +78,7 @@ class PaymentController extends Controller
             if (!$userId) {
                 return response()->json([
                     'error' => 'Usuario no autenticado o no se proporcionó un ID de cliente válido'
-                ], 401);
+                ], 400);
             }
 
             $eventType = $this->resolveEventType($request);
@@ -397,7 +397,7 @@ class PaymentController extends Controller
                     'http_code' => $e->getHttpCode(),
                     'request_id' => $e->getRequestId()
                 ]
-            ], $e->getHttpCode() ?: 401);
+            ], $e->getHttpCode() ?: 500);
         } catch (OpenpayApiError $e) {
             Log::error('OpenPay error: ' . $e->getMessage());
             return response()->json([
@@ -481,9 +481,9 @@ class PaymentController extends Controller
             $artist = Artist::where('user_id', $user->id)->first();
             if (!$artist) {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Artist profile not found for this user'
-                ], 404);
+                    'success' => true,
+                    'sales' => [],
+                ], 200);
             }
 
             $sales = ArtistSale::where('artist_id', $artist->id)
@@ -739,9 +739,10 @@ class PaymentController extends Controller
 
             if (!$artist) {
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Artist profile not found for this user'
-                ], 404);
+                    'success' => true,
+                    'total' => 0,
+                    'count' => 0,
+                ], 200);
             }
 
             $salesQuery = ArtistSale::where('artist_id', $artist->id)->where('status', ArtistSale::PAYMENT_STATUS_LIQUIDATED);
@@ -787,7 +788,7 @@ class PaymentController extends Controller
             if (!$userId) {
                 return response()->json([
                     'error' => 'Usuario no autenticado o no se proporcionó un ID de cliente válido'
-                ], 401);
+                ], 400);
             }
 
             $eventType = $this->resolveEventType($request);
