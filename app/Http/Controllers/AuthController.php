@@ -15,8 +15,6 @@ class AuthController extends Controller
 {
     public function __construct()
     {
-        // El refresh debe funcionar incluso si el access token ya expiró,
-        // siempre que siga dentro de la ventana de refresh_ttl.
         $this->middleware('auth:api', ['except' => ['login', 'refresh']]);
     }
 

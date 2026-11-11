@@ -40,16 +40,6 @@ class Handler extends ExceptionHandler
         });
     }
 
-    /**
-     * Convierte los fallos de autenticación en un 401 JSON.
-     *
-     * Sin esto, Laravel intenta redirigir a la ruta "login" (que no existe
-     * en una API) y termina devolviendo un 500.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Illuminate\Auth\AuthenticationException  $exception
-     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
-     */
     protected function unauthenticated($request, AuthenticationException $exception)
     {
         if ($request->is('api/*') || $request->expectsJson()) {
