@@ -51,6 +51,9 @@ pipeline {
                     sudo chmod -R ug+rwX \
                         "$DEPLOY_DIR/storage" \
                         "$DEPLOY_DIR/bootstrap/cache"
+                    sudo rm -rf "$DEPLOY_DIR/public/storage"
+                    sudo -u www-data sh -c "cd '$DEPLOY_DIR' && php artisan storage:link"
+                    sudo -u www-data sh -c "cd '$DEPLOY_DIR' && php artisan optimize:clear"
                     sudo -u www-data sh -c "cd '$DEPLOY_DIR' && php artisan config:cache"
                 '''
             }
