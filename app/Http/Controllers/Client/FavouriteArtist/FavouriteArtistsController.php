@@ -34,7 +34,7 @@ class FavouriteArtistsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -74,7 +74,7 @@ class FavouriteArtistsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -99,7 +99,7 @@ class FavouriteArtistsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
     
@@ -107,6 +107,14 @@ class FavouriteArtistsController extends Controller
     {
         try {
             $artist = Artist::where('user_id', Auth::user()->id)->first();
+
+            if (!$artist) {
+                return response()->json([
+                    'success' => true,
+                    'count' => 0,
+                ], 200);
+            }
+
             $count = FavouriteArtists::where('artist_id', $artist->id)->count();
             return response()->json([
                 'success' => true,
@@ -116,7 +124,7 @@ class FavouriteArtistsController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 }

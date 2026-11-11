@@ -233,7 +233,7 @@ class ShoppingCardController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
     public function count_list_shopping_card_details()
@@ -356,7 +356,7 @@ class ShoppingCardController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -396,7 +396,7 @@ class ShoppingCardController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 

@@ -187,7 +187,7 @@ class UserSanctionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -206,7 +206,7 @@ class UserSanctionController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no encontrado',
-                ], 401);
+                ], 404);
             }
 
             $this->checkAndLiftExpiredSanction($user);
@@ -260,7 +260,7 @@ class UserSanctionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -279,7 +279,7 @@ class UserSanctionController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no encontrado',
-                ], 401);
+                ], 404);
             }
 
             $tickets = SupportTicket::with(['reporter', 'artistSale'])
@@ -310,7 +310,7 @@ class UserSanctionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -349,21 +349,21 @@ class UserSanctionController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Ticket no encontrado',
-                ], 401);
+                ], 404);
             }
 
             if ($ticket->status != SupportTicket::STATUS_RESOLVED) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Solo se pueden aplicar sanciones basadas en tickets que ya estén resueltos.'
-                ], 401);
+                ], 422);
             }
 
             if ($ticket->sanction()->exists()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Este ticket ya fue utilizado para emitir una sanción anteriormente.'
-                ], 401);
+                ], 422);
             }
 
             DB::beginTransaction();
@@ -375,7 +375,7 @@ class UserSanctionController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no encontrado',
-                ], 401);
+                ], 404);
             }
             
             $startsAt = Carbon::now();
@@ -425,7 +425,7 @@ class UserSanctionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
 
@@ -447,7 +447,7 @@ class UserSanctionController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no encontrado',
-                ], 401);
+                ], 404);
             }
 
             $activeSanction = UserSanction::where('user_id', $user->id)
@@ -480,7 +480,7 @@ class UserSanctionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ], 401);
+            ], 500);
         }
     }
     /**

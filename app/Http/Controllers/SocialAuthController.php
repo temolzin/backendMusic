@@ -95,7 +95,7 @@ class SocialAuthController extends Controller
         return  response()->json([
             'success' => false,
             'message' => 'Unexpected error',
-        ], 401);
+        ], 500);
     }
 
     public function redirectToFacebookProvider()
@@ -167,6 +167,6 @@ class SocialAuthController extends Controller
         return  response()->json([
             'success' => false,
             'message' => 'Unexpected error',
-        ], 401);
+        ], 500);
     }
 }
