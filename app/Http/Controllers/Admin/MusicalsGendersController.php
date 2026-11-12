@@ -190,6 +190,23 @@ class MusicalsGendersController extends Controller
         try {
             DB::beginTransaction();
             $product = MusicalGender::where('id', $id)->first();
+
+            if (!$product) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El género musical no existe.',
+                ], 404);
+            }
+
+            if ($product->artists()->count() > 0) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar el género musical porque tiene artistas asociados.',
+                ], 422);
+            }
+
             $product->delete();
             DB::commit();
             return response()->json([
