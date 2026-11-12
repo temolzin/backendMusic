@@ -17,7 +17,7 @@ class GendersController extends Controller
     public function index()
     {
         try {
-            $musicalGenders = MusicalGender::orderBy('name', 'Asc')->get();
+            $musicalGenders = MusicalGender::withCount('artists')->orderBy('name', 'Asc')->get();
 
             return response()->json([
                 'success' => true,
