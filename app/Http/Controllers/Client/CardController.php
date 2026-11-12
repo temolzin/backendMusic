@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 
 class CardController extends Controller
 {
+    private const UPDATABLE_FIELDS = ['number_card', 'name', 'expiration_date'];
+
     /**
      * Display a listing of the resource.
      *
@@ -18,7 +20,10 @@ class CardController extends Controller
     public function index()
     {
         try {
-            $cards = Card::orderBy('id', 'Asc')->where('user_id', Auth::user()->id)->get();
+            $cards = Card::orderBy('id', 'Asc')
+                ->where('user_id', Auth::id())
+                ->get()
+                ->map(fn (Card $card) => $this->cardResponse($card));
 
             return response()->json([
                 'success' => true,
@@ -52,25 +57,12 @@ class CardController extends Controller
     {
         try {
             $number = $request->input('number_card');
-            $clean = preg_replace('/[\s-]/', '', $number);
-
-            $cardType = match (true) {
-                preg_match('/^4/', $clean) => 'Visa',
-                preg_match('/^5[1-5]/', $clean) || preg_match('/^2(2[2-9]|[3-6]\d|7[01])/', $clean) => 'Mastercard',
-                preg_match('/^3[47]/', $clean) => 'American Express',
-                preg_match('/^6(011|5)/', $clean) => 'Discover',
-                preg_match('/^3(0[0-5]|[68])/', $clean) => 'Diners Club',
-                preg_match('/^35(2[89]|[3-8])/', $clean) => 'JCB',
-                preg_match('/^(5018|5020|5038|6304|6759|676[1-3])/', $clean) => 'Maestro',
-                preg_match('/^62/', $clean) => 'UnionPay',
-                default => 'Desconocida'
-            };
 
             DB::beginTransaction();
             $card = new Card();
-            $card->user_id = Auth::user()->id;
+            $card->user_id = Auth::id();
             $card->number_card = $number;
-            $card->card_type = $cardType;
+            $card->card_type = $this->detectCardType($number);
             $card->name = $request->input('name');
             $card->expiration_date = $request->input('expiration_date');
             $card->save();
@@ -79,7 +71,7 @@ class CardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'card' => $card,
+                'card' => $this->cardResponse($card),
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -99,11 +91,15 @@ class CardController extends Controller
     public function show($id)
     {
         try {
-            $card = Card::find($id);
+            $card = $this->findOwnedCard($id);
+
+            if (!$card) {
+                return $this->cardNotFound();
+            }
 
             return response()->json([
                 'success' => true,
-                'card' => $card,
+                'card' => $this->cardResponse($card),
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -135,15 +131,29 @@ class CardController extends Controller
     {
         try {
             DB::beginTransaction();
-            $card = Card::find($id);
-            $card->fill($request->all());
+            $card = $this->findOwnedCard($id);
+
+            if (!$card) {
+                DB::rollback();
+                return $this->cardNotFound();
+            }
+
+            $data = $request->only(self::UPDATABLE_FIELDS);
+
+            $numberCard = $data['number_card'] ?? null;
+
+            $data = $numberCard === null
+                ? array_diff_key($data, ['number_card' => true])
+                : array_merge($data, ['card_type' => $this->detectCardType($numberCard)]);
+
+            $card->fill($data);
             $card->save();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'card' => $card,
+                'card' => $this->cardResponse($card),
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();
@@ -164,7 +174,13 @@ class CardController extends Controller
     {
         try {
             DB::beginTransaction();
-            $card = Card::where('id', $id)->first();
+            $card = $this->findOwnedCard($id);
+
+            if (!$card) {
+                DB::rollback();
+                return $this->cardNotFound();
+            }
+
             $card->delete();
 
             DB::commit();
@@ -178,6 +194,60 @@ class CardController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function findOwnedCard($id): ?Card
+    {
+        return Card::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->first();
+    }
+
+    private function cardNotFound()
+    {
+        return response()->json([
+            'success' => false,
+            'message' => 'Tarjeta no encontrada',
+        ], 404);
+    }
+
+    private function cardResponse(Card $card): array
+    {
+        return array_merge($card->toArray(), [
+            'number_card' => $this->maskCardNumber($card->number_card),
+        ]);
+    }
+
+    private function maskCardNumber(?string $number): ?string
+    {
+        if ($number === null) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D/', '', $number);
+
+        if ($digits === '') {
+            return $number;
+        }
+
+        return str_repeat('*', max(0, strlen($digits) - 4)) . substr($digits, -4);
+    }
+
+    private function detectCardType(?string $number): string
+    {
+        $clean = preg_replace('/[\s-]/', '', (string) $number);
+
+        return match (true) {
+            preg_match('/^4/', $clean) => 'Visa',
+            preg_match('/^5[1-5]/', $clean) || preg_match('/^2(2[2-9]|[3-6]\d|7[01])/', $clean) => 'Mastercard',
+            preg_match('/^3[47]/', $clean) => 'American Express',
+            preg_match('/^6(011|5)/', $clean) => 'Discover',
+            preg_match('/^3(0[0-5]|[68])/', $clean) => 'Diners Club',
+            preg_match('/^35(2[89]|[3-8])/', $clean) => 'JCB',
+            preg_match('/^(5018|5020|5038|6304|6759|676[1-3])/', $clean) => 'Maestro',
+            preg_match('/^62/', $clean) => 'UnionPay',
+            default => 'Desconocida'
+        };
     }
 
     public function getProfile()
