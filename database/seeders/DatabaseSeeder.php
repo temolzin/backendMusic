@@ -45,5 +45,6 @@ class DatabaseSeeder extends Seeder
         $this->call(ArtistCompletableEventsSeeder::class);
         $this->call(SystemCommentSeeder::class);
         $this->call(ArtistRatingCommentSeeder::class);
+        $this->call(RestoreLocalDemoMediaSeeder::class);
     }
 }
