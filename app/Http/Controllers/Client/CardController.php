@@ -140,11 +140,11 @@ class CardController extends Controller
 
             $data = $request->only(self::UPDATABLE_FIELDS);
 
-            if (array_key_exists('number_card', $data) && $data['number_card'] !== null) {
-                $data['card_type'] = $this->detectCardType($data['number_card']);
-            } else {
-                unset($data['number_card']);
-            }
+            $numberCard = $data['number_card'] ?? null;
+
+            $data = $numberCard === null
+                ? array_diff_key($data, ['number_card' => true])
+                : array_merge($data, ['card_type' => $this->detectCardType($numberCard)]);
 
             $card->fill($data);
             $card->save();
