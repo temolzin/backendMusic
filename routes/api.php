@@ -90,6 +90,7 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
         Route::get('/admin/client-refunds/pending', [ClientRefundController::class, 'getPendingRefunds']);
         Route::post('/admin/client-refunds/{id}/process', [ClientRefundController::class, 'processRefund']);
         Route::get('/admin/openpay-keys', [OpenpayKeysController::class, 'getKeys']);
+        Route::get('/admin/openpay-balance', [OpenpayKeysController::class, 'getBalance']);
         Route::put('/admin/openpay-keys', [OpenpayKeysController::class, 'updateKeys']);
         Route::get('/admin/webhook-verification-codes', [App\Http\Controllers\Admin\WebhookVerificationController::class, 'index']);
         Route::delete('/admin/webhook-verification-codes/{id}', [App\Http\Controllers\Admin\WebhookVerificationController::class, 'destroy']);
