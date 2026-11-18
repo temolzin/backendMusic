@@ -97,3 +97,5 @@ $admin  = $this->userWithRole('administrador');
 
 - `tests/Feature/Security/AuthorizationTest.php` — guests get 401 and clients get 403 on admin routes.
 - `tests/Feature/ExampleTest.php` and `tests/Unit/ExampleTest.php` — framework examples.
+
+<!-- demo PR: template preview -->
