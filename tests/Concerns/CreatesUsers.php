@@ -7,10 +7,6 @@ use App\Models\User;
 
 trait CreatesUsers
 {
-    /**
-     * Crea (o reutiliza) un rol por slug y devuelve un usuario con ese rol.
-     */
-    protected function userWithRole(string $slug): User
     {
         $role = Role::where('slug', $slug)->first();
 
