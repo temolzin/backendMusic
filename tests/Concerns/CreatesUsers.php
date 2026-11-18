@@ -7,6 +7,7 @@ use App\Models\User;
 
 trait CreatesUsers
 {
+    protected function userWithRole(string $slug): User
     {
         $role = Role::where('slug', $slug)->first();
 
