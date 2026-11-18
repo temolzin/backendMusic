@@ -1,0 +1,51 @@
+name: Backend tests
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: vibeer_testing
+          MYSQL_USER: vibeer_test
+          MYSQL_PASSWORD: vibeer_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: mbstring, pdo_mysql, gd, zip, exif, bcmath, intl
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare test environment
+        run: |
+          cp .env.testing.example .env.testing
+          php artisan key:generate --env=testing --force
+          php artisan jwt:secret --env=testing --force
+
+      - name: Run migrations
+        run: php artisan migrate --env=testing --force
+
+      - name: Run tests
+        run: composer test
