@@ -68,8 +68,9 @@ class PaymentController extends Controller
             // stored full number instead of relying on the (masked) value sent
             // by the client, which OpenPay rejects.
             if (!$token && $savedCardId) {
-                $savedCard = Card::where('id', $savedCardId)
-                    ->where('user_id', Auth::id() ?? $request->input('customer_id'))
+                $savedCard = Card::query()
+                    ->whereKey($savedCardId)
+                    ->where('user_id', Auth::id())
                     ->first();
 
                 if (!$savedCard) {
