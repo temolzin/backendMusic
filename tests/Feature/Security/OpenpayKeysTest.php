@@ -73,6 +73,48 @@ class OpenpayKeysTest extends TestCase
             ->assertOk();
     }
 
+    public function test_get_keys_reports_whether_the_secret_is_configured(): void
+    {
+        $this->seedKeys();
+
+        $this->actingAs($this->userWithRole('administrador'), 'api')
+            ->getJson('/api/admin/openpay-keys')
+            ->assertOk()
+            ->assertJsonPath('data.openpay_secret_set', true);
+    }
+
+    public function test_update_without_secret_keeps_the_current_one(): void
+    {
+        $this->seedKeys();
+
+        $this->actingAs($this->userWithRole('administrador'), 'api')
+            ->putJson('/api/admin/openpay-keys', [
+                'openpay_id' => 'mz_test_merchant',
+                'openpay_public_key' => 'pk_test_public_value',
+                'openpay_sandbox_mode' => false,
+            ])
+            ->assertOk();
+
+        $keys = OpenpayKey::first();
+
+        $this->assertSame('sk_test_secret_value', $keys->openpay_secret);
+        $this->assertFalse($keys->openpay_sandbox_mode);
+        $this->assertSame(1, OpenpayKey::query()->count());
+    }
+
+    public function test_creating_keys_requires_a_secret(): void
+    {
+        $this->actingAs($this->userWithRole('administrador'), 'api')
+            ->putJson('/api/admin/openpay-keys', [
+                'openpay_id' => 'mz_test_merchant',
+                'openpay_public_key' => 'pk_test_public_value',
+                'openpay_sandbox_mode' => true,
+            ])
+            ->assertStatus(422);
+
+        $this->assertSame(0, OpenpayKey::query()->count());
+    }
+
     public function test_non_admin_cannot_update_openpay_keys(): void
     {
         $this->seedKeys();
