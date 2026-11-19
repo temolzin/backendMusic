@@ -161,10 +161,6 @@ Route::group(["middleware" => ["auth:api", CheckAccountStatus::class]], function
     Route::get('/sales/{id}/cancellation-preview', [PaymentController::class, 'cancellationPreview']);
     Route::get('/chat/messages/{artistSaleId}', [ChatController::class, 'getMessages']);
     Route::post('/chat/messages', [ChatController::class, 'sendMessage']);
-    Route::get('/admin/openpay-keys', [OpenpayKeysController::class, 'getKeys']);
-    Route::get('/admin/webhook-verification-codes', [App\Http\Controllers\Admin\WebhookVerificationController::class, 'index']);
-    Route::delete('/admin/webhook-verification-codes/{id}', [App\Http\Controllers\Admin\WebhookVerificationController::class, 'destroy']);
-    Route::delete('/admin/webhook-verification-codes', [App\Http\Controllers\Admin\WebhookVerificationController::class, 'clearAll']);
 });
 
 Route::get('/openpay-keys/public', [OpenpayKeysController::class, 'getPublicKeys']);

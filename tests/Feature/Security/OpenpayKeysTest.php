@@ -36,6 +36,43 @@ class OpenpayKeysTest extends TestCase
         $this->assertStringNotContainsString('sk_test_secret_value', $response->getContent());
     }
 
+    public function test_non_admin_cannot_read_openpay_keys(): void
+    {
+        $this->seedKeys();
+
+        $this->actingAs($this->userWithRole('cliente'), 'api')
+            ->getJson('/api/admin/openpay-keys')
+            ->assertForbidden();
+    }
+
+    public function test_public_keys_endpoint_only_returns_public_values(): void
+    {
+        $this->seedKeys();
+
+        $response = $this->getJson('/api/openpay-keys/public');
+
+        $response->assertOk()
+            ->assertJsonPath('data.openpay_id', 'mz_test_merchant')
+            ->assertJsonPath('data.openpay_public_key', 'pk_test_public_value');
+
+        $this->assertArrayNotHasKey('openpay_secret', $response->json('data') ?? []);
+        $this->assertStringNotContainsString('sk_test_secret_value', $response->getContent());
+    }
+
+    public function test_non_admin_cannot_read_webhook_verification_codes(): void
+    {
+        $this->actingAs($this->userWithRole('cliente'), 'api')
+            ->getJson('/api/admin/webhook-verification-codes')
+            ->assertForbidden();
+    }
+
+    public function test_admin_can_read_webhook_verification_codes(): void
+    {
+        $this->actingAs($this->userWithRole('administrador'), 'api')
+            ->getJson('/api/admin/webhook-verification-codes')
+            ->assertOk();
+    }
+
     public function test_non_admin_cannot_update_openpay_keys(): void
     {
         $this->seedKeys();
