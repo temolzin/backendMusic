@@ -302,7 +302,7 @@ class PaymentController extends Controller
 
             $createdCharges = [];
             $openpayCustomerId = null;
-            $deviceSessionId = $request->input("deviceSessionId") ?? Str::uuid()->toString();
+            $deviceSessionId = $this->resolveDeviceSessionId($request->input("deviceSessionId"));
 
             try {
                 $openpayCustomer = $openpay->customers->add($customerData);
@@ -1521,6 +1521,15 @@ class PaymentController extends Controller
         $taxRate = 1.16;
 
         return round((($amount * $baseCommissionRate) + $fixedCharge) * $taxRate, 2);
+    }
+
+    private function resolveDeviceSessionId($value): string
+    {
+        $sessionId = is_string($value) ? trim($value) : '';
+
+        return $sessionId !== '' && mb_strlen($sessionId) <= 32
+            ? $sessionId
+            : Str::uuid()->getHex();
     }
 
     private function sendSaleRequestEmail(ArtistSale $sale)
