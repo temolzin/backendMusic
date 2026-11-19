@@ -141,11 +141,9 @@ class OpenpayKeysController extends Controller
         try {
             $keys = OpenpayKey::first();
 
-            if ($keys) {
-                $keys->fill($data)->save();
-            } else {
-                OpenpayKey::create($data);
-            }
+            $keys
+                ? $keys->fill($data)->save()
+                : OpenpayKey::create($data);
 
             return response()->json(['success' => true, 'message' => 'Credenciales actualizadas'], 200);
         } catch (\Throwable $e) {
