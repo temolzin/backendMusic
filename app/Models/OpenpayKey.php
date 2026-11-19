@@ -22,8 +22,5 @@ class OpenpayKey extends Model
         'openpay_sandbox_mode' => 'boolean',
     ];
 
-    /**
-     * The secret key must never be serialized to JSON/responses.
-     */
     protected $hidden = ['openpay_secret'];
 }
