@@ -63,10 +63,6 @@ class PaymentController extends Controller
             $token = $request->input("token");
             $savedCardId = $request->input("saved_card_id");
 
-            // Support paying with a previously saved card: the card number is
-            // stored (masked on read), so we tokenize server-side using the
-            // stored full number instead of relying on the (masked) value sent
-            // by the client, which OpenPay rejects.
             if (!$token && $savedCardId) {
                 $savedCard = Card::query()
                     ->whereKey($savedCardId)
