@@ -91,10 +91,7 @@ class PaymentController extends Controller
 
                 [$month, $year] = array_pad(explode('/', (string) $savedCard->expiration_date), 2, '');
                 $month = (int) $month;
-                $year = (int) $year;
-                if ($year > 0 && $year < 100) {
-                    $year += 2000;
-                }
+                $year = (int) preg_replace('/\D/', '', (string) $year) % 100;
 
                 $baseUrl = $keys->openpay_sandbox_mode
                     ? 'https://sandbox-api.openpay.mx/v1'
