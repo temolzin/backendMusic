@@ -23,6 +23,7 @@ use App\Models\ShoppingCardDetail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use App\Models\OpenpayKey;
 use App\Models\Offer;
@@ -60,6 +61,79 @@ class PaymentController extends Controller
             Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
 
             $token = $request->input("token");
+            $savedCardId = $request->input("saved_card_id");
+
+            // Support paying with a previously saved card: the card number is
+            // stored (masked on read), so we tokenize server-side using the
+            // stored full number instead of relying on the (masked) value sent
+            // by the client, which OpenPay rejects.
+            if (!$token && $savedCardId) {
+                $savedCard = Card::where('id', $savedCardId)
+                    ->where('user_id', Auth::id() ?? $request->input('customer_id'))
+                    ->first();
+
+                if (!$savedCard) {
+                    return response()->json([
+                        'error' => 'Tarjeta guardada no encontrada',
+                    ], 404);
+                }
+
+                $cvv = $request->input('cvv');
+                if (!$cvv) {
+                    return response()->json([
+                        'error' => 'El CVV es requerido para pagar con una tarjeta guardada',
+                    ], 422);
+                }
+
+                $cardNumber = preg_replace('/\D/', '', (string) $savedCard->number_card);
+                if (strlen($cardNumber) < 13) {
+                    return response()->json([
+                        'error' => 'La tarjeta guardada no tiene un número válido',
+                    ], 422);
+                }
+
+                [$month, $year] = array_pad(explode('/', (string) $savedCard->expiration_date), 2, '');
+                $month = (int) $month;
+                $year = (int) $year;
+                if ($year > 0 && $year < 100) {
+                    $year += 2000;
+                }
+
+                $baseUrl = $keys->openpay_sandbox_mode
+                    ? 'https://sandbox-api.openpay.mx/v1'
+                    : 'https://api.openpay.mx/v1';
+
+                $tokenResponse = Http::acceptJson()
+                    ->withBasicAuth($keys->openpay_secret, '')
+                    ->timeout(15)
+                    ->post($baseUrl . '/' . rawurlencode($keys->openpay_id) . '/tokens', [
+                        'card_number' => $cardNumber,
+                        'holder_name' => $savedCard->name,
+                        'expiration_year' => $year,
+                        'expiration_month' => $month,
+                        'cvv2' => $cvv,
+                    ]);
+
+                if (!$tokenResponse->successful()) {
+                    Log::warning('OpenPay token creation failed for saved card', [
+                        'status' => $tokenResponse->status(),
+                        'body' => $tokenResponse->body(),
+                    ]);
+                    return response()->json([
+                        'error' => [
+                            'category' => 'TOKEN_ERROR',
+                            'description' => 'No se pudo procesar la tarjeta guardada. Intenta con una tarjeta nueva.',
+                        ],
+                    ], 422);
+                }
+
+                $token = $tokenResponse->json('id');
+                if (!$token) {
+                    return response()->json([
+                        'error' => 'No se recibió un token válido de OpenPay',
+                    ], 422);
+                }
+            }
             $name = $request->input("name") ?? $request->input("order_details.first_name");
             $last_name = $request->input("last_name") ?? $request->input("order_details.last_name");
             $email = $request->input("email") ?? $request->input("customer_email");
