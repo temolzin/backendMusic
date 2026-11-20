@@ -73,6 +73,16 @@ class OpenpayKeysTest extends TestCase
             ->assertOk();
     }
 
+    public function test_get_keys_returns_an_empty_payload_when_openpay_is_not_configured(): void
+    {
+        $this->actingAs($this->userWithRole('administrador'), 'api')
+            ->getJson('/api/admin/openpay-keys')
+            ->assertOk()
+            ->assertJsonPath('data.configured', false)
+            ->assertJsonPath('data.openpay_secret_set', false)
+            ->assertJsonPath('data.openpay_sandbox_mode', true);
+    }
+
     public function test_get_keys_reports_whether_the_secret_is_configured(): void
     {
         $this->seedKeys();

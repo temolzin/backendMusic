@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\OpenpayKey;
+use Illuminate\Encryption\MissingAppKeyException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -14,20 +15,27 @@ class OpenpayKeysController extends Controller
     {
         try {
             $keys = OpenpayKey::first();
-            if (!$keys) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'OpenPay no está configurado.',
-                ], 503);
-            }
+
             return response()->json([
                 'success' => true,
-                'data' => array_merge($keys->toArray(), [
-                    'openpay_secret_set' => filled($keys->openpay_secret),
-                ]),
+                'data' => [
+                    'openpay_id' => $keys?->openpay_id,
+                    'openpay_public_key' => $keys?->openpay_public_key,
+                    'openpay_sandbox_mode' => $keys?->openpay_sandbox_mode ?? true,
+                    'configured' => $keys !== null,
+                    'openpay_secret_set' => filled($keys?->openpay_secret),
+                ],
             ], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        } catch (\Throwable $e) {
+            Log::error('OpenPay keys lookup failed.', [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudieron cargar las credenciales de OpenPay.',
+            ], 500);
         }
     }
 
@@ -146,6 +154,15 @@ class OpenpayKeysController extends Controller
                 : OpenpayKey::create($data);
 
             return response()->json(['success' => true, 'message' => 'Credenciales actualizadas'], 200);
+        } catch (MissingAppKeyException $e) {
+            Log::error('OpenPay keys update failed: APP_KEY is missing.', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'El servidor no tiene configurada la APP_KEY, no se pueden cifrar las credenciales.',
+            ], 500);
         } catch (\Throwable $e) {
             Log::error('OpenPay keys update failed.', [
                 'exception' => get_class($e),
