@@ -22,7 +22,9 @@ class OpenpayKeysController extends Controller
             }
             return response()->json([
                 'success' => true,
-                'data'    => $keys,
+                'data' => array_merge($keys->toArray(), [
+                    'openpay_secret_set' => filled($keys->openpay_secret),
+                ]),
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -110,8 +112,8 @@ class OpenpayKeysController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'openpay_id'           => $keys->openpay_id,
-                    'openpay_public_key'   => $keys->openpay_public_key,
+                    'openpay_id' => $keys->openpay_id,
+                    'openpay_public_key' => $keys->openpay_public_key,
                     'openpay_sandbox_mode' => $keys->openpay_sandbox_mode,
                 ],
             ], 200);
@@ -122,27 +124,38 @@ class OpenpayKeysController extends Controller
 
     public function updateKeys(Request $request)
     {
-        try {
-            $request->validate([
-                'openpay_id'           => 'required|string',
-                'openpay_secret'       => 'required|string',
-                'openpay_public_key'   => 'required|string',
-                'openpay_sandbox_mode' => 'required|boolean',
-            ]);
+        $data = $request->validate([
+            'openpay_id' => 'required|string',
+            'openpay_secret' => 'sometimes|required|string',
+            'openpay_public_key' => 'required|string',
+            'openpay_sandbox_mode' => 'required|boolean',
+        ]);
 
-            OpenpayKey::updateOrCreate(
-                ['id' => 1],
-                $request->only([
-                    'openpay_id',
-                    'openpay_secret',
-                    'openpay_public_key',
-                    'openpay_sandbox_mode',
-                ])
-            );
+        if (!OpenpayKey::query()->exists() && empty($data['openpay_secret'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'La llave secreta es requerida.',
+            ], 422);
+        }
+
+        try {
+            $keys = OpenpayKey::first();
+
+            $keys
+                ? $keys->fill($data)->save()
+                : OpenpayKey::create($data);
 
             return response()->json(['success' => true, 'message' => 'Credenciales actualizadas'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        } catch (\Throwable $e) {
+            Log::error('OpenPay keys update failed.', [
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudieron guardar las credenciales.',
+            ], 500);
         }
     }
 }

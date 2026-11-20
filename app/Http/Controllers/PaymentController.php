@@ -23,6 +23,7 @@ use App\Models\ShoppingCardDetail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 use App\Models\OpenpayKey;
 use App\Models\Offer;
@@ -60,6 +61,73 @@ class PaymentController extends Controller
             Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
 
             $token = $request->input("token");
+            $savedCardId = $request->input("saved_card_id");
+
+            if (!$token && $savedCardId) {
+                $savedCard = Card::query()
+                    ->whereKey($savedCardId)
+                    ->where('user_id', Auth::id())
+                    ->first();
+
+                if (!$savedCard) {
+                    return response()->json([
+                        'error' => 'Tarjeta guardada no encontrada',
+                    ], 404);
+                }
+
+                $cvv = $request->input('cvv');
+                if (!$cvv) {
+                    return response()->json([
+                        'error' => 'El CVV es requerido para pagar con una tarjeta guardada',
+                    ], 422);
+                }
+
+                $cardNumber = preg_replace('/\D/', '', (string) $savedCard->number_card);
+                if (strlen($cardNumber) < 13) {
+                    return response()->json([
+                        'error' => 'La tarjeta guardada no tiene un número válido',
+                    ], 422);
+                }
+
+                [$month, $year] = array_pad(explode('/', (string) $savedCard->expiration_date), 2, '');
+                $month = (int) $month;
+                $year = (int) preg_replace('/\D/', '', (string) $year) % 100;
+
+                $baseUrl = $keys->openpay_sandbox_mode
+                    ? 'https://sandbox-api.openpay.mx/v1'
+                    : 'https://api.openpay.mx/v1';
+
+                $tokenResponse = Http::acceptJson()
+                    ->withBasicAuth($keys->openpay_secret, '')
+                    ->timeout(15)
+                    ->post($baseUrl . '/' . rawurlencode($keys->openpay_id) . '/tokens', [
+                        'card_number' => $cardNumber,
+                        'holder_name' => $savedCard->name,
+                        'expiration_year' => $year,
+                        'expiration_month' => $month,
+                        'cvv2' => $cvv,
+                    ]);
+
+                if (!$tokenResponse->successful()) {
+                    Log::warning('OpenPay token creation failed for saved card', [
+                        'status' => $tokenResponse->status(),
+                        'body' => $tokenResponse->body(),
+                    ]);
+                    return response()->json([
+                        'error' => [
+                            'category' => 'TOKEN_ERROR',
+                            'description' => 'No se pudo procesar la tarjeta guardada. Intenta con una tarjeta nueva.',
+                        ],
+                    ], 422);
+                }
+
+                $token = $tokenResponse->json('id');
+                if (!$token) {
+                    return response()->json([
+                        'error' => 'No se recibió un token válido de OpenPay',
+                    ], 422);
+                }
+            }
             $name = $request->input("name") ?? $request->input("order_details.first_name");
             $last_name = $request->input("last_name") ?? $request->input("order_details.last_name");
             $email = $request->input("email") ?? $request->input("customer_email");
@@ -234,7 +302,7 @@ class PaymentController extends Controller
 
             $createdCharges = [];
             $openpayCustomerId = null;
-            $deviceSessionId = $request->input("deviceSessionId") ?? Str::uuid()->toString();
+            $deviceSessionId = $this->resolveDeviceSessionId($request->input("deviceSessionId"));
 
             try {
                 $openpayCustomer = $openpay->customers->add($customerData);
@@ -1453,6 +1521,15 @@ class PaymentController extends Controller
         $taxRate = 1.16;
 
         return round((($amount * $baseCommissionRate) + $fixedCharge) * $taxRate, 2);
+    }
+
+    private function resolveDeviceSessionId($value): string
+    {
+        $sessionId = is_string($value) ? trim($value) : '';
+
+        return $sessionId !== '' && mb_strlen($sessionId) <= 32
+            ? $sessionId
+            : Str::uuid()->getHex();
     }
 
     private function sendSaleRequestEmail(ArtistSale $sale)

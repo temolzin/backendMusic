@@ -54,6 +54,7 @@ class ShoppingCardController extends Controller
         }
 
         $this->consolidateDuplicateItems($mainCart);
+        $this->refreshItemPrices($mainCart);
         $this->recalculateShoppingCardTotal($mainCart);
 
         return $mainCart->fresh();
@@ -95,6 +96,35 @@ class ShoppingCardController extends Controller
             }
 
             $mainItem->save();
+        }
+    }
+
+    private function refreshItemPrices(ShoppingCard $shoppingCard): void
+    {
+        $now = Carbon::now()->format('Y-m-d H:i:s');
+        $items = ShoppingCardDetail::where('shopping_card_id', $shoppingCard->id)->get();
+
+        foreach ($items as $item) {
+            $artist = Artist::find($item->artist_id);
+
+            if (!$artist) {
+                continue;
+            }
+
+            $activeOffer = Offer::where('artist_id', $artist->id)
+                ->where('start_date', '<=', $now)
+                ->where('end_date', '>=', $now)
+                ->orderBy('discount_percentage', 'desc')
+                ->first();
+
+            $price = $activeOffer
+                ? (float) $artist->price_hour * (1 - $activeOffer->discount_percentage / 100)
+                : (float) $artist->price_hour;
+
+            if ((float) $item->price !== $price) {
+                $item->price = $price;
+                $item->save();
+            }
         }
     }
 
