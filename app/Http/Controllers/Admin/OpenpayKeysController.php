@@ -22,7 +22,7 @@ class OpenpayKeysController extends Controller
             }
             return response()->json([
                 'success' => true,
-                'data'    => array_merge($keys->toArray(), [
+                'data' => array_merge($keys->toArray(), [
                     'openpay_secret_set' => filled($keys->openpay_secret),
                 ]),
             ], 200);
@@ -112,8 +112,8 @@ class OpenpayKeysController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'openpay_id'           => $keys->openpay_id,
-                    'openpay_public_key'   => $keys->openpay_public_key,
+                    'openpay_id' => $keys->openpay_id,
+                    'openpay_public_key' => $keys->openpay_public_key,
                     'openpay_sandbox_mode' => $keys->openpay_sandbox_mode,
                 ],
             ], 200);
@@ -125,9 +125,9 @@ class OpenpayKeysController extends Controller
     public function updateKeys(Request $request)
     {
         $data = $request->validate([
-            'openpay_id'           => 'required|string',
-            'openpay_secret'       => 'sometimes|required|string',
-            'openpay_public_key'   => 'required|string',
+            'openpay_id' => 'required|string',
+            'openpay_secret' => 'sometimes|required|string',
+            'openpay_public_key' => 'required|string',
             'openpay_sandbox_mode' => 'required|boolean',
         ]);
 
