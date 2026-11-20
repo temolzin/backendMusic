@@ -30,6 +30,7 @@ use App\Models\Offer;
 use App\Models\EventCancellation;
 use App\Models\Card;
 use App\Services\DistanceMatrixService;
+use App\Services\PaymentFailureReference;
 use Illuminate\Support\Facades\Mail;
 use App\Services\TicketPdfService;
 use App\Mail\ArtistSaleRequest;
@@ -44,6 +45,7 @@ class PaymentController extends Controller
     public function processPayment(Request $request)
     {
         $acquiredLocks = [];
+        $step = 'CONFIG';
 
         try {
             $keys = OpenpayKey::first();
@@ -64,6 +66,7 @@ class PaymentController extends Controller
             $savedCardId = $request->input("saved_card_id");
 
             if (!$token && $savedCardId) {
+                $step = 'SAVED_CARD';
                 $savedCard = Card::query()
                     ->whereKey($savedCardId)
                     ->where('user_id', Auth::id())
@@ -128,6 +131,7 @@ class PaymentController extends Controller
                     ], 422);
                 }
             }
+            $step = 'PAYMENT_DATA';
             $name = $request->input("name") ?? $request->input("order_details.first_name");
             $last_name = $request->input("last_name") ?? $request->input("order_details.last_name");
             $email = $request->input("email") ?? $request->input("customer_email");
@@ -165,6 +169,7 @@ class PaymentController extends Controller
             $distanceService = new DistanceMatrixService();
             $totalExtraKmCostPesos = 0;
 
+            $step = 'PRICING';
             foreach ($artistList as $element) {
                 if (!is_array($element) || !array_key_exists('artist_id', $element)) {
                     return response()->json([
@@ -244,6 +249,7 @@ class PaymentController extends Controller
 
             $lockKeys = array_values(array_unique($lockKeys));
 
+            $step = 'AVAILABILITY';
             foreach ($lockKeys as $lockKey) {
                 $lock = Cache::lock($lockKey, 300);
                 if (!$lock->get()) {
@@ -304,6 +310,7 @@ class PaymentController extends Controller
             $openpayCustomerId = null;
             $deviceSessionId = $this->resolveDeviceSessionId($request->input("deviceSessionId"));
 
+            $step = 'OPENPAY';
             try {
                 $openpayCustomer = $openpay->customers->add($customerData);
                 $card = $openpayCustomer->cards->add([
@@ -339,6 +346,7 @@ class PaymentController extends Controller
                 throw $e;
             }
 
+            $step = 'PERSISTENCE';
             DB::beginTransaction();
             try {
                 foreach ($itemsForSales as $index => $item) {
@@ -478,12 +486,22 @@ class PaymentController extends Controller
                 ]
             ], $e->getHttpCode() ?: 500);
         } catch (Exception $e) {
-            Log::error('Payment processing error: ' . $e->getMessage());
+            $failureReference = PaymentFailureReference::for($step, $e);
+            Log::error('Payment processing error', [
+                'failure_reference' => $failureReference,
+                'step' => $step,
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'error' => [
                     'category' => 'Error genérico',
                     'error_code' => 'GENERIC_ERROR',
                     'description' => 'Ocurrió un error inesperado al procesar el pago. Intenta de nuevo.',
+                    'failure_reference' => $failureReference,
                 ]
             ], 500);
         } finally {
