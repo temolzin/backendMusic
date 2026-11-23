@@ -59,7 +59,16 @@ class PaymentController extends Controller
                     ],
                 ], 503);
             }
-            $openpay = Openpay::getInstance($keys->openpay_id, $keys->openpay_secret, "MX", $request->ip());
+            $clientIp = $this->resolveOpenpayClientIp($request);
+            Openpay::setCountry('MX');
+            Openpay::setEndpointUrl('MX');
+            Openpay::setPublicIp($clientIp);
+            $openpay = Openpay::getInstance(
+                $keys->openpay_id,
+                $keys->openpay_secret,
+                'MX',
+                $clientIp
+            );
             Openpay::setProductionMode(!$keys->openpay_sandbox_mode);
 
             $token = $request->input("token");
@@ -1558,6 +1567,13 @@ class PaymentController extends Controller
         return $sessionId !== '' && mb_strlen($sessionId) <= 32
             ? $sessionId
             : Str::uuid()->getHex();
+    }
+
+    private function resolveOpenpayClientIp(Request $request): ?string
+    {
+        $ip = $request->ip();
+
+        return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? $ip : null;
     }
 
     private function sendSaleRequestEmail(ArtistSale $sale)
