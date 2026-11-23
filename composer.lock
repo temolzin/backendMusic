@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4224987010ce701ef7ac24d7da459ade",
+    "content-hash": "6e700508fe35c1311e89148caeda2cea",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3176,16 +3176,16 @@
         },
         {
             "name": "openpay/sdk",
-            "version": "3.0.0",
+            "version": "3.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/open-pay/openpay-php.git",
-                "reference": "c4744c77db23f464ce2c724e271bcc623ebd2968"
+                "reference": "5a922d4e95e6c68c37c6e558e33b6f7e4918f398"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/open-pay/openpay-php/zipball/c4744c77db23f464ce2c724e271bcc623ebd2968",
-                "reference": "c4744c77db23f464ce2c724e271bcc623ebd2968",
+                "url": "https://api.github.com/repos/open-pay/openpay-php/zipball/5a922d4e95e6c68c37c6e558e33b6f7e4918f398",
+                "reference": "5a922d4e95e6c68c37c6e558e33b6f7e4918f398",
                 "shasum": ""
             },
             "require": {
@@ -3221,9 +3221,9 @@
             "description": "This is a client implementing the payment services for Openpay at openpay.mx",
             "support": {
                 "issues": "https://github.com/open-pay/openpay-php/issues",
-                "source": "https://github.com/open-pay/openpay-php/tree/3.0.0"
+                "source": "https://github.com/open-pay/openpay-php/tree/3.1.1"
             },
-            "time": "2021-12-03T00:17:58+00:00"
+            "time": "2024-10-28T22:15:37+00:00"
         },
         {
             "name": "opis/closure",
