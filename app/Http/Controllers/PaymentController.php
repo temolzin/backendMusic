@@ -453,14 +453,24 @@ class PaymentController extends Controller
                 ]
             ], $e->getHttpCode() ?: 400);
         } catch (OpenpayApiConnectionError $e) {
-            Log::error('OpenPay connection error: ' . $e->getMessage());
+            $failureReference = PaymentFailureReference::for($step, $e);
+            Log::error('OpenPay connection error', [
+                'failure_reference' => $failureReference,
+                'step' => $step,
+                'exception' => get_class($e),
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'error' => [
                     'category' => $e->getCategory(),
                     'error_code' => $e->getErrorCode(),
                     'description' => self::translateOpenpayError($e->getErrorCode(), 'No pudimos conectar con el procesador de pagos. Intenta de nuevo en unos minutos.'),
                     'http_code' => $e->getHttpCode(),
-                    'request_id' => $e->getRequestId()
+                    'request_id' => $e->getRequestId(),
+                    'failure_reference' => $failureReference,
                 ]
             ], $e->getHttpCode() ?: 503);
         } catch (OpenpayApiAuthError $e) {
