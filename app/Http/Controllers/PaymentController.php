@@ -62,7 +62,6 @@ class PaymentController extends Controller
             $clientIp = $this->resolveOpenpayClientIp($request);
             Openpay::setCountry('MX');
             Openpay::setEndpointUrl('MX');
-            Openpay::setPublicIp($clientIp);
             $openpay = Openpay::getInstance(
                 $keys->openpay_id,
                 $keys->openpay_secret,
