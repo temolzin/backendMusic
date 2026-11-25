@@ -469,7 +469,6 @@ class PaymentController extends Controller
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
             ]);
             return response()->json([
                 'error' => [
@@ -512,7 +511,6 @@ class PaymentController extends Controller
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'trace' => $e->getTraceAsString(),
             ]);
             return response()->json([
                 'error' => [
